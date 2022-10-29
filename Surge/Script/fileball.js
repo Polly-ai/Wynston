@@ -1,6 +1,6 @@
 /**
 [rewrite_local]
-^https://firebaseremoteconfig.googleapis.com/v1/projects/filebox-ac299/namespaces/firebase:fetch\?key=.* url script-response-body https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/fileball.js
+^https://firebaseremoteconfig.googleapis.com/v1/projects/filebox-ac299/namespaces/firebase:fetch\?key=.* url script-response-body https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/fileball.js
 [mitm] 
 hostname = %APPEND% *.googleapis.com
 **/
