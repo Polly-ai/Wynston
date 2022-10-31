@@ -5,7 +5,7 @@
 
 [Scrpit]
 # > Symbolab 高级功能解锁 （需登录）
-Symbolab = type=http-response,pattern=^https?:\/\/scibug\.com\/appleSubscriptionValidate$,requires-body=1,script-path=https://gitlab.com/ddgksf2013/Cuttlefish/-/raw/master/Crack/symbolab.js
+Symbolab = type=http-response,pattern=^https?:\/\/scibug\.com\/appleSubscriptionValidate$,requires-body=1,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Symbolab.js
 
 [MITM]
 hostname = %APPEND% scibug.com
