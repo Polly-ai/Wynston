@@ -9,7 +9,7 @@ QuantumultX
 [rewrite_local]
 
 # > TopWidgets Unlock
-^https?:\/\/.*xiaozujian\.com\/api\/app\/config\/userConfig url script-response-body https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/topwidgets.js
+^https?:\/\/.*xiaozujian\.com\/api\/app\/config\/userConfig url script-response-body https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Topwidgets.js
 
 [mitm]
 hostname=*xiaozujian.com
@@ -20,7 +20,7 @@ Surge
 [Script]
 
 # > TopWidgets Unlock
-topwidgets = type=http-response,pattern=^https?:\/\/.*xiaozujian\.com\/api\/app\/config\/userConfig,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/topwidgets.js
+topwidgets = type=http-response,pattern=^https?:\/\/.*xiaozujian\.com\/api\/app\/config\/userConfig,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Topwidgets.js
 
 [MITM]
 hostname = %APPEND% *xiaozujian.com
