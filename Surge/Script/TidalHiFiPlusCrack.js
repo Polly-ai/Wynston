@@ -1,3 +1,5 @@
+QuantumultX
+
 [rewrite_local]
 # > TIDAL解锁HiFi Plus
 ^https?:\/\/api\.tidal\.com\/v1\/users\/\d+\/subscription.+ url script-response-body https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/TIDALHiFiPlusCrack.js
@@ -5,6 +7,17 @@
 
 [mitm] 
 hostname = api.tidal.com
+
+
+Surge
+
+[Script]
+# > TIDAL解锁HiFi Plus
+TIDAL = type=http-request,pattern=^https?:\/\/api\.tidal\.com\/v1\/(pages\/album|(user|track|page)s\/(\d+)\/(state|subscription|lyrics|onboarding|playbackinfopostpaywall)),requires-body=0,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/TidalHiFiPlusCrack.js 
+
+[MITM]
+hostname = %APPEND% api.tidal.com
+
 
 *******************************/
 
