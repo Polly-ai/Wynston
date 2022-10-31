@@ -3,7 +3,7 @@
 
 
 [Script]
-Calm = type=http-response,pattern= https://api.calm.com/(me|device|ios/receipt),requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Calm.js
+Calm = type=http-response,pattern=https://api.calm.com/(me|device|ios/receipt),requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Calm.js
 
 [MITM]
 hostname = %APPEND% api.calm.com
