@@ -1,13 +1,39 @@
-[rewrite_local]
+# 傲软抠图解锁VIP
+# 下载地址:https://apps.apple.com/cn/app/id1490054676
+# 脚本作者:墨鱼
 
-# ～ 傲软抠图解锁会员权限（2022-09-13）@ddgksf2013
-https?:\/\/.*\.aoscdn\.com\/base\/vip\/client\/authorizations$ url script-response-body https://gitlab.com/ddgksf2013/Cuttlefish/-/raw/master/Crack/Apowersoft.js
+
+
+QuantumultX
+
+
+[rewrite_local]
+https?:\/\/.*\.aoscdn\.com\/base\/vip\/client\/authorizations$ url script-response-body https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Apowersoft.js
 
 [mitm] 
-
 hostname=*.aoscdn.com
 
-***********************************/
+
+Surge
+
+[Script]
+Apowersoft = type=http-response,pattern=https?:\/\/.*\.aoscdn\.com\/base\/vip\/client\/authorizations$,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Apowersoft.js
+
+[MITM]
+hostname = %APPEND% *.aoscdn.com
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
