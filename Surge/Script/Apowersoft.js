@@ -37,8 +37,7 @@ hostname = %APPEND% *.aoscdn.com
 
 
 
-var cuttlefish ={"warning":"本腳本僅供學習交流使用，禁止轉載售賣","tgchannel":"https://t.me/ddgksf2021","feedback":"https://t.me/ddgksf2013_bot"};
-var ddgksf2013 = {
+var Wynston = {
   "status" : 200,
   "message" : "success",
   "data" : {
@@ -60,4 +59,4 @@ var ddgksf2013 = {
     "vip_special" : 1
   }
 };
-$done({body: JSON.stringify(ddgksf2013)});
+$done({body: JSON.stringify(Wynston)});
