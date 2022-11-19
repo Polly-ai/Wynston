@@ -2,7 +2,6 @@
 
 
 [Script]
-
 Fileball = type=http-response,pattern=^https://firebaseremoteconfig.googleapis.com/v1/projects/filebox-ac299/apps/.*,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Fileball.js
 
 [MITM] 
