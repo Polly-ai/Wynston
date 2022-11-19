@@ -1,9 +1,15 @@
-/**
-[rewrite_local]
-^https://firebaseremoteconfig.googleapis.com/v1/projects/filebox-ac299/namespaces/firebase:fetch\?key=.* url script-response-body https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Fileball.js
-[mitm] 
+/**********
+
+
+[Script]
+
+Fileball = type=http-response,pattern=^https://firebaseremoteconfig.googleapis.com/v1/projects/filebox-ac299/apps/.*,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/Script/Fileball.js
+
+[MITM] 
 hostname = %APPEND% *.googleapis.com
-**/
+
+
+**********/
 
 
 
