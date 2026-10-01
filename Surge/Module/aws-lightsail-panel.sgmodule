@@ -1,0 +1,10 @@
+#!name=AWS Lightsail 流量面板（自定义版）
+#!desc=监控两台不同 region 的 Lightsail 实例：月流量、CPU 利用率、配置规格、账单日，中文排版。
+#!arguments=instance_1_name,instance_2_name,ACCESS_KEY_ID,SECRET_ACCESS_KEY
+#!arguments-desc=填两个不同 region 的实例名。AWS Key 可填原文或 URL 编码。
+
+[Script]
+aws-lightsail-panel = type=generic,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/aws-lightsail-bandwidth-panel.js,argument=instance_1_name={{{instance_1_name}}}&instance_2_name={{{instance_2_name}}}&ACCESS_KEY_ID={{{ACCESS_KEY_ID}}}&SECRET_ACCESS_KEY={{{SECRET_ACCESS_KEY}}},timeout=60
+
+[Panel]
+AWSLightsailPanel = title="AWS Lightsail 流量",content="Loading...",script-name=aws-lightsail-panel,update-interval=3600
