@@ -167,6 +167,9 @@ async function loadUsage(instance, credentials) {
   const incoming = sumMetric(networkIn);
   const outgoing = sumMetric(networkOut);
   const quota = quotaGb * BYTES_PER_GB;
+  const cpuAvg = await loadCpu(instance, credentials);
+  const hw = instance.hardware || {};
+  const disks = hw.disks || [];
   return {
     name: instance.name,
     region: instance.region,
@@ -174,7 +177,38 @@ async function loadUsage(instance, credentials) {
     incoming,
     outgoing,
     percent: ((incoming + outgoing) / quota) * 100,
+    cpuAvg,
+    cpuCount: Number(hw.cpuCount),
+    ramGb: Number(hw.ramSizeInGb),
+    diskGb: disks.reduce((total, disk) => total + (Number(disk.sizeInGb) || 0), 0),
   };
+}
+
+async function loadCpu(instance, credentials) {
+  try {
+    const endTime = Date.now() / 1000;
+    const result = await awsCall(
+      "GetInstanceMetricData",
+      instance.region,
+      {
+        instanceName: instance.name,
+        metricName: "CPUUtilization",
+        statistics: ["Average"],
+        unit: "Percent",
+        period: 3600,
+        startTime: endTime - 7200,
+        endTime,
+      },
+      credentials
+    );
+    const points = (result.metricData || [])
+      .map((point) => Number(point.average))
+      .filter((value) => Number.isFinite(value));
+    if (!points.length) return null;
+    return points.reduce((total, value) => total + value, 0) / points.length;
+  } catch {
+    return null;
+  }
 }
 
 async function awsCall(operation, region, payload, credentials) {
@@ -337,13 +371,25 @@ function sumMetric(result) {
 
 function formatInstance(item) {
   const used = item.incoming + item.outgoing;
-  const left = Math.max(item.quota - used, 0);
-  return [
-    instanceTitle(item),
-    `已用：${formatGigabytes(used)} / ${formatGigabytes(item.quota)} GB（${item.percent.toFixed(2)}%）`,
-    `剩余：${formatGigabytes(left)} GB`,
-    progressBar(item.percent),
-  ].join("\n");
+  const lines = [instanceTitle(item)];
+  const spec = formatSpec(item);
+  if (spec) lines.push(spec);
+  lines.push(
+    item.cpuAvg === null ? "CPU：暂无数据" : `CPU：${item.cpuAvg.toFixed(2)}%（近 2 小时平均）`
+  );
+  lines.push(
+    `已用：${formatGigabytes(used)} GB / ${formatTerabytes(item.quota)} TB（${item.percent.toFixed(2)}%）`
+  );
+  lines.push(progressBar(item.percent));
+  return lines.join("\n");
+}
+
+function formatSpec(item) {
+  const parts = [];
+  if (Number.isFinite(item.cpuCount) && item.cpuCount > 0) parts.push(`${item.cpuCount} vCPU`);
+  if (Number.isFinite(item.ramGb) && item.ramGb > 0) parts.push(`${item.ramGb} GB 内存`);
+  if (Number.isFinite(item.diskGb) && item.diskGb > 0) parts.push(`${item.diskGb} GB SSD`);
+  return parts.length ? `配置：${parts.join("｜")}` : "";
 }
 
 function instanceTitle(item) {
@@ -367,6 +413,10 @@ function flagOf(countryCode) {
 
 function formatGigabytes(bytes) {
   return (bytes / BYTES_PER_GB).toFixed(2);
+}
+
+function formatTerabytes(bytes) {
+  return (bytes / BYTES_PER_GB / 1024).toFixed(2);
 }
 
 function billDate() {
@@ -440,4 +490,3 @@ function clamp(value, minimum, maximum) {
 function messageOf(error) {
   return error && error.message ? error.message : String(error);
 }
-
