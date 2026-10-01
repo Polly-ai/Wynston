@@ -1,4 +1,4 @@
-const TITLE = "AWS Lightsail 流量";
+const TITLE = "AWS Lightsail 监控";
 
 const DISCOVERY_REGION = "us-east-1";
 const CONTENT_TYPE = "application/x-amz-json-1.1";
