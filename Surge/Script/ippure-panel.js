@@ -1,6 +1,6 @@
 // IPPure 节点信息面板 (Surge)
 // 数据来源：https://my.ippure.com/v1/info（参考 StashNetworks 官方 IPPure Tile，单次请求）
-// 显示（对齐 IPPure 网站详情页）：当前节点名、IP、ASN、位置、宽带、机构、IP来源、IP属性、IPPure系数
+// 显示（对齐 IPPure 网站详情页）：标题即节点名；内容为 ASN、位置、宽带、机构、IP来源、IP属性、IPPure系数（不显示 IP）
 // 网站有但 /v1/info 接口不返回的（AS域名、IP范围、人机流量比、多源位置）无法显示
 // 宽带取 ip-api.com 的 isp、机构取 ip-api.com 的 org（同 node_purity.js）；宽带无结果时回落到 IPPure 的 asOrganization，机构无结果时不显示；与 IPPure 并行查询
 //
@@ -90,20 +90,6 @@ function resolveNode(targetGroup) {
     .catch(function () { return { name: targetGroup, policy: "" }; });
 }
 
-// IP 打码：只显示前两段，后面用 * 代替
-// IPv4：38.102.232.152 → 38.102.*.*
-// IPv6：2406:840:... → 2406:840:*:*:*:*:*:*
-function maskIP(ip) {
-  if (typeof ip !== "string" || !ip) return ip;
-  if (ip.indexOf(":") !== -1) {
-    var g = ip.split(":");
-    return g.slice(0, 2).join(":") + ":*:*:*:*:*:*";
-  }
-  var o = ip.split(".");
-  if (o.length === 4) return o[0] + "." + o[1] + ".*.*";
-  return ip;
-}
-
 // 系数分级沿用 IPPure 自己的口径：0-25 纯净，26-50 轻度风险，51-70 中度风险，71-100 高度风险
 function fraudMeta(score) {
   if (score <= 25) return { tag: "纯净", emoji: "🟢", color: "#34C759" };
@@ -112,9 +98,9 @@ function fraudMeta(score) {
   return { tag: "高度风险", emoji: "🔴", color: "#FF3B30" };
 }
 
-function finish(lines, color, icon) {
+function finish(lines, color, icon, title) {
   $done({
-    title: "节点信息",
+    title: title || "节点信息",
     content: lines.filter(function (l) { return l !== undefined && l !== null; }).join("\n"),
     icon: icon || "globe.asia.australia",
     "icon-color": color || "#3D90ED"
@@ -144,11 +130,8 @@ function cleanOrg(name) {
   return name.replace(/,?\s*(LLC|Inc|Corp|Ltd|Limited|Company|Co\.?\s*Ltd\.?|Co\.?)\.?$/i, "").trim();
 }
 
-function renderIPPure(nodeName, p, v4ip, a) {
+function renderIPPure(nodeName, p, a) {
   var details = [];
-  // IP 行：v6 出口时标明 IPv6，并附带 ip-api.com 查到的同节点 IPv4（ip-api 无 AAAA，只走 v4；网站首页也是 v4/v6 双列）
-  if (p.ip) details.push((p.ip.indexOf(":") !== -1 ? "IPv6：" : "IP：") + maskIP(p.ip));
-  if (v4ip) details.push("IPv4：" + maskIP(v4ip));
   // ASN：ASxxxx – 运营商（同网站格式，运营商去冗余后缀）
   var asnOrg = cleanOrg(p.asOrganization);
   var asnLine = "";
@@ -164,7 +147,7 @@ function renderIPPure(nodeName, p, v4ip, a) {
   var orgName = (a && a.org) ? cleanOrg(a.org) : "";
   if (orgName && orgName !== ispName && orgName !== asnOrg) details.push("机构：" + orgName);
   // IP来源：原生 / 广播（网站叫法，由 isBroadcast 决定）
-  if (typeof p.isBroadcast === "boolean") details.push("IP来源：" + (p.isBroadcast ? "📡 广播IP" : "🌱 原生IP"));
+  if (typeof p.isBroadcast === "boolean") details.push("IP来源：" + (p.isBroadcast ? "📡 广播IP" : "✅ 原生IP"));
   // IP属性：移动 / 住宅 / 机房（网站叫法，单值；移动优先，同 node_purity.js）
   var attr = "";
   if (a && a.mobile) attr = "📱 移动网络";
@@ -195,21 +178,17 @@ function renderIPPure(nodeName, p, v4ip, a) {
   else if (p.isDataCenter) icon = "server.rack";
   else if (p.isBroadcast) icon = "antenna.radiowaves.left.and.right";
 
-  // 排版：节点名单独做标题行（不带“节点：”前缀）/ 详情 / 系数 三段，空行分隔
-  var lines = [];
-  if (nodeName) lines.push(nodeName);
-  if (nodeName && details.length) lines.push("");
-  lines = lines.concat(details);
-  lines.push("");
+  // 排版：标题即节点名；内容以空行开头，详情 / 系数两段空行分隔
+  var lines = [""].concat(details);
+  if (details.length) lines.push("");
   lines.push(coefLine);
 
-  finish(lines, color, icon);
+  finish(lines, color, icon, nodeName);
 }
 
 function renderIPApi(nodeName, a) {
-  // IPPure 失败时用 ip-api.com 兜底 IP 与位置，系数显示查询失败
+  // IPPure 失败时用 ip-api.com 兜底位置等信息，系数显示查询失败
   var details = [];
-  if (a.query) details.push("IP：" + maskIP(a.query));
   var fallbackAsnOrg = "";
   if (a.as) {
     var am = a.as.match(/^(AS\d+)\s+(.*)$/);
@@ -223,13 +202,10 @@ function renderIPApi(nodeName, a) {
   if (fallbackOrg && fallbackOrg !== fallbackIsp && fallbackOrg !== fallbackAsnOrg) details.push("机构：" + fallbackOrg);
   if (a.mobile) details.push("IP属性：" + "📱 移动网络");
   else if (a.hosting) details.push("IP属性：" + "🖥️ 机房IP");
-  var lines = [];
-  if (nodeName) lines.push(nodeName);
-  if (nodeName && details.length) lines.push("");
-  lines = lines.concat(details);
-  lines.push("");
-  lines.push("IPPure系数：" + "查询失败");
-  finish(lines, "#3D90ED", "globe.asia.australia");
+  var lines = [""].concat(details);
+  if (details.length) lines.push("");
+  lines.push("IPPure系数：查询失败");
+  finish(lines, "#3D90ED", "globe.asia.australia", nodeName);
 }
 
 var manualNode = getArg("node");
@@ -243,7 +219,7 @@ var nodeTask = manualNode
 
 nodeTask.then(function (node) {
   // 先解析节点，再带 policy 强制走该节点查出口 IP
-  // IPPure 与 ip-api 并行：IPPure 给系数与 IP 属性，ip-api（仅 v4）给宽带属性，v6 出口时还顺带补 IPv4
+  // IPPure 与 ip-api 并行：IPPure 给系数与 IP 属性，ip-api 给宽带/机构/移动标识
   return Promise.all([
     fetchJSON(IPPURE_URL, 5, node.policy).catch(function () { return null; }),
     fetchJSON(IPAPI_URL, 5, node.policy).catch(function () { return null; })
@@ -252,11 +228,7 @@ nodeTask.then(function (node) {
     var a = results[1];
     // IPPure 返回了无 ip 字段的错误响应时，也视为失败，走 ip-api 兜底，避免面板半空
     if (p && p.ip) {
-      var v4ip = null;
-      if (p.ip && p.ip.indexOf(":") !== -1 && isNaN(Number(p.ippureCoefficient)) && isNaN(Number(p.fraudScore)) && a && a.query) {
-        v4ip = a.query;
-      }
-      renderIPPure(node.name, p, v4ip, a);
+      renderIPPure(node.name, p, a);
     } else if (a && a.query) {
       renderIPApi(node.name, a);
     } else {
