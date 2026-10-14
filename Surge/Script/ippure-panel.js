@@ -1,6 +1,7 @@
 // IPPure 节点信息面板 (Surge)
 // 数据来源：https://my.ippure.com/v1/info（参考 StashNetworks 官方 IPPure Tile，单次请求）
-// 显示：当前节点名、出口 IP、位置、运营商、ASN、IPPure 欺诈分数、IP 类型
+// 显示（对齐 IPPure 网站详情页）：当前节点名、IP、ASN、位置、IP来源、IP属性、IPPure系数
+// 网站有但 /v1/info 接口不返回的（AS域名、IP范围、人机流量比、多源位置）无法显示
 //
 // 节点名选中逻辑（参考 node_purity.js）：
 //  用 Surge 内置 $httpAPI 直接调本地 HTTP API，不需要密钥：
@@ -109,19 +110,19 @@ function flagEmoji(code) {
   return String.fromCodePoint(127397 + cc.charCodeAt(0), 127397 + cc.charCodeAt(1));
 }
 
-// 欺诈分数分级沿用 IPPure 自己的口径：0-25 安全，26-50 轻度风险，51-70 中度风险，71-100 高度风险
+// 系数分级沿用 IPPure 自己的口径：0-25 纯净，26-50 轻度风险，51-70 中度风险，71-100 高度风险
 function fraudMeta(score) {
-  if (score <= 25) return { tag: "安全", emoji: "🟢", color: "#34C759" };
+  if (score <= 25) return { tag: "纯净", emoji: "🟢", color: "#34C759" };
   if (score <= 50) return { tag: "轻度风险", emoji: "🟡", color: "#FFCC00" };
   if (score <= 70) return { tag: "中度风险", emoji: "🟠", color: "#FF9500" };
   return { tag: "高度风险", emoji: "🔴", color: "#FF3B30" };
 }
 
-function finish(lines, color) {
+function finish(lines, color, icon) {
   $done({
     title: "节点信息",
-    content: lines.filter(Boolean).join("\n"),
-    icon: "globe.asia.australia",
+    content: lines.filter(function (l) { return l !== undefined && l !== null; }).join("\n"),
+    icon: icon || "globe.asia.australia",
     "icon-color": color || "#3D90ED"
   });
 }
@@ -142,43 +143,72 @@ function buildLocation(flag, country, region, city) {
   return loc;
 }
 
-function renderIPPure(nodeName, p) {
-  var lines = [];
-  if (nodeName) lines.push("节点：" + nodeName);
-  if (p.ip) lines.push("IP：" + maskIP(p.ip));
-  if (p.country) lines.push("位置：" + buildLocation(flagEmoji(p.countryCode), p.country, p.region, p.city));
-  if (p.asOrganization) lines.push("运营商：" + p.asOrganization);
-  if (p.asn) lines.push("ASN：AS" + p.asn);
+function renderIPPure(nodeName, p, v4ip) {
+  var details = [];
+  // IP 行：v6 出口时标明 IPv6，并附带 ip-api.com 查到的同节点 IPv4（ip-api 无 AAAA，只走 v4；网站首页也是 v4/v6 双列）
+  if (p.ip) details.push((p.ip.indexOf(":") !== -1 ? "IPv6：" : "IP：") + maskIP(p.ip));
+  if (v4ip) details.push("IPv4：" + maskIP(v4ip));
+  // ASN：ASxxxx – 运营商（同网站格式）
+  var asnLine = "";
+  if (p.asn) asnLine = "AS" + p.asn;
+  if (p.asOrganization) asnLine = asnLine ? asnLine + " – " + p.asOrganization : p.asOrganization;
+  if (asnLine) details.push("ASN：" + asnLine);
+  if (p.country) details.push("位置：" + buildLocation(flagEmoji(p.countryCode), p.country, p.region, p.city));
+  // IP来源：原生 / 广播（网站叫法，由 isBroadcast 决定）
+  if (typeof p.isBroadcast === "boolean") details.push("IP来源：" + (p.isBroadcast ? "广播IP" : "原生IP"));
+  // IP属性：住宅 / 机房（网站叫法，单值）
+  var attr = "";
+  if (p.isResidential) attr = "住宅IP";
+  else if (p.isDataCenter) attr = "机房IP";
+  else if (p.isBroadcast) attr = "广播IP";
+  if (attr) details.push("IP属性：" + attr);
 
   var color = "#3D90ED";
-  var score = Number(p.fraudScore);
+  var coefLine = "";
+  // 系数优先用 ippureCoefficient（即网站的 IPPure系数），缺失时回落到 fraudScore
+  var score = Number(p.ippureCoefficient);
+  if (isNaN(score)) score = Number(p.fraudScore);
   if (!isNaN(score)) {
     var m = fraudMeta(score);
     color = m.color;
-    lines.push("欺诈分数：" + score + " " + m.emoji + " " + m.tag);
+    coefLine = "IPPure系数：" + score + "% " + m.emoji + " " + m.tag;
+  } else if (p.ip && p.ip.indexOf(":") !== -1) {
+    // 已实测：IPPure 的 IPv6 响应里本来就没有分数，不是查询失败
+    coefLine = "IPPure系数：v6 无分数（IPPure 仅给 v4 打分）";
   } else {
-    lines.push("欺诈分数：查询失败");
+    coefLine = "IPPure系数：查询失败";
   }
 
-  var types = [];
-  if (p.isResidential) types.push("住宅");
-  if (p.isBroadcast) types.push("广播");
-  if (p.isDataCenter) types.push("机房");
-  if (types.length) lines.push("类型：" + types.join(" / ") + " IP");
+  // 图标按 IP 属性适配，颜色按系数风险适配
+  var icon = "globe.asia.australia";
+  if (p.isResidential) icon = "house.fill";
+  else if (p.isDataCenter) icon = "server.rack";
+  else if (p.isBroadcast) icon = "antenna.radiowaves.left.and.right";
 
-  finish(lines, color);
+  // 排版：节点标题 / 详情 / 系数 三段，空行分隔
+  var lines = [];
+  if (nodeName) lines.push("节点：" + nodeName);
+  if (nodeName && details.length) lines.push("");
+  lines = lines.concat(details);
+  lines.push("");
+  lines.push(coefLine);
+
+  finish(lines, color, icon);
 }
 
 function renderIPApi(nodeName, a) {
-  // IPPure 失败时用 ip-api.com 兜底 IP 与位置，欺诈分数显示查询失败
+  // IPPure 失败时用 ip-api.com 兜底 IP 与位置，系数显示查询失败
+  var details = [];
+  if (a.query) details.push("IP：" + maskIP(a.query));
+  if (a.as) details.push("ASN：" + a.as);
+  if (a.country) details.push("位置：" + buildLocation(flagEmoji(a.countryCode), a.country, a.regionName, a.city));
   var lines = [];
   if (nodeName) lines.push("节点：" + nodeName);
-  if (a.query) lines.push("IP：" + maskIP(a.query));
-  if (a.country) lines.push("位置：" + buildLocation(flagEmoji(a.countryCode), a.country, a.regionName, a.city));
-  if (a.isp) lines.push("运营商：" + a.isp);
-  if (a.as) lines.push("ASN：" + a.as);
-  lines.push("欺诈分数：查询失败");
-  finish(lines, "#3D90ED");
+  if (nodeName && details.length) lines.push("");
+  lines = lines.concat(details);
+  lines.push("");
+  lines.push("IPPure系数：查询失败");
+  finish(lines, "#3D90ED", "globe.asia.australia");
 }
 
 var manualNode = getArg("node");
@@ -193,7 +223,15 @@ var nodeTask = manualNode
 nodeTask.then(function (node) {
   // 先解析节点，再带 policy 强制走该节点查出口 IP
   return fetchJSON(IPPURE_URL, 5, node.policy)
-    .then(function (p) { renderIPPure(node.name, p); })
+    .then(function (p) {
+      // v6 出口且无分数：再用 ip-api.com（仅 v4）补查同节点 IPv4，一并显示
+      if (p.ip && p.ip.indexOf(":") !== -1 && isNaN(Number(p.fraudScore))) {
+        return fetchJSON(IPAPI_URL, 5, node.policy)
+          .then(function (a) { renderIPPure(node.name, p, a.query); })
+          .catch(function () { renderIPPure(node.name, p); });
+      }
+      renderIPPure(node.name, p);
+    })
     .catch(function () {
       return fetchJSON(IPAPI_URL, 5, node.policy)
         .then(function (a) { renderIPApi(node.name, a); })
