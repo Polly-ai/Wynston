@@ -172,11 +172,17 @@ function renderIPPure(nodeName, p, a) {
     coefLine = "IPPure系数：" + "查询失败";
   }
 
-  // 图标按 IP 属性适配，颜色按系数风险适配
-  var icon = "globe.asia.australia";
-  if (p.isResidential) icon = "house.fill";
-  else if (p.isDataCenter) icon = "server.rack";
-  else if (p.isBroadcast) icon = "antenna.radiowaves.left.and.right";
+  // 图标：纯净或无分数时按 IP 属性适配（住宅房子/机房机架/广播天线/未知地球）；
+  // 轻度风险以上按风险适配（轻/中度黄橙三角、高度红八角），颜色始终跟系数风险走
+  var icon;
+  if (!isNaN(score) && score > 25) {
+    icon = score <= 70 ? "exclamationmark.triangle.fill" : "exclamationmark.octagon.fill";
+  } else {
+    icon = "globe.asia.australia";
+    if (p.isResidential) icon = "house.fill";
+    else if (p.isDataCenter) icon = "server.rack";
+    else if (p.isBroadcast) icon = "antenna.radiowaves.left.and.right";
+  }
 
   // 排版：标题即节点名；内容以空行开头，详情 / 系数两段空行分隔
   var lines = [""].concat(details);
