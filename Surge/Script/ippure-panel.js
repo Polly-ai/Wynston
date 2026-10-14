@@ -104,13 +104,6 @@ function maskIP(ip) {
   return ip;
 }
 
-function flagEmoji(code) {
-  if (typeof code !== "string" || code.length !== 2) return "";
-  var cc = code.toUpperCase() === "TW" ? "CN" : code.toUpperCase();
-  if (!/^[A-Z]{2}$/.test(cc)) return "";
-  return String.fromCodePoint(127397 + cc.charCodeAt(0), 127397 + cc.charCodeAt(1));
-}
-
 // 系数分级沿用 IPPure 自己的口径：0-25 纯净，26-50 轻度风险，51-70 中度风险，71-100 高度风险
 function fraudMeta(score) {
   if (score <= 25) return { tag: "纯净", emoji: "🟢", color: "#34C759" };
@@ -137,26 +130,13 @@ function fail(err) {
   });
 }
 
-function buildLocation(flag, country, region, city) {
-  var loc = (flag ? flag + " " : "") + (country || "");
+function buildLocation(country, region, city) {
+  var loc = country || "";
   if (region) loc += " · " + region;
   if (city) loc += " · " + city;
   return loc;
 }
 
-// 标签对齐：按半角=1、全角=2 算宽度，用全角空格(2)与普通空格(1)把标签补到同一宽度，值从同一列开始
-function padLabel(label, target) {
-  var w = 0;
-  for (var i = 0; i < label.length; i++) {
-    w += label.charCodeAt(i) > 127 ? 2 : 1;
-  }
-  var pad = "";
-  var diff = target - w;
-  while (diff >= 2) { pad += "　"; diff -= 2; }
-  if (diff === 1) pad += " ";
-  return label + pad;
-}
-var LABEL_WIDTH = 12; // “IPPure系数：”的宽度，其余标签向它看齐
 
 // 运营商名去冗余后缀：Cogent Communications, LLC → Cogent Communications
 function cleanOrg(name) {
@@ -167,28 +147,31 @@ function cleanOrg(name) {
 function renderIPPure(nodeName, p, v4ip, a) {
   var details = [];
   // IP 行：v6 出口时标明 IPv6，并附带 ip-api.com 查到的同节点 IPv4（ip-api 无 AAAA，只走 v4；网站首页也是 v4/v6 双列）
-  if (p.ip) details.push(padLabel(p.ip.indexOf(":") !== -1 ? "IPv6：" : "IP：", LABEL_WIDTH) + maskIP(p.ip));
-  if (v4ip) details.push(padLabel("IPv4：", LABEL_WIDTH) + maskIP(v4ip));
+  if (p.ip) details.push((p.ip.indexOf(":") !== -1 ? "IPv6：" : "IP：") + maskIP(p.ip));
+  if (v4ip) details.push("IPv4：" + maskIP(v4ip));
   // ASN：ASxxxx – 运营商（同网站格式，运营商去冗余后缀）
+  var asnOrg = cleanOrg(p.asOrganization);
   var asnLine = "";
   if (p.asn) asnLine = "AS" + p.asn;
-  if (p.asOrganization) asnLine = asnLine ? asnLine + " – " + cleanOrg(p.asOrganization) : cleanOrg(p.asOrganization);
-  if (asnLine) details.push(padLabel("ASN：", LABEL_WIDTH) + asnLine);
-  if (p.country) details.push(padLabel("位置：", LABEL_WIDTH) + buildLocation(flagEmoji(p.countryCode), p.country, p.region, p.city));
+  if (asnOrg) asnLine = asnLine ? asnLine + " – " + asnOrg : asnOrg;
+  if (asnLine) details.push("ASN：" + asnLine);
+  if (p.country) details.push("位置：" + buildLocation(p.country, p.region, p.city));
   // 宽带：运营商名（同 node_purity.js 的“宽带”，取 ip-api 的 isp；无结果时回落到 IPPure 的 asOrganization）
-  var ispName = (a && a.isp) ? cleanOrg(a.isp) : cleanOrg(p.asOrganization);
-  if (ispName) details.push(padLabel("宽带：", LABEL_WIDTH) + ispName);
-  // 机构：同 node_purity.js 的“机构”，取 ip-api 的 org；无结果时不显示，避免与 ASN 行的运营商重复
-  if (a && a.org) details.push(padLabel("机构：", LABEL_WIDTH) + cleanOrg(a.org));
+  // 与 ASN 行运营商重复时不显示，避免同一名字出现多次
+  var ispName = (a && a.isp) ? cleanOrg(a.isp) : asnOrg;
+  if (ispName && ispName !== asnOrg) details.push("宽带：" + ispName);
+  // 机构：同 node_purity.js 的“机构”，取 ip-api 的 org；与宽带/ASN 运营商重复时不显示
+  var orgName = (a && a.org) ? cleanOrg(a.org) : "";
+  if (orgName && orgName !== ispName && orgName !== asnOrg) details.push("机构：" + orgName);
   // IP来源：原生 / 广播（网站叫法，由 isBroadcast 决定）
-  if (typeof p.isBroadcast === "boolean") details.push(padLabel("IP来源：", LABEL_WIDTH) + (p.isBroadcast ? "📡 广播IP" : "🌱 原生IP"));
+  if (typeof p.isBroadcast === "boolean") details.push("IP来源：" + (p.isBroadcast ? "📡 广播IP" : "🌱 原生IP"));
   // IP属性：移动 / 住宅 / 机房（网站叫法，单值；移动优先，同 node_purity.js）
   var attr = "";
   if (a && a.mobile) attr = "📱 移动网络";
   else if (p.isResidential) attr = "🏠 住宅IP";
   else if (p.isDataCenter) attr = "🖥️ 机房IP";
   else if (p.isBroadcast) attr = "📡 广播IP";
-  if (attr) details.push(padLabel("IP属性：", LABEL_WIDTH) + attr);
+  if (attr) details.push("IP属性：" + attr);
 
   var color = "#3D90ED";
   var coefLine = "";
@@ -198,12 +181,12 @@ function renderIPPure(nodeName, p, v4ip, a) {
   if (!isNaN(score)) {
     var m = fraudMeta(score);
     color = m.color;
-    coefLine = padLabel("IPPure系数：", LABEL_WIDTH) + score + "% " + m.emoji + " " + m.tag;
+    coefLine = "IPPure系数：" + score + "% " + m.emoji + " " + m.tag;
   } else if (p.ip && p.ip.indexOf(":") !== -1) {
     // 已实测：IPPure 的 IPv6 响应里本来就没有分数，不是查询失败
-    coefLine = padLabel("IPPure系数：", LABEL_WIDTH) + "v6 无分数（IPPure 仅给 v4 打分）";
+    coefLine = "IPPure系数：" + "v6 无分数（IPPure 仅给 v4 打分）";
   } else {
-    coefLine = padLabel("IPPure系数：", LABEL_WIDTH) + "查询失败";
+    coefLine = "IPPure系数：" + "查询失败";
   }
 
   // 图标按 IP 属性适配，颜色按系数风险适配
@@ -226,22 +209,26 @@ function renderIPPure(nodeName, p, v4ip, a) {
 function renderIPApi(nodeName, a) {
   // IPPure 失败时用 ip-api.com 兜底 IP 与位置，系数显示查询失败
   var details = [];
-  if (a.query) details.push(padLabel("IP：", LABEL_WIDTH) + maskIP(a.query));
+  if (a.query) details.push("IP：" + maskIP(a.query));
+  var fallbackAsnOrg = "";
   if (a.as) {
     var am = a.as.match(/^(AS\d+)\s+(.*)$/);
-    details.push(padLabel("ASN：", LABEL_WIDTH) + (am ? am[1] + " – " + cleanOrg(am[2]) : a.as));
+    fallbackAsnOrg = am ? cleanOrg(am[2]) : "";
+    details.push("ASN：" + (am ? am[1] + (fallbackAsnOrg ? " – " + fallbackAsnOrg : "") : a.as));
   }
-  if (a.country) details.push(padLabel("位置：", LABEL_WIDTH) + buildLocation(flagEmoji(a.countryCode), a.country, a.regionName, a.city));
-  if (a.isp) details.push(padLabel("宽带：", LABEL_WIDTH) + cleanOrg(a.isp));
-  if (a.org) details.push(padLabel("机构：", LABEL_WIDTH) + cleanOrg(a.org));
-  if (a.mobile) details.push(padLabel("IP属性：", LABEL_WIDTH) + "📱 移动网络");
-  else if (a.hosting) details.push(padLabel("IP属性：", LABEL_WIDTH) + "🖥️ 机房IP");
+  if (a.country) details.push("位置：" + buildLocation(a.country, a.regionName, a.city));
+  var fallbackIsp = a.isp ? cleanOrg(a.isp) : "";
+  if (fallbackIsp && fallbackIsp !== fallbackAsnOrg) details.push("宽带：" + fallbackIsp);
+  var fallbackOrg = a.org ? cleanOrg(a.org) : "";
+  if (fallbackOrg && fallbackOrg !== fallbackIsp && fallbackOrg !== fallbackAsnOrg) details.push("机构：" + fallbackOrg);
+  if (a.mobile) details.push("IP属性：" + "📱 移动网络");
+  else if (a.hosting) details.push("IP属性：" + "🖥️ 机房IP");
   var lines = [];
   if (nodeName) lines.push(nodeName);
   if (nodeName && details.length) lines.push("");
   lines = lines.concat(details);
   lines.push("");
-  lines.push(padLabel("IPPure系数：", LABEL_WIDTH) + "查询失败");
+  lines.push("IPPure系数：" + "查询失败");
   finish(lines, "#3D90ED", "globe.asia.australia");
 }
 
