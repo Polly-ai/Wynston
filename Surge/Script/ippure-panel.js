@@ -88,6 +88,20 @@ function resolveNode(targetGroup) {
     .catch(function () { return { name: targetGroup, policy: "" }; });
 }
 
+// IP 打码：只显示前两段，后面用 * 代替
+// IPv4：38.102.232.152 → 38.102.*.*
+// IPv6：2406:840:... → 2406:840:*:*:*:*:*:*
+function maskIP(ip) {
+  if (typeof ip !== "string" || !ip) return ip;
+  if (ip.indexOf(":") !== -1) {
+    var g = ip.split(":");
+    return g.slice(0, 2).join(":") + ":*:*:*:*:*:*";
+  }
+  var o = ip.split(".");
+  if (o.length === 4) return o[0] + "." + o[1] + ".*.*";
+  return ip;
+}
+
 function flagEmoji(code) {
   if (typeof code !== "string" || code.length !== 2) return "";
   var cc = code.toUpperCase() === "TW" ? "CN" : code.toUpperCase();
@@ -131,7 +145,7 @@ function buildLocation(flag, country, region, city) {
 function renderIPPure(nodeName, p) {
   var lines = [];
   if (nodeName) lines.push("节点：" + nodeName);
-  if (p.ip) lines.push("IP：" + p.ip);
+  if (p.ip) lines.push("IP：" + maskIP(p.ip));
   if (p.country) lines.push("位置：" + buildLocation(flagEmoji(p.countryCode), p.country, p.region, p.city));
   if (p.asOrganization) lines.push("运营商：" + p.asOrganization);
   if (p.asn) lines.push("ASN：AS" + p.asn);
@@ -159,7 +173,7 @@ function renderIPApi(nodeName, a) {
   // IPPure 失败时用 ip-api.com 兜底 IP 与位置，欺诈分数显示查询失败
   var lines = [];
   if (nodeName) lines.push("节点：" + nodeName);
-  if (a.query) lines.push("IP：" + a.query);
+  if (a.query) lines.push("IP：" + maskIP(a.query));
   if (a.country) lines.push("位置：" + buildLocation(flagEmoji(a.countryCode), a.country, a.regionName, a.city));
   if (a.isp) lines.push("运营商：" + a.isp);
   if (a.as) lines.push("ASN：" + a.as);
