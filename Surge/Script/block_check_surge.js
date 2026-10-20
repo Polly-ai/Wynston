@@ -8,7 +8,7 @@
  *
  * 配置 (Surge):
  *   [Panel]
- *   节点阻断检测 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=network, icon-color=#467fcf
+ *   节点阻断检测 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=antenna.radiowaves.left.and.right, icon-color=#467fcf
  *
  *   [Script]
  *   block_check = type=generic, script-path=block_check_surge.js, argument=Proxy
@@ -19,8 +19,9 @@
  *   远端探测默认自动进行：Surge 不开放节点服务器地址（圈 X 版用
  *           get_server_description 读取，Surge 无此 API），故脚本缓存每次成功测得的
  *           出口 IP 作为探测目标——节点正常时用本次出口 IP，节点异常时用上次缓存，
- *           以 Ping 方式做 check-host / Globalping 探测。如需精确到端口的 TCP 探测，
- *           可手动指定 argument=Proxy&target=example.com:443（手动 target 优先）。
+ *           先 Ping 探测，全部不可达时回退测 443 端口 TCP（应对服务器禁 Ping）。
+ *           如需精确到端口的 TCP 探测，可手动指定
+ *           argument=Proxy&target=example.com:443（手动 target 优先）。
  *
  * 使用：在策略页的面板上点刷新按钮执行（不要在脚本列表里直接运行，generic 脚本
  *       手动运行时 $done 结果不显示）。全程约 5~20 秒，25 秒未完成会强制出结果。
@@ -115,6 +116,54 @@ function writeCachedExit(policy, ip) {
   } catch (e) {}
 }
 
+// check-host 一次完整探测：提交 → 等待 → 取结果（无任何节点回报时多等一轮再取）
+function submitCheckHost(type, target, probeHost, probePort) {
+  var url = CHECK_HOST + "/check-" + type + "?host=" + encodeURIComponent(target) + "&max_nodes=10";
+  return http({ url: url, headers: { "Accept": "application/json" } })
+    .then(function (body) {
+      var d = JSON.parse(body);
+      if (!d.ok || !d.request_id) return { src: "remote", ok: false, error: "提交失败", probeHost: probeHost, probePort: probePort };
+      var rid = d.request_id;
+      var nodeList = d.nodes || {};
+      var nodeNames = Object.keys(nodeList);
+      var countryMap = {};
+      nodeNames.forEach(function (n) {
+        var info = nodeList[n];
+        if (info && info.length >= 1) countryMap[n] = info[0];
+      });
+      function fetchResult() {
+        return http({ url: CHECK_HOST + "/check-result/" + rid, headers: { "Accept": "application/json" } })
+          .then(function (b) { return JSON.parse(b); });
+      }
+      return sleep(4000).then(fetchResult).then(function (res) {
+        var reported = nodeNames.some(function (n) { return res[n]; });
+        if (reported) return res;
+        return sleep(3000).then(fetchResult); // 结果还没出来，多等一轮
+      }).then(function (res) {
+        var reachable = false;
+        var items = [];
+        nodeNames.forEach(function (n) {
+          var cc = countryMap[n] || "";
+          var flag = cc ? getFlag(cc) : "🌍";
+          var nr = res[n];
+          var ms = "--.--ms";
+          if (nr && Array.isArray(nr)) {
+            for (var e = 0; e < nr.length; e++) {
+              if (nr[e] && typeof nr[e].time === "number") {
+                reachable = true;
+                ms = formatMs(nr[e].time * 1000);
+                break;
+              }
+            }
+          }
+          items.push({ flag: flag, ms: ms });
+        });
+        return { src: "remote", ok: reachable, data: items, probeHost: probeHost, probePort: probePort };
+      });
+    })
+    .catch(function () { return { src: "remote", ok: false, error: "请求失败", probeHost: probeHost, probePort: probePort }; });
+}
+
 // ---------- 全局状态（供看门狗强制出结果） ----------
 var STATE = { node: null, direct: null, remote: null, gp: null, tag: "" };
 var RENDERED = false;
@@ -152,7 +201,8 @@ function startChecks(tag, policy, host, port) {
     .catch(function () { return { src: "direct", ok: false }; });
 
   // C: check-host 远端探测。等节点测试出结果再定探测目标：
-  //    手动 target → TCP 精确探测；否则用出口 IP（本次的优先，其次上次缓存）做 Ping 探测
+  //    手动 target → TCP 精确探测；否则用出口 IP（本次的优先，其次上次缓存）做 Ping 探测，
+  //    Ping 全部不可达时再回退试一次出口 IP 的 443 端口 TCP（不少服务器禁 Ping 但 443 开着）
   var pC = pA.then(function (aRes) {
     var probeHost = host, probePort = port, probeTcp = !!(host && port);
     if (!probeHost) {
@@ -162,48 +212,15 @@ function startChecks(tag, policy, host, port) {
     if (!probeHost) {
       return { src: "remote", ok: false, error: "无出口 IP 记录，跳过远端探测" };
     }
-    var checkTarget = probeTcp ? (probeHost + ":" + probePort) : probeHost;
-    var checkUrl = CHECK_HOST + (probeTcp ? "/check-tcp?host=" : "/check-ping?host=") + encodeURIComponent(checkTarget) + "&max_nodes=10";
-    return http({ url: checkUrl, headers: { "Accept": "application/json" } })
-      .then(function (body) {
-        var d = JSON.parse(body);
-        if (!d.ok || !d.request_id) return { src: "remote", ok: false, error: "提交失败", probeHost: probeHost, probePort: probePort };
-        var rid = d.request_id;
-        var nodeList = d.nodes || {};
-        var nodeNames = Object.keys(nodeList);
-        var countryMap = {};
-        nodeNames.forEach(function (n) {
-          var info = nodeList[n];
-          if (info && info.length >= 1) countryMap[n] = info[0];
-        });
-        return sleep(3500).then(function () {
-          return http({ url: CHECK_HOST + "/check-result/" + rid, headers: { "Accept": "application/json" } })
-            .then(function (body2) {
-              var res = JSON.parse(body2);
-              var reachable = false;
-              var items = [];
-              nodeNames.forEach(function (n) {
-                var cc = countryMap[n] || "";
-                var flag = cc ? getFlag(cc) : "🌍";
-                var nr = res[n];
-                var ms = "--.--ms";
-                if (nr && Array.isArray(nr)) {
-                  for (var e = 0; e < nr.length; e++) {
-                    if (nr[e] && typeof nr[e].time === "number") {
-                      reachable = true;
-                      ms = formatMs(nr[e].time * 1000);
-                      break;
-                    }
-                  }
-                }
-                items.push({ flag: flag, ms: ms });
-              });
-              return { src: "remote", ok: reachable, data: items, probeHost: probeHost, probePort: probePort };
-            })
-            .catch(function () { return { src: "remote", ok: false, error: "查询失败", probeHost: probeHost, probePort: probePort }; });
-        });
-      })
-      .catch(function () { return { src: "remote", ok: false, error: "请求失败", probeHost: probeHost, probePort: probePort }; });
+    if (probeTcp) {
+      return submitCheckHost("tcp", probeHost + ":" + probePort, probeHost, probePort);
+    }
+    return submitCheckHost("ping", probeHost, probeHost, null).then(function (first) {
+      if (first.ok) return first;
+      return submitCheckHost("tcp", probeHost + ":443", probeHost, null)
+        .then(function (second) { return second.ok ? second : first; })
+        .catch(function () { return first; });
+    });
   });
 
   pA.then(function (r) { STATE.node = r; });
@@ -234,10 +251,10 @@ function runGlobalping(tag, host, port, node, direct, checkHost) {
   var body = {
     type: "ping",
     target: host,
+    measurementOptions: { port: port ? parseInt(port) : 443, protocol: "TCP" },
     locations: [{ country: "CN", tags: ["eyeball-network"] }],
     limit: 12
   };
-  if (port) body.measurementOptions = { port: parseInt(port), protocol: "TCP" };
 
   http({
     url: GP_API,
@@ -496,7 +513,7 @@ function render(tag, node, direct, remote, gpData, forced) {
   $done({
     title: "节点阻断检测",
     content: lines.join("\n"),
-    icon: "network",
+    icon: "antenna.radiowaves.left.and.right",
     "icon-color": "#467fcf"
   });
 }
@@ -509,7 +526,7 @@ try {
   $done({
     title: "节点阻断检测",
     content: "脚本异常：" + (e && e.message ? e.message : e),
-    icon: "network",
+    icon: "antenna.radiowaves.left.and.right",
     "icon-color": "#f44336"
   });
 }
