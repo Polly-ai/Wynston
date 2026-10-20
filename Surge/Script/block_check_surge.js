@@ -11,7 +11,7 @@
  *   节点阻断检测 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=antenna.radiowaves.left.and.right, icon-color=#467fcf
  *
  *   [Script]
- *   block_check = type=generic, script-path=block_check_surge.js, argument=Proxy
+ *   block_check = type=generic, script-path=block_check_surge.js, argument=Proxy, timeout=30
  *
  * 参数说明（两种写法等效）：
  *   group=策略组名：实时读取该组当前选中节点（默认 Proxy）
@@ -24,7 +24,7 @@
  *           argument=Proxy&target=example.com:443（手动 target 优先）。
  *
  * 使用：在策略页的面板上点刷新按钮执行（不要在脚本列表里直接运行，generic 脚本
- *       手动运行时 $done 结果不显示）。全程约 5~20 秒，25 秒未完成会强制出结果。
+ *       手动运行时 $done 结果不显示）。全程约 5~20 秒，18 秒未完成会强制出结果。
  */
 
 const IP_API = "http://ip-api.com/json?lang=zh-CN";
@@ -64,7 +64,7 @@ function http(options) {
     var opts = {
       url: options.url,
       headers: options.headers || {},
-      timeout: TIMEOUT
+      timeout: options.timeout || TIMEOUT
     };
     if (options.policy) opts.policy = options.policy;
     if (options.body !== undefined) opts.body = options.body;
@@ -116,10 +116,29 @@ function writeCachedExit(policy, ip) {
   } catch (e) {}
 }
 
-// check-host 一次完整探测：提交 → 等待 → 取结果（无任何节点回报时多等一轮再取）
+// 从 check-host 单个节点的结果里提取延迟（秒），两种格式都要兼容：
+//   TCP : [{address, time}]
+//   Ping: [[["OK", time, "ip"], ["OK", time], ...]]（嵌套数组，时间在第二位）
+function extractTime(nr) {
+  if (!nr || !Array.isArray(nr)) return null;
+  for (var i = 0; i < nr.length; i++) {
+    var it = nr[i];
+    if (it && typeof it.time === "number") return it.time;
+    if (Array.isArray(it)) {
+      for (var j = 0; j < it.length; j++) {
+        var att = it[j];
+        if (Array.isArray(att) && typeof att[1] === "number") return att[1];
+        if (att && typeof att.time === "number") return att.time;
+      }
+    }
+  }
+  return null;
+}
+
+// check-host 一次完整探测：提交 → 等待 3.3 秒 → 取结果（总时长压进 5 秒，超时未生效也能跑完）
 function submitCheckHost(type, target, probeHost, probePort) {
   var url = CHECK_HOST + "/check-" + type + "?host=" + encodeURIComponent(target) + "&max_nodes=10";
-  return http({ url: url, headers: { "Accept": "application/json" } })
+  return http({ url: url, headers: { "Accept": "application/json" }, timeout: 3 })
     .then(function (body) {
       var d = JSON.parse(body);
       if (!d.ok || !d.request_id) return { src: "remote", ok: false, error: "提交失败", probeHost: probeHost, probePort: probePort };
@@ -132,31 +151,18 @@ function submitCheckHost(type, target, probeHost, probePort) {
         if (info && info.length >= 1) countryMap[n] = info[0];
       });
       function fetchResult() {
-        return http({ url: CHECK_HOST + "/check-result/" + rid, headers: { "Accept": "application/json" } })
+        return http({ url: CHECK_HOST + "/check-result/" + rid, headers: { "Accept": "application/json" }, timeout: 2.5 })
           .then(function (b) { return JSON.parse(b); });
       }
-      return sleep(4000).then(fetchResult).then(function (res) {
-        var reported = nodeNames.some(function (n) { return res[n]; });
-        if (reported) return res;
-        return sleep(3000).then(fetchResult); // 结果还没出来，多等一轮
-      }).then(function (res) {
+      return sleep(3300).then(fetchResult).then(function (res) {
         var reachable = false;
         var items = [];
         nodeNames.forEach(function (n) {
           var cc = countryMap[n] || "";
           var flag = cc ? getFlag(cc) : "🌍";
-          var nr = res[n];
-          var ms = "--.--ms";
-          if (nr && Array.isArray(nr)) {
-            for (var e = 0; e < nr.length; e++) {
-              if (nr[e] && typeof nr[e].time === "number") {
-                reachable = true;
-                ms = formatMs(nr[e].time * 1000);
-                break;
-              }
-            }
-          }
-          items.push({ flag: flag, ms: ms });
+          var t = extractTime(res[n]);
+          if (t !== null) reachable = true;
+          items.push({ flag: flag, ms: t !== null ? formatMs(t * 1000) : "--.--ms" });
         });
         return { src: "remote", ok: reachable, data: items, probeHost: probeHost, probePort: probePort };
       });
@@ -175,17 +181,17 @@ function run() {
   STATE.tag = policy || "当前节点";
   var t = parseTarget(TARGET);
 
-  // 25 秒看门狗：无论卡在哪一步，都强制渲染当前已有结果
+  // 18 秒看门狗：无论卡在哪一步，都强制渲染当前已有结果
   setTimeout(function () {
     if (!RENDERED) render(STATE.tag, STATE.node, STATE.direct, STATE.remote, STATE.gp, true);
-  }, 25000);
+  }, 18000);
 
   startChecks(STATE.tag, policy, t.host, t.port);
 }
 
 function startChecks(tag, policy, host, port) {
   // A: 走节点访问 ip-api（policy 指定为当前选中节点；无节点时按当前出站）
-  var nodeOpts = { url: IP_API };
+  var nodeOpts = { url: IP_API, timeout: 3 };
   if (policy) nodeOpts.policy = policy;
   var pA = http(nodeOpts)
     .then(function (body) {
@@ -196,13 +202,29 @@ function startChecks(tag, policy, host, port) {
     .catch(function () { return { src: "node", ok: false }; });
 
   // B: 本机直连访问 ip-api（不带 policy 即直连）
-  var pB = http({ url: IP_API })
+  var pB = http({ url: IP_API, timeout: 3 })
     .then(function (body) { return { src: "direct", ok: true, data: JSON.parse(body) }; })
     .catch(function () { return { src: "direct", ok: false }; });
 
   // C: check-host 远端探测。等节点测试出结果再定探测目标：
   //    手动 target → TCP 精确探测；否则用出口 IP（本次的优先，其次上次缓存）做 Ping 探测，
   //    Ping 全部不可达时再回退试一次出口 IP 的 443 端口 TCP（不少服务器禁 Ping 但 443 开着）
+  // 有该节点的出口 IP 缓存时，远端探测立即与节点测试并行启动（不等 pA 返回），把总时长压进 5 秒；
+  // 若 pA 发现出口 IP 变了（切了节点），pC 再改走实时探测
+  var cachedIP = host ? null : readCachedExit(policy);
+  var earlyRemote = null;
+  if (cachedIP) {
+    earlyRemote = Promise.all([
+      submitCheckHost("ping", cachedIP, cachedIP, null),
+      submitCheckHost("tcp", cachedIP + ":443", cachedIP, null)
+    ]).then(function (rs) {
+      if (rs[0].ok) return rs[0];
+      if (rs[1].ok) return rs[1];
+      if (rs[0].data) return rs[0];
+      return rs[1].data ? rs[1] : rs[0];
+    });
+  }
+
   var pC = pA.then(function (aRes) {
     var probeHost = host, probePort = port, probeTcp = !!(host && port);
     if (!probeHost) {
@@ -212,14 +234,20 @@ function startChecks(tag, policy, host, port) {
     if (!probeHost) {
       return { src: "remote", ok: false, error: "无出口 IP 记录，跳过远端探测" };
     }
+    if (!probeTcp && earlyRemote && probeHost === cachedIP) return earlyRemote;
     if (probeTcp) {
       return submitCheckHost("tcp", probeHost + ":" + probePort, probeHost, probePort);
     }
-    return submitCheckHost("ping", probeHost, probeHost, null).then(function (first) {
-      if (first.ok) return first;
-      return submitCheckHost("tcp", probeHost + ":443", probeHost, null)
-        .then(function (second) { return second.ok ? second : first; })
-        .catch(function () { return first; });
+    // 自动模式：Ping 与 443 端口 TCP 并行探测（串行太慢），Ping 有结果用 Ping，
+    // 否则用 TCP —— 应对服务器禁 Ping
+    return Promise.all([
+      submitCheckHost("ping", probeHost, probeHost, null),
+      submitCheckHost("tcp", probeHost + ":443", probeHost, null)
+    ]).then(function (rs) {
+      if (rs[0].ok) return rs[0];
+      if (rs[1].ok) return rs[1];
+      if (rs[0].data) return rs[0];
+      return rs[1].data ? rs[1] : rs[0];
     });
   });
 
