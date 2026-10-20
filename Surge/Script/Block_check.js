@@ -8,46 +8,52 @@
  *
  * 配置 (Surge):
  *   [Panel]
- *   节点阻断检测 = title="🌐 节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=bolt.horizontal.icloud.fill, icon-color=#467fcf
+ *   节点阻断检测 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=bolt.horizontal.icloud.fill, icon-color=#467fcf
  *
  *   [Script]
- *   block_check = type=generic, script-path=block_check_surge.js, argument=group=Proxy&target=example.com:443
+ *   block_check = type=generic, script-path=block_check_surge.js, argument=Proxy
  *
- * 参数说明：
- *   group   要检测的 select 策略组名，脚本自动取该组当前选中的节点做"走节点"测试；
- *           不填则默认取第一个 select 组的当前选择。
- *   target  节点服务器地址 host:port。Surge 不向脚本开放节点的服务器地址（圈 X 版用
- *           get_server_description 读取，Surge 无此 API），只能手动填，仅用于
- *           check-host / Globalping 的远端探测；不填则跳过这两项。
+ * 参数说明（两种写法等效）：
+ *   group=策略组名：实时读取该组当前选中节点（默认 Proxy）
+ *   纯名字，如 argument=Proxy：等同于 group=Proxy
+ *   （可选）远端探测需要节点服务器地址，而 Surge 不向脚本开放该信息（圈 X 版用
+ *           get_server_description 读取，Surge 无此 API）。如需启用 check-host /
+ *           Globalping 远端探测，把参数改成 argument=Proxy&target=example.com:443；
+ *           不填 target 则跳过远端与国内探测，结论里会注明。
  *
- * 使用：打开策略页面板区，点该面板的刷新按钮执行检测（全程约 10~20 秒）。
+ * 使用：在策略页的面板上点刷新按钮执行（不要在脚本列表里直接运行，generic 脚本
+ *       手动运行时 $done 结果不显示）。全程约 5~20 秒，25 秒未完成会强制出结果。
  */
 
 const IP_API = "http://ip-api.com/json?lang=zh-CN";
 const CHECK_HOST = "https://check-host.net";
 const GP_API = "https://api.globalping.io/v1/measurements";
-const TIMEOUT = 10; // Surge $httpClient 的 timeout 单位为秒
+const TIMEOUT = 6; // Surge $httpClient 的 timeout 单位为秒
 
 // ---------- 参数解析 ----------
 function parseArgs() {
-  var args = {};
   var raw = (typeof $argument !== "undefined") ? $argument : null;
-  if (!raw) return args;
-  if (typeof raw === "object") return raw;
-  String(raw).split("&").forEach(function (pair) {
+  if (!raw) return { group: "", target: "" };
+  if (typeof raw === "object") {
+    return { group: raw.group || "", target: raw.target || "" };
+  }
+  var s = String(raw).trim();
+  if (s.indexOf("=") === -1) return { group: s, target: "" }; // argument=Proxy 这种简写
+  var args = { group: "", target: "" };
+  s.split("&").forEach(function (pair) {
     var i = pair.indexOf("=");
     if (i > 0) {
       var k = decodeURIComponent(pair.substring(0, i));
       var v = decodeURIComponent(pair.substring(i + 1));
-      args[k] = v;
+      if (k === "group" || k === "target") args[k] = v;
     }
   });
   return args;
 }
 
 const ARGS = parseArgs();
-const GROUP = ARGS.group || "";
-const TARGET = ARGS.target || "";
+const GROUP = ARGS.group;
+const TARGET = ARGS.target;
 
 // ---------- 工具 ----------
 function http(options) {
@@ -87,18 +93,25 @@ function parseTarget(target) {
   if (!target) return { host: null, port: null };
   var colon = target.lastIndexOf(":");
   if (colon === -1) return { host: null, port: null };
-  return {
-    host: target.substring(0, colon),
-    port: target.substring(colon + 1)
-  };
+  return { host: target.substring(0, colon), port: target.substring(colon + 1) };
 }
+
+// ---------- 全局状态（供看门狗强制出结果） ----------
+var STATE = { node: null, direct: null, remote: null, gp: null, tag: "" };
+var RENDERED = false;
 
 // ---------- 主流程 ----------
 function run() {
-  var policy = getSelectedPolicy(GROUP);
-  var tag = policy || "当前节点";
+  var policy = getSelectedPolicy(GROUP || "Proxy");
+  STATE.tag = policy || "当前节点";
   var t = parseTarget(TARGET);
-  startChecks(tag, policy, t.host, t.port);
+
+  // 25 秒看门狗：无论卡在哪一步，都强制渲染当前已有结果
+  setTimeout(function () {
+    if (!RENDERED) render(STATE.tag, STATE.node, STATE.direct, STATE.remote, STATE.gp, true);
+  }, 25000);
+
+  startChecks(STATE.tag, policy, t.host, t.port);
 }
 
 function startChecks(tag, policy, host, port) {
@@ -155,13 +168,18 @@ function startChecks(tag, policy, host, port) {
       })
       .catch(function () { return { src: "remote", ok: false, error: "请求失败" }; });
   } else {
-    pC = Promise.resolve({ src: "remote", ok: false, error: "未配置 target 地址" });
+    pC = Promise.resolve({ src: "remote", ok: false, error: "未配置 target，跳过远端探测" });
   }
+
+  pA.then(function (r) { STATE.node = r; });
+  pB.then(function (r) { STATE.direct = r; });
+  pC.then(function (r) { STATE.remote = r; });
 
   Promise.allSettled([pA, pB, pC]).then(function (results) {
     var node = results[0].value;
     var direct = results[1].value;
     var checkHost = results[2].value;
+    STATE.node = node; STATE.direct = direct; STATE.remote = checkHost;
 
     var nOk = node && node.ok;
     var dOk = direct && direct.ok;
@@ -171,7 +189,7 @@ function startChecks(tag, policy, host, port) {
     if (dOk && cOk && !nOk && host && port) {
       runGlobalping(tag, host, port, node, direct, checkHost);
     } else {
-      render(tag, node, direct, checkHost, null);
+      render(tag, node, direct, checkHost, null, false);
     }
   });
 }
@@ -192,16 +210,18 @@ function runGlobalping(tag, host, port, node, direct, checkHost) {
     body: JSON.stringify(body)
   }).then(function (respBody) {
     var d = JSON.parse(respBody);
-    if (!d.id) { render(tag, node, direct, checkHost, null); return; }
+    if (!d.id) { render(tag, node, direct, checkHost, null, false); return; }
 
     sleep(6000).then(function () {
       http({ url: GP_API + "/" + d.id, headers: { "Accept": "application/json" } })
         .then(function (respBody2) {
-          render(tag, node, direct, checkHost, JSON.parse(respBody2));
+          var gp = JSON.parse(respBody2);
+          STATE.gp = gp;
+          render(tag, node, direct, checkHost, gp, false);
         })
-        .catch(function () { render(tag, node, direct, checkHost, null); });
+        .catch(function () { render(tag, node, direct, checkHost, null, false); });
     });
-  }).catch(function () { render(tag, node, direct, checkHost, null); });
+  }).catch(function () { render(tag, node, direct, checkHost, null, false); });
 }
 
 // ---------- 分析 ----------
@@ -250,16 +270,19 @@ function analyzeBlockSource(gpData) {
     if (g.reachable) reachableIsps.push(keys[k]); else blockedIsps.push(keys[k]);
   }
 
-  var conclusion;
+  var conclusion, kind;
   if (reachableIsps.length === 0) {
-    conclusion = "🚫 GFW 全局阻断 — 国内三大运营商均无法访问";
+    conclusion = "GFW 全局阻断，国内三大运营商均无法访问";
+    kind = "blocked";
   } else if (blockedIsps.length > 0) {
-    conclusion = "🚫 运营商级拦截 — " + blockedIsps.join("、") + " 不可达，" + reachableIsps.join("、") + " 正常";
+    conclusion = "运营商级拦截：" + blockedIsps.join("、") + " 不可达，" + reachableIsps.join("、") + " 正常";
+    kind = "blocked";
   } else {
-    conclusion = "✅ 国内三大运营商全部可达，非 GFW 或运营商拦截，请检查客户端配置";
+    conclusion = "国内三大运营商全部可达，非 GFW 或运营商拦截，请检查客户端配置";
+    kind = "clear";
   }
 
-  return { ispGroups: ispGroups, conclusion: conclusion };
+  return { ispGroups: ispGroups, conclusion: conclusion, kind: kind };
 }
 
 function cnCity(en) {
@@ -299,6 +322,23 @@ function formatMs(ms) {
   }
 }
 
+// IP 打码：只显示前两段，其余用 * 替代（如 203.0.*.*）
+function maskIP(ip) {
+  if (!ip) return "未知";
+  ip = String(ip);
+  if (ip.indexOf(".") !== -1) {
+    var parts = ip.split(".");
+    if (parts.length === 4) return parts[0] + "." + parts[1] + ".*.*";
+    return ip;
+  }
+  if (ip.indexOf(":") !== -1) {
+    var segs = ip.split(":").filter(function (s) { return s !== ""; });
+    if (segs.length >= 2) return segs[0] + ":" + segs[1] + ":*";
+    return ip;
+  }
+  return ip;
+}
+
 function getFlag(cc) {
   if (!cc || cc.length !== 2) return "🌍";
   var cp = cc.toUpperCase().split('').map(function (c) { return 127397 + c.charCodeAt(); });
@@ -306,27 +346,39 @@ function getFlag(cc) {
 }
 
 // ---------- 渲染（Surge 面板为纯文本，无 HTML） ----------
-function render(tag, node, direct, remote, gpData) {
+function dot(ok, pending, skip) {
+  if (pending || skip) return "⚪";
+  return ok ? "🟢" : "🔴";
+}
+
+function render(tag, node, direct, remote, gpData, forced) {
+  if (RENDERED) return;
+  RENDERED = true;
+
   var nOk = node && node.ok;
   var dOk = direct && direct.ok;
   var rOk = remote && remote.ok;
+  var remoteSkipped = !!(remote && remote.error && remote.error.indexOf("未配置") !== -1);
 
   var lines = [];
 
+  if (forced) lines.push("检测超时，以下为已完成部分");
+
   // 节点代理
-  lines.push("节点代理: " + (nOk ? "✅ 正常" : "❌ 不可达"));
+  lines.push(dot(nOk, !node) + " 节点代理 · " + (node ? (nOk ? "正常" : "不可达") : "未完成"));
   if (nOk && node.data) {
     var d = node.data;
-    lines.push("IP: " + d.query);
-    lines.push("位置: " + [d.country, d.regionName, d.city].filter(Boolean).join(" - "));
-    lines.push("ISP: " + (d.isp || "未知"));
+    lines.push("IP：" + maskIP(d.query));
+    lines.push("位置：" + [d.country, d.regionName, d.city].filter(Boolean).join(" - "));
+    lines.push("ISP：" + (d.isp || "未知"));
   }
+  lines.push("");
 
   // 本机网络
-  lines.push("本机网络: " + (dOk ? "✅ 正常" : "❌ 异常"));
+  lines.push(dot(dOk, !direct) + " 本机网络 · " + (direct ? (dOk ? "正常" : "异常") : "未完成"));
 
   // 远端探测
-  lines.push("远端探测: " + (rOk ? "✅ 可达" : "❌ 不可达"));
+  lines.push(dot(rOk, !remote, remoteSkipped) + " 远端探测 · " + (!remote ? "未完成" : (remoteSkipped ? "已跳过" : (rOk ? "可达" : "不可达"))));
   if (remote && remote.data && remote.data.length > 0) {
     var items = remote.data;
     for (var i = 0; i < items.length; i += 2) {
@@ -334,7 +386,7 @@ function render(tag, node, direct, remote, gpData) {
       if (i + 1 < items.length) line += "    " + items[i + 1].flag + " " + items[i + 1].ms;
       lines.push(line);
     }
-  } else if (remote && remote.error) {
+  } else if (remote && remote.error && !remoteSkipped) {
     lines.push(remote.error);
   }
 
@@ -357,11 +409,11 @@ function render(tag, node, direct, remote, gpData) {
         }
       }
       var domesticReachable = allProbes.some(function (p) { return p.ok; });
-      lines.push("国内探测: " + (domesticReachable ? "✅ 可达" : "❌ 不可达"));
+      lines.push(dot(domesticReachable) + " 国内探测 · " + (domesticReachable ? "可达" : "不可达"));
       for (var i2 = 0; i2 < allProbes.length; i2 += 2) {
-        var l2 = (allProbes[i2].ok ? "✅" : "❌") + allProbes[i2].label + " " + allProbes[i2].ms;
+        var l2 = allProbes[i2].label + " " + (allProbes[i2].ok ? allProbes[i2].ms : "超时");
         if (i2 + 1 < allProbes.length) {
-          l2 += "    " + (allProbes[i2 + 1].ok ? "✅" : "❌") + allProbes[i2 + 1].label + " " + allProbes[i2 + 1].ms;
+          l2 += "    " + allProbes[i2 + 1].label + " " + (allProbes[i2 + 1].ok ? allProbes[i2 + 1].ms : "超时");
         }
         lines.push(l2);
       }
@@ -369,28 +421,35 @@ function render(tag, node, direct, remote, gpData) {
   }
 
   // 诊断结论
-  lines.push("📋 诊断结论");
-  if (!dOk) {
-    lines.push("⚠️ 本机网络异常");
+  lines.push("");
+  var conclusion;
+  if (forced || !node || !direct || !remote) {
+    conclusion = "数据不完整";
+  } else if (!dOk) {
+    conclusion = "⚠️ 本机网络异常";
   } else if (nOk && rOk) {
-    lines.push("✅ 节点正常");
+    conclusion = "✅ 节点正常";
   } else if (!nOk && rOk && dOk) {
     if (gpData && gpData.results) {
       var a2 = analyzeBlockSource(gpData);
-      lines.push(a2 && a2.conclusion ? a2.conclusion : "🚫 疑似被运营商/GFW 阻断");
+      if (a2 && a2.conclusion) {
+        conclusion = (a2.kind === "clear" ? "✅ " : "🚫 ") + a2.conclusion;
+      } else {
+        conclusion = "🚫 疑似被运营商/GFW 阻断";
+      }
     } else {
-      lines.push("🚫 疑似被运营商/GFW 阻断");
+      conclusion = "🚫 疑似被运营商/GFW 阻断";
     }
   } else if (!nOk && !rOk && dOk) {
-    lines.push("💤 节点离线");
+    conclusion = remoteSkipped ? "节点不可达，远端探测已跳过，无法判定原因" : "💤 节点离线";
   } else {
-    lines.push("❓ 数据不完整");
+    conclusion = "数据不完整";
   }
-
-  lines.push("节点: " + (tag || "当前节点"));
+  lines.push("结论：" + conclusion);
+  lines.push("节点：" + (tag || "当前节点"));
 
   $done({
-    title: "🌐 节点阻断检测",
+    title: "节点阻断检测",
     content: lines.join("\n"),
     icon: "bolt.horizontal.icloud.fill",
     "icon-color": "#467fcf"
@@ -401,8 +460,8 @@ try {
   run();
 } catch (e) {
   $done({
-    title: "🌐 节点阻断检测",
-    content: "🛑 脚本异常: " + (e && e.message ? e.message : e),
+    title: "节点阻断检测",
+    content: "脚本异常：" + (e && e.message ? e.message : e),
     icon: "bolt.horizontal.icloud.fill",
     "icon-color": "#f44336"
   });
