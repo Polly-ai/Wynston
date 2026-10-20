@@ -103,6 +103,7 @@ var RENDERED = false;
 // ---------- 主流程 ----------
 function run() {
   var policy = getSelectedPolicy(GROUP || "Proxy");
+  console.log("[block_check] group=" + (GROUP || "Proxy") + ", 当前节点=" + policy);
   STATE.tag = policy || "当前节点";
   var t = parseTarget(TARGET);
 
@@ -176,6 +177,7 @@ function startChecks(tag, policy, host, port) {
   pC.then(function (r) { STATE.remote = r; });
 
   Promise.allSettled([pA, pB, pC]).then(function (results) {
+    console.log("[block_check] 三路检测完成: " + results.map(function (r) { return r.status + "/" + (r.value ? (r.value.src + ":" + r.value.ok) : "?"); }).join(", "));
     var node = results[0].value;
     var direct = results[1].value;
     var checkHost = results[2].value;
@@ -377,8 +379,12 @@ function render(tag, node, direct, remote, gpData, forced) {
   // 本机网络
   lines.push(dot(dOk, !direct) + " 本机网络 · " + (direct ? (dOk ? "正常" : "异常") : "未完成"));
 
-  // 远端探测
-  lines.push(dot(rOk, !remote, remoteSkipped) + " 远端探测 · " + (!remote ? "未完成" : (remoteSkipped ? "已跳过" : (rOk ? "可达" : "不可达"))));
+  // 远端探测（按原版样式：标题行 + 国旗延迟两列）
+  var remoteStatus;
+  if (!remote) remoteStatus = "未完成";
+  else if (remoteSkipped) remoteStatus = "已跳过";
+  else remoteStatus = rOk ? "✅ 可达" : "❌ 不可达";
+  lines.push("远端探测：" + remoteStatus);
   if (remote && remote.data && remote.data.length > 0) {
     var items = remote.data;
     for (var i = 0; i < items.length; i += 2) {
@@ -429,6 +435,10 @@ function render(tag, node, direct, remote, gpData, forced) {
     conclusion = "⚠️ 本机网络异常";
   } else if (nOk && rOk) {
     conclusion = "✅ 节点正常";
+  } else if (nOk && remoteSkipped) {
+    conclusion = "✅ 节点正常（远端探测已跳过）";
+  } else if (nOk && !rOk) {
+    conclusion = "✅ 节点正常（远端探测不可达）";
   } else if (!nOk && rOk && dOk) {
     if (gpData && gpData.results) {
       var a2 = analyzeBlockSource(gpData);
@@ -448,6 +458,7 @@ function render(tag, node, direct, remote, gpData, forced) {
   lines.push("结论：" + conclusion);
   lines.push("节点：" + (tag || "当前节点"));
 
+  console.log("[block_check] 渲染完成, forced=" + !!forced);
   $done({
     title: "节点阻断检测",
     content: lines.join("\n"),
@@ -456,9 +467,11 @@ function render(tag, node, direct, remote, gpData, forced) {
   });
 }
 
+console.log("[block_check] 脚本启动, argument=" + JSON.stringify(typeof $argument !== "undefined" ? $argument : null));
 try {
   run();
 } catch (e) {
+  console.log("[block_check] 同步异常: " + (e && e.message ? e.message : e));
   $done({
     title: "节点阻断检测",
     content: "脚本异常：" + (e && e.message ? e.message : e),
