@@ -8,7 +8,7 @@
  *
  * 配置 (Surge):
  *   [Panel]
- *   节点阻断检测 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=antenna.radiowaves.left.and.right, icon-color=#467fcf
+ *   节点阻断检测 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=shield.checkered, icon-color=#467fcf
  *
  *   [Script]
  *   block_check = type=generic, script-path=block_check_surge.js, argument=Proxy, timeout=30
@@ -541,7 +541,7 @@ function render(tag, node, direct, remote, gpData, forced) {
   $done({
     title: "节点阻断检测",
     content: lines.join("\n"),
-    icon: "antenna.radiowaves.left.and.right",
+    icon: "shield.checkered",
     "icon-color": "#467fcf"
   });
 }
@@ -554,7 +554,7 @@ try {
   $done({
     title: "节点阻断检测",
     content: "脚本异常：" + (e && e.message ? e.message : e),
-    icon: "antenna.radiowaves.left.and.right",
+    icon: "shield.checkered",
     "icon-color": "#f44336"
   });
 }
