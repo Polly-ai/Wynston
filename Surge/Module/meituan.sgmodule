@@ -52,4 +52,4 @@ meituan_7 = type=http-response, pattern=^https?:\/\/mop\.meituan\.com\/mop\/entr
 meituan_8 = type=http-response, pattern=^https?:\/\/mop\.meituan\.com\/api\/entryModule\/startupPicture, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/MT.js
 
 [MITM]
-hostname = %APPEND%apimobile.meituan.com, feedguess.meituan.com, mop.meituan.com, mt-personalcenter.meituan.com, assistify.meituan.com
+hostname = %APPEND% apimobile.meituan.com, feedguess.meituan.com, mop.meituan.com, mt-personalcenter.meituan.com, assistify.meituan.com
