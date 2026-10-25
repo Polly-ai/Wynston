@@ -1,7 +1,7 @@
-#!name = 美团App
+#!name = 美团App @Polly-ai
 #!desc = 美团 App 精简：拦截 shark/httpdns 相关域名与 IP；脚本处理首页 Tab、Feed、我的页、搜索热词、购物车入口与开屏图
 #!author = TG@ZenMoFiShi
-# 原作者标注更新：2026.10.25（转换自QX格式）
+# 原作者标注更新：2026.10.25（转换自 QX/Loon 格式，未在真机验证）
 
 [Rule]
 DOMAIN,shark-mt.meituan.com,REJECT
