@@ -132,13 +132,13 @@ def convert(text):
 
     beijing = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
     out = []
-    out.append(f"# 上游来源：{UPSTREAM_URL}")
-    out.append(f"# 更新时间：{beijing}（北京时间）")
     out.append(f"#!name = {HEADER_NAME}")
     out.append(f"#!desc = {HEADER_DESC}")
     out.append(f"#!category = {HEADER_CATEGORY}")
     out.append(f"#!author = {HEADER_AUTHOR}")
     out.append(HEADER_NOTE)
+    out.append(f"# 上游来源：{UPSTREAM_URL}")
+    out.append(f"# 更新时间：{beijing}（北京时间）")
     out.append("")
     out.append("[Rule]")
     out.extend(rules)
