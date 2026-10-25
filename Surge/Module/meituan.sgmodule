@@ -1,6 +1,6 @@
 #!name = 美团app净化
-#!desc = 美团 App 精简：拦截 shark/httpdns 相关域名与 IP；脚本处理首页 Tab、Feed、我的页、搜索热词、购物车入口与开屏图
-#!category=Polly-ai
+#!desc = 美团 App 精简：拦截 shark/httpdns 相关域名与 IP；脚本处理首页 Tab、Feed、我的页、搜索热词、购物车入口与开屏图（每日随上游自动更新）
+#!category = Polly-ai
 #!author = TG@ZenMoFiShi
 # 原作者标注更新：2026.10.25（转换自QX格式）
 
