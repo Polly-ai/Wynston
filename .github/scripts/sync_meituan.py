@@ -11,7 +11,7 @@
   - ip-cidr, X, reject          -> IP-CIDR,X,REJECT,no-resolve
   - ip6-cidr, X, reject         -> IP-CIDR6,X,REJECT,no-resolve
   - ^... url script-response-body <js> -> [Script] 唯一脚本名，type=http-response
-  - hostname = a, b, c          -> [MITM] hostname = %APPEND%a, b, c
+  - hostname = a, b, c          -> [MITM] hostname = %APPEND% a, b, c
 
 固定不变的头部（同步时不被上游覆盖）：
   - #!name、#!desc、#!category、#!author
@@ -32,10 +32,10 @@ DEFAULT_OUTPUT = "Surge/Module/meituan.sgmodule"
 
 # 固定头部：同步时始终以这里为准，不跟随上游变化。
 HEADER_NAME = "美团app净化"
-HEADER_DESC = "美团 App 精简：拦截 shark/httpdns 相关域名与 IP；脚本处理首页 Tab、Feed、我的页、搜索热词、购物车入口与开屏图"
+HEADER_DESC = "美团 App 精简：拦截 shark/httpdns 相关域名与 IP；脚本处理首页 Tab、Feed、我的页、搜索热词、购物车入口与开屏图（每日随上游自动更新）"
 HEADER_CATEGORY = "Polly-ai"
 HEADER_AUTHOR = "TG@ZenMoFiShi"
-HEADER_NOTE = "# 原作者标注更新：2026.10.25（转换自 QX/Loon 格式，未在真机验证）"
+HEADER_NOTE = "# 原作者标注更新：2026.10.25（转换自QX格式）"
 
 RULE_PATTERNS = [
     (re.compile(r"^host,\s*(.+?),\s*reject$"), "DOMAIN"),
@@ -118,7 +118,7 @@ def convert(text):
     out.append(f"# 更新时间：{beijing}（北京时间）")
     out.append(f"#!name = {HEADER_NAME}")
     out.append(f"#!desc = {HEADER_DESC}")
-    out.append(f"#!category={HEADER_CATEGORY}")
+    out.append(f"#!category = {HEADER_CATEGORY}")
     out.append(f"#!author = {HEADER_AUTHOR}")
     out.append(HEADER_NOTE)
     out.append("")
@@ -129,7 +129,7 @@ def convert(text):
     out.extend(scripts)
     out.append("")
     out.append("[MITM]")
-    out.append(f"hostname = %APPEND%{mitm_hosts}")
+    out.append(f"hostname = %APPEND% {mitm_hosts}")
     return "\n".join(out) + "\n"
 
 
