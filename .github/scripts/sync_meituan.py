@@ -48,6 +48,7 @@ RULE_PATTERNS = [
 # 脚本规则可能被换行拆开（上一行以 script-response-body 结尾、URL 在下一行），
 # 因此用 \s+ 横跨空白（含换行）匹配，而不是按行解析。
 SCRIPT_RE = re.compile(r"(\^\S+)\s+url\s+script-response-body\s+(https?://\S+)")
+URL_REJECT_RE = re.compile(r"^(\^\S+)\s+url\s+reject\s*$")
 HOSTNAME_RE = re.compile(r"^hostname\s*=\s*(.+)$", re.MULTILINE)
 
 
@@ -71,10 +72,27 @@ def fetch_text(from_file):
 
 
 def convert(text):
+    # Join a wrapped hostname continuation line: upstream wraps a long
+    # hostname list, leaving a bare domain on the next line. Without this
+    # the bare line hits the fail() branch and the whole sync aborts.
+    _lines = text.splitlines()
+    _joined = []
+    for _ln in _lines:
+        if (_joined and _joined[-1].strip().startswith("hostname") and _joined[-1].strip().endswith(",")
+                and re.match(r"^[\w\.\-]+$", _ln.strip())):
+            _joined[-1] = _joined[-1].rstrip() + " " + _ln.strip()
+        else:
+            _joined.append(_ln)
+    text = "\n".join(_joined)
     rules = []
+    url_rewrites = []
     for raw in text.splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
+            continue
+        _ur = URL_REJECT_RE.match(line)
+        if _ur:
+            url_rewrites.append(f"{_ur.group(1)} _ reject")
             continue
         if line.startswith("^") or re.match(r"^https?://\S+$", line):
             continue  # 脚本规则由 SCRIPT_RE 统一处理（含换行拆开的情况）
@@ -128,6 +146,10 @@ def convert(text):
     out.append("[Script]")
     out.extend(scripts)
     out.append("")
+    if url_rewrites:
+        out.append("[URL Rewrite]")
+        out.extend(url_rewrites)
+        out.append("")
     out.append("[MITM]")
     out.append(f"hostname = %APPEND% {mitm_hosts}")
     return "\n".join(out) + "\n"
