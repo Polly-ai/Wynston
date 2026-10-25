@@ -1,0 +1,39 @@
+name: Sync meituan module from upstream
+
+# 每天北京时间 06:00（UTC 22:00）从 ZenmoFeiShi 的 Qx MT.snippet
+# 重新转换一次 Surge 模块；上游没变时不产生提交。
+# 也可以在仓库 Actions 页面手动点 Run workflow 立即跑一次。
+on:
+  schedule:
+    - cron: "0 22 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Convert upstream snippet to Surge module
+        run: python3 .github/scripts/sync_meituan.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Surge/Module/meituan.sgmodule
+          if ! git diff --cached --quiet; then
+            git commit -m "Sync meituan.sgmodule from upstream"
+            git push
+          else
+            echo "No changes to commit"
+          fi
