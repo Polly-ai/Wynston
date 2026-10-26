@@ -1,3 +1,4 @@
+[Rule]
 # > muse.ai
 DOMAIN-SUFFIX,muse.ai
 DOMAIN,production.museai.com
@@ -8,7 +9,7 @@ DOMAIN-SUFFIX,meta.com
 DOMAIN-SUFFIX,cdninstagram.com
 DOMAIN-SUFFIX,fbcdn.net
 DOMAIN-SUFFIX,facebook.com
-DOMAIN-SUFFIX,muse.ai
+DOMAIN-SUFFIX,muse.ai eat(t
 DOMAIN-SUFFIX,meta.ai
 DOMAIN-SUFFIX,metaaivm.com
 DOMAIN-SUFFIX,museai.com
