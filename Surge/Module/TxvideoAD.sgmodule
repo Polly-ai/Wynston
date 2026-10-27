@@ -1,0 +1,20 @@
+#!name = 腾讯视频净化
+#!desc = 去除开屏广告、视频播放前广告、底部的多余 tap 栏、我的页面美化、我的界面顶部广告
+#!category = Polly-ai
+#!author = TG@ZenMoFiShi
+
+# 转换自 QX 格式，上游：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/TxvideoAD.snippet
+
+[Rule]
+DOMAIN,iacc.stgw.qq.com,REJECT
+DOMAIN,tacc.video.qq.com,REJECT
+
+[Script]
+txvideo_1 = type=http-request, pattern=^https?:\/\/i\.video\.qq\.com\/(?:\?.*)?$, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Txvideoad.js
+txvideo_2 = type=http-response, pattern=^https?:\/\/i\.video\.qq\.com\/(?:\?.*)?$, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Txvideoad.js
+txvideo_3 = type=http-response, pattern=^https?:\/\/iacc\.qq\.com\/(?:\?.*)?$, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Txvideoad.js
+txvideo_4 = type=http-response, pattern=^https?:\/\/config\.ab\.qq\.com\/tab\/GetTabRemoteConfig(?:\?.*)?$, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Txvideoad.js
+txvideo_5 = type=http-response, pattern=^https:\/\/rdelivery\.qq\.com\/v1\/sdkconfig\/get(?:\?.*)?$, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Txvideoad.js
+
+[MITM]
+hostname = %APPEND% i.video.qq.com, iacc.qq.com, config.ab.qq.com, rdelivery.qq.com
