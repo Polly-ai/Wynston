@@ -1,0 +1,40 @@
+name: Sync bilibili-enhance module from upstream
+
+# 每天北京时间 07:00（UTC 23:00）从 kokoryh/Sparkle 的 bilibili.sgmodule
+# 重新镜像一次 Surge 模块（仅固定描述与分类两行，其余以上游为准）；
+# 上游没变时不产生提交。
+# 也可以在仓库 Actions 页面手动点 Run workflow 立即跑一次。
+on:
+  schedule:
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Mirror upstream module to Surge module
+        run: python3 .github/scripts/sync_bilibili.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Surge/Module/bilibili-enhance.sgmodule
+          if ! git diff --cached --quiet; then
+            git commit -m "Sync bilibili-enhance.sgmodule from upstream"
+            git push
+          else
+            echo "No changes to commit"
+          fi
