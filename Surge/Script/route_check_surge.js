@@ -1,27 +1,39 @@
-// 节点去程路径（Surge 面板脚本 v2）
+// 节点去程路径（Surge 面板脚本 v3）
 //
-// 显示目标：去程怎么走、有没有绕路，不是延迟。
-// 面板卡片装不下 16 行完整跳数表，所以这里显示压缩版：
-// 国家/网络路径序列 + 绕路结论。完整跳数见原始追踪，不在面板里展开。
+// 显示目标：去程怎么走、有没有绕路，落地点在哪，不是延迟。
+// 面板卡片装不下 16 行完整跳数表，所以这里显示压缩版，但比 v2 更细：
+// 路径按（国家 + ASN）分段，落地单独一行，结论只在追踪到终点时才下。
+//
+// v2 的教训：追踪没到终点时，路径只剩中国几跳，结论却写了“直连”——
+// 那是错的。v3 先核对最后一跳是不是目标 IP，没到终点就明说未到终点，
+// 不下直连/绕路的结论。
 //
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
-// 为什么不用 itdog：itdog 是非官方接口，要先 POST 建任务再 WebSocket 收结果，
-// 还要一个站内 md5 token，在 Surge 面板里实现脆弱且容易失效；
-// Globalping 已实测跑通（国内探针追踪 SG 目标，16 秒出结果）。
-// 监测点是 Globalping 在国内在线的探针（当前只有长沙联通这一个），
-// 不是按运营商/省份自选；探针不在线时会直接提示。
-//
+// 监测点首选陕西电信（西安 4134），不在线时依次退到国内电信、国内任意探针；
+// 监测点那行永远显示实际用的探针。社区探针上下线频繁，陕西电信探针不在线
+// 时面板会用其他探针顶上并如实标注，不是偷偷换。
+var LOCATIONS_CHAIN = [
+  [{ country: 'CN', city: "Xi'an", asn: 4134 }],
+  [{ country: 'CN', asn: 4134 }],
+  [{ country: 'CN' }],
+];
+var CITY_NAMES = {
+  "Xi'an": '西安', Shanghai: '上海', Changsha: '长沙', Guangzhou: '广州',
+  Beijing: '北京', Shenzhen: '深圳', Chengdu: '成都', Wuhan: '武汉',
+  Nanjing: '南京', Hangzhou: '杭州', Zhengzhou: '郑州', Nanning: '南宁',
+};
+
 // 工作方式：
 // 1. 当前节点（选中策略组决定，拿不到时读全局出站策略）
 // 2. 经该节点查出口 IP（ip-api），这个 IP 就是追踪目标（VPS 节点出口即服务器 IP）
 // 3. Globalping 从国内探针追踪该 IP，取 hops
-// 4. 每跳 IP 用 $utils.geoip 取国家，连续相同国家合并成路径序列；
-//    终点国家之外的途经国家 = 绕路
+// 4. 每跳 IP 用 $utils.geoip 取国家、$utils.ipasn 取 ASN，连续相同（国家+ASN）
+//    合并成一段；终点国家之外的途经国家 = 绕路
 // IP 显示按惯例只留前两段。
 
 var IP_API = 'http://ip-api.com/json/?fields=status,message,country,regionName,city,isp,org,as,query';
 var GP_CREATE = 'https://api.globalping.io/v1/measurements';
-var ICON = 'network';
+var ICON = 'point.topleft.down.to.point.bottomright.curvepath';
 var ICON_COLOR = '#3D90ED';
 var POLL_INTERVAL = 5000;
 var POLL_MAX = 10;
@@ -75,6 +87,14 @@ function countryOf(ip, hostname) {
   return null;
 }
 
+function asnOf(ip) {
+  try {
+    var asn = $utils.ipasn(ip);
+    if (asn !== null && asn !== undefined && asn !== '') return String(asn);
+  } catch (e) {}
+  return null;
+}
+
 function carrierOf(network) {
   if (!network) return '';
   var n = network.toUpperCase();
@@ -100,6 +120,7 @@ function currentNode() {
   return '';
 }
 
+// 拿不到选中节点时，读全局出站策略（global 模式下用这个）
 function resolveNode(cb) {
   var node = currentNode();
   if (node) { cb(node); return; }
@@ -134,51 +155,57 @@ resolveNode(function (nodeName) {
   $httpClient.get(getOpts(IP_API, policy), function (error, response, data) {
     var target = null;
     var egressLine = '出口：查询失败';
+    var egress = { loc: '', asn: '' };
     try {
       var j = JSON.parse(data);
       if (j && j.status === 'success') {
         target = j.query;
-        var loc = [j.country, j.regionName, j.city].filter(function (x) { return !!x; }).join(' ');
-        egressLine = '出口：' + maskIP(j.query) + (loc ? ' | ' + loc : '');
+        egress.loc = [j.country, j.regionName, j.city].filter(function (x) { return !!x; }).join(' ');
+        egress.asn = (j.as || '').split(' ')[0];
+        egressLine = '出口：' + maskIP(j.query) + (egress.loc ? ' | ' + egress.loc : '');
       }
     } catch (e) {}
     if (!target) {
       finish(['节点：' + displayName, egressLine, '路径：出口查不到，无法追踪']);
       return;
     }
-    // 第二步：Globalping 建任务（这一步不走节点，直连即可）
-    $httpClient.post({
-      url: GP_CREATE,
-      body: {
-        type: 'traceroute',
-        target: target,
-        locations: [{ country: 'CN' }],
-        measurementOptions: { protocol: 'ICMP' },
-      },
-      timeout: 10,
-    }, function (error2, response2, data2) {
-      var id = null;
-      var probesCount = -1;
-      try {
-        var r = JSON.parse(data2);
-        id = r.id;
-        probesCount = r.probesCount;
-      } catch (e) {}
-      if (!id) {
-        finish(['节点：' + displayName, egressLine, '路径：追踪任务创建失败']);
-        return;
-      }
-      if (probesCount === 0) {
+    // 第二步：Globalping 建任务（这一步不走节点，直连即可）；
+    // 按 LOCATIONS_CHAIN 依次尝试，首选陕西电信
+    var ctx = { displayName: displayName, egressLine: egressLine, egress: egress, target: target };
+    (function tryCreate(i) {
+      if (i >= LOCATIONS_CHAIN.length) {
         finish(['节点：' + displayName, egressLine, '路径：国内暂无探针在线']);
         return;
       }
-      poll(id, 0, displayName, egressLine);
-    });
+      $httpClient.post({
+        url: GP_CREATE,
+        body: {
+          type: 'traceroute',
+          target: target,
+          locations: LOCATIONS_CHAIN[i],
+          measurementOptions: { protocol: 'ICMP' },
+        },
+        timeout: 10,
+      }, function (error2, response2, data2) {
+        var id = null;
+        var probesCount = -1;
+        try {
+          var r = JSON.parse(data2);
+          id = r.id;
+          probesCount = r.probesCount;
+        } catch (e) {}
+        if (id && probesCount > 0) {
+          poll(id, 0, ctx);
+        } else {
+          tryCreate(i + 1);
+        }
+      });
+    })(0);
   });
 
-  function poll(id, attempt, displayName, egressLine) {
+  function poll(id, attempt, ctx) {
     if (attempt >= POLL_MAX) {
-      finish([ '节点：' + displayName, egressLine, '路径：追踪超时（探针未返回）']);
+      finish(['节点：' + ctx.displayName, ctx.egressLine, '路径：追踪超时（探针未返回）']);
       return;
     }
     $httpClient.get({ url: GP_CREATE + '/' + id, timeout: 10 }, function (error, response, data) {
@@ -190,46 +217,77 @@ resolveNode(function (nodeName) {
         first = r.results && r.results[0];
       } catch (e) {}
       if (status === 'finished' && first && first.result) {
-        render(first, displayName, egressLine);
+        render(first, ctx);
         return;
       }
       if (status === 'failed') {
-        finish(['节点：' + displayName, egressLine, '路径：探针追踪失败']);
+        finish(['节点：' + ctx.displayName, ctx.egressLine, '路径：探针追踪失败']);
         return;
       }
-      setTimeout(function () { poll(id, attempt + 1, displayName, egressLine); }, POLL_INTERVAL);
+      setTimeout(function () { poll(id, attempt + 1, ctx); }, POLL_INTERVAL);
     });
   }
 
-  function render(first, displayName, egressLine) {
+  function render(first, ctx) {
     var probe = first.probe || {};
     var hops = (first.result && first.result.hops) || [];
-    var monitor = (probe.city || '国内') + (carrierOf(probe.network) || '');
-    var seq = [];
+    var monitor = (CITY_NAMES[probe.city] || probe.city || '国内') + (carrierOf(probe.network) || '');
+    var segs = []; // {key, label, country}
     var hopCount = 0;
+    var lastIdx = 0;
+    var lastCountry = null;
+    var reached = false;
+    var finalRTT = null;
     for (var i = 0; i < hops.length; i++) {
       var h = hops[i];
       var ip = h.resolvedAddress;
-      if (!ip || isPrivateIP(ip)) continue;
+      if (!ip) continue;
+      lastIdx = i + 1;
+      if (isPrivateIP(ip)) continue;
       hopCount++;
       var c = countryOf(ip, h.resolvedHostname);
-      if (c && (seq.length === 0 || seq[seq.length - 1] !== c)) seq.push(c);
-    }
-    var dest = seq.length > 0 ? seq[seq.length - 1] : null;
-    var transit = [];
-    for (var k = 0; k < seq.length; k++) {
-      if (seq[k] !== '中国' && seq[k] !== dest && transit.indexOf(seq[k]) === -1) transit.push(seq[k]);
+      var asn = asnOf(ip);
+      var label = c || '未知';
+      if (asn) label += 'AS' + asn;
+      var key = (c || '?') + '|' + (asn || '');
+      if (segs.length === 0 || segs[segs.length - 1].key !== key) {
+        segs.push({ key: key, label: label, country: c });
+      }
+      lastCountry = c || lastCountry;
+      if (ip === ctx.target) {
+        reached = true;
+        if (h.timings && h.timings.length > 0 && h.timings[0].rtt !== undefined) {
+          finalRTT = Math.round(h.timings[0].rtt);
+        }
+      }
     }
     var lines = [];
-    lines.push('节点：' + displayName);
-    lines.push(egressLine);
+    lines.push('节点：' + ctx.displayName);
+    lines.push(ctx.egressLine);
     lines.push('监测点：' + monitor);
-    if (seq.length === 0) {
+    if (segs.length === 0) {
       lines.push('路径：无可用跳数');
+      lines.push('落地：未到达');
+      lines.push('结论：无数据');
+      finish(lines);
+      return;
+    }
+    var pathLine = '路径：' + segs.map(function (s) { return s.label; }).join(' → ') + '（' + hopCount + ' 跳）';
+    if (!reached) pathLine += '，未到终点';
+    lines.push(pathLine);
+    if (reached) {
+      var land = '落地：' + maskIP(ctx.target) + ' | ' + (ctx.egress.loc || '') + (ctx.egress.asn ? ' ' + ctx.egress.asn : '') + (finalRTT !== null ? ' | ' + finalRTT + 'ms' : '');
+      lines.push(land);
+      var dest = segs[segs.length - 1].country;
+      var transit = [];
+      for (var k = 0; k < segs.length; k++) {
+        var cc = segs[k].country;
+        if (cc && cc !== '中国' && cc !== dest && transit.indexOf(cc) === -1) transit.push(cc);
+      }
+      lines.push(transit.length > 0 ? '结论：⚠️ 绕路（经' + transit.join('、') + '）' : '结论：直连，无绕路');
     } else {
-      lines.push('路径：' + seq.join(' → ') + '（' + hopCount + ' 跳）');
-      if (transit.length > 0) lines.push('结论：⚠️ 绕路（经' + transit.join('、') + '）');
-      else lines.push('结论：直连，无绕路');
+      lines.push('落地：未到达（最后响应第 ' + lastIdx + ' 跳 · ' + (lastCountry || '未知') + '）');
+      lines.push('结论：追踪未到终点，结论仅供参考');
     }
     finish(lines);
   }
