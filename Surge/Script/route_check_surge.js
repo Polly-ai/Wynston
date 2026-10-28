@@ -1,12 +1,17 @@
-// 节点去程路径（Surge 面板脚本 v3）
+// 路由追踪（Surge 面板脚本 v4）
 //
 // 显示目标：去程怎么走、有没有绕路，落地点在哪，不是延迟。
-// 面板卡片装不下 16 行完整跳数表，所以这里显示压缩版，但比 v2 更细：
+// 面板卡片装不下 16 行完整跳数表，所以这里显示压缩版：
 // 路径按（国家 + ASN）分段，落地单独一行，结论只在追踪到终点时才下。
 //
 // v2 的教训：追踪没到终点时，路径只剩中国几跳，结论却写了“直连”——
-// 那是错的。v3 先核对最后一跳是不是目标 IP，没到终点就明说未到终点，
+// 那是错的。v3 起先核对最后一跳是不是目标 IP，没到终点就明说未到终点，
 // 不下直连/绕路的结论。
+//
+// v4 对“未知”的处理：骨干网路由器（如电信 202.97 段）在 Surge 自带 IP 库里
+// 常常没有地理位置，geoip 返回空。处理分三档：终点那跳直接用 ip-api 的
+// 国家；同 ASN 的未知跳继承上一段的国家（同属一家骨干网）；其他未知跳
+// 显示运营商名（如 RETN AS9002），实在没名才写未知。
 //
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
 // 监测点首选陕西电信（西安 4134），不在线时依次退到国内电信、国内任意探针；
@@ -21,6 +26,13 @@ var CITY_NAMES = {
   "Xi'an": '西安', Shanghai: '上海', Changsha: '长沙', Guangzhou: '广州',
   Beijing: '北京', Shenzhen: '深圳', Chengdu: '成都', Wuhan: '武汉',
   Nanjing: '南京', Hangzhou: '杭州', Zhengzhou: '郑州', Nanning: '南宁',
+  // ip-api 的节点城市（英文 -> 中文；查不到的城市原样显示英文）
+  'Frankfurt am Main': '法兰克福', 'Los Angeles': '洛杉矶', Singapore: '新加坡',
+  Tokyo: '东京', Osaka: '大阪', 'San Jose': '圣何塞', Seattle: '西雅图',
+  Amsterdam: '阿姆斯特丹', London: '伦敦', Sydney: '悉尼', Seoul: '首尔',
+  'Hong Kong': '香港', Taipei: '台北', Mumbai: '孟买', Toronto: '多伦多',
+  Chicago: '芝加哥', Dallas: '达拉斯', Miami: '迈阿密', 'New York': '纽约',
+  'San Francisco': '旧金山', Ashburn: '阿什本', 'Salt Lake City': '盐湖城',
 };
 
 // 工作方式：
@@ -31,7 +43,7 @@ var CITY_NAMES = {
 //    合并成一段；终点国家之外的途经国家 = 绕路
 // IP 显示按惯例只留前两段。
 
-var IP_API = 'http://ip-api.com/json/?fields=status,message,country,regionName,city,isp,org,as,query';
+var IP_API = 'http://ip-api.com/json/?fields=status,message,country,countryCode,city,isp,org,as,query';
 var GP_CREATE = 'https://api.globalping.io/v1/measurements';
 var ICON = 'point.topleft.down.to.point.bottomright.curvepath';
 var ICON_COLOR = '#3D90ED';
@@ -49,6 +61,12 @@ var HOST_HINTS = {
   fra: '德国', ams: '荷兰', lhr: '英国', syd: '澳大利亚', icn: '韩国',
   hkg: '香港', ord: '美国', dfw: '美国', mia: '美国', sea: '美国',
   sjc: '美国', ash: '美国', tor: '加拿大', bom: '印度', gru: '巴西',
+};
+// 国家查不到时的运营商名（只列把握大的知名 ASN）
+var ASN_ORG = {
+  4134: '中国电信', 4837: '中国联通', 9808: '中国移动', 9929: '联通产业互联',
+  9002: 'RETN', 6939: 'HE', 174: 'Cogent', 1299: 'Telia', 3356: 'Lumen',
+  3491: 'PCCW', 2914: 'NTT', 45090: '腾讯云', 37963: '阿里云', 55990: '华为云',
 };
 
 function maskIP(ip) {
@@ -140,7 +158,7 @@ function getOpts(url, policy) {
 
 function finish(lines) {
   $done({
-    title: '节点去程',
+    title: '路由追踪',
     content: lines.join('\n'),
     icon: ICON,
     'icon-color': ICON_COLOR,
@@ -155,12 +173,14 @@ resolveNode(function (nodeName) {
   $httpClient.get(getOpts(IP_API, policy), function (error, response, data) {
     var target = null;
     var egressLine = '出口：查询失败';
-    var egress = { loc: '', asn: '' };
+    var egress = { loc: '', asn: '', countryCn: '' };
     try {
       var j = JSON.parse(data);
       if (j && j.status === 'success') {
         target = j.query;
-        egress.loc = [j.country, j.regionName, j.city].filter(function (x) { return !!x; }).join(' ');
+        egress.countryCn = COUNTRY_NAMES[j.countryCode] || j.country || '';
+        var cityCn = CITY_NAMES[j.city] || j.city || '';
+        egress.loc = [egress.countryCn, cityCn].filter(function (x) { return !!x; }).join(' ');
         egress.asn = (j.as || '').split(' ')[0];
         egressLine = '出口：' + maskIP(j.query) + (egress.loc ? ' | ' + egress.loc : '');
       }
@@ -250,16 +270,30 @@ resolveNode(function (nodeName) {
       lastIdx = i + 1;
       if (isPrivateIP(ip)) continue;
       hopCount++;
+      var isTarget = (ip === ctx.target);
       var c = countryOf(ip, h.resolvedHostname);
+      // 终点那跳：geoip 常常查不到，直接用 ip-api 的国家
+      if (isTarget && ctx.egress.countryCn) c = ctx.egress.countryCn;
       var asn = asnOf(ip);
-      var label = c || '未知';
-      if (asn) label += 'AS' + asn;
+      // 同 ASN 的未知跳：继承上一段的国家（同属一家骨干网，如电信 202.97 段）
+      var prev = segs.length > 0 ? segs[segs.length - 1] : null;
+      if (!c && asn && prev && prev.asn === asn && prev.country) c = prev.country;
+      var label;
+      if (c) {
+        label = c;
+        if (asn) label += 'AS' + asn;
+      } else if (asn && ASN_ORG[asn]) {
+        label = ASN_ORG[asn] + ' AS' + asn;
+      } else {
+        label = '未知';
+        if (asn) label += 'AS' + asn;
+      }
       var key = (c || '?') + '|' + (asn || '');
       if (segs.length === 0 || segs[segs.length - 1].key !== key) {
-        segs.push({ key: key, label: label, country: c });
+        segs.push({ key: key, label: label, country: c, asn: asn });
       }
       lastCountry = c || lastCountry;
-      if (ip === ctx.target) {
+      if (isTarget) {
         reached = true;
         if (h.timings && h.timings.length > 0 && h.timings[0].rtt !== undefined) {
           finalRTT = Math.round(h.timings[0].rtt);
@@ -270,6 +304,7 @@ resolveNode(function (nodeName) {
     lines.push('节点：' + ctx.displayName);
     lines.push(ctx.egressLine);
     lines.push('监测点：' + monitor);
+    lines.push('────────────────');
     if (segs.length === 0) {
       lines.push('路径：无可用跳数');
       lines.push('落地：未到达');
@@ -289,10 +324,10 @@ resolveNode(function (nodeName) {
         var cc = segs[k].country;
         if (cc && cc !== '中国' && cc !== dest && transit.indexOf(cc) === -1) transit.push(cc);
       }
-      lines.push(transit.length > 0 ? '结论：⚠️ 绕路（经' + transit.join('、') + '）' : '结论：直连，无绕路');
+      lines.push(transit.length > 0 ? '结论：⚠️ 绕路（经' + transit.join('、') + '）' : '结论：✅ 直连，无绕路');
     } else {
       lines.push('落地：未到达（最后响应第 ' + lastIdx + ' 跳 · ' + (lastCountry || '未知') + '）');
-      lines.push('结论：追踪未到终点，结论仅供参考');
+      lines.push('结论：⏳ 追踪未到终点，结论仅供参考');
     }
     finish(lines);
   }
