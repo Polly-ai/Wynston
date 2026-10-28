@@ -1,4 +1,4 @@
-// 路由追踪（Surge 面板脚本 v4）
+// 路由追踪（Surge 面板脚本 v4.1）
 //
 // 显示目标：去程怎么走、有没有绕路，落地点在哪，不是延迟。
 // 面板卡片装不下 16 行完整跳数表，所以这里显示压缩版：
@@ -12,6 +12,13 @@
 // 常常没有地理位置，geoip 返回空。处理分三档：终点那跳直接用 ip-api 的
 // 国家；同 ASN 的未知跳继承上一段的国家（同属一家骨干网）；其他未知跳
 // 显示运营商名（如 RETN AS9002），实在没名才写未知。
+//
+// v4.1：仍显示未知的跳（国家未知、ASN 也不在补丁表里），再调一次 ip-api
+// 按 IP 查国家与运营商（走节点，并行查，20 秒没查完就先用已有结果渲染）。
+// 路径尽量完整显示：每段标注跳号范围（如 中国电信 AS4134（3-4）），
+// 段与段之间的无响应跳也点名（如 第 4 跳无响应），不再只给总数。
+// 路径竖排显示：每段一行、箭头引导，一眼看清去程怎么走，
+// 同时保留跳号范围与无响应跳点名（完整与一目了然兼顾）。
 //
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
 // 监测点首选陕西电信（西安 4134），不在线时依次退到国内电信、国内任意探针；
@@ -67,6 +74,7 @@ var ASN_ORG = {
   4134: '中国电信', 4837: '中国联通', 9808: '中国移动', 9929: '联通产业互联',
   9002: 'RETN', 6939: 'HE', 174: 'Cogent', 1299: 'Telia', 3356: 'Lumen',
   3491: 'PCCW', 2914: 'NTT', 45090: '腾讯云', 37963: '阿里云', 55990: '华为云',
+  219498: 'TRIFONOV',
 };
 
 function maskIP(ip) {
@@ -257,78 +265,143 @@ resolveNode(function (nodeName) {
     var probe = first.probe || {};
     var hops = (first.result && first.result.hops) || [];
     var monitor = (CITY_NAMES[probe.city] || probe.city || '国内') + (carrierOf(probe.network) || '');
-    var segs = []; // {key, label, country}
-    var hopCount = 0;
+    // 第一遍：只算每跳的基础国家（geoip/hostname/终点 ip-api）和 ASN，不分段
+    var hopInfos = [];
     var lastIdx = 0;
-    var lastCountry = null;
-    var reached = false;
-    var finalRTT = null;
     for (var i = 0; i < hops.length; i++) {
       var h = hops[i];
       var ip = h.resolvedAddress;
       if (!ip) continue;
       lastIdx = i + 1;
       if (isPrivateIP(ip)) continue;
-      hopCount++;
       var isTarget = (ip === ctx.target);
       var c = countryOf(ip, h.resolvedHostname);
-      // 终点那跳：geoip 常常查不到，直接用 ip-api 的国家
       if (isTarget && ctx.egress.countryCn) c = ctx.egress.countryCn;
-      var asn = asnOf(ip);
-      // 同 ASN 的未知跳：继承上一段的国家（同属一家骨干网，如电信 202.97 段）
-      var prev = segs.length > 0 ? segs[segs.length - 1] : null;
-      if (!c && asn && prev && prev.asn === asn && prev.country) c = prev.country;
-      var label;
-      if (c) {
-        label = c;
-        if (asn) label += 'AS' + asn;
-      } else if (asn && ASN_ORG[asn]) {
-        label = ASN_ORG[asn] + ' AS' + asn;
-      } else {
-        label = '未知';
-        if (asn) label += 'AS' + asn;
+      var rtt = null;
+      if (isTarget && h.timings && h.timings.length > 0 && h.timings[0].rtt !== undefined) {
+        rtt = Math.round(h.timings[0].rtt);
       }
-      var key = (c || '?') + '|' + (asn || '');
-      if (segs.length === 0 || segs[segs.length - 1].key !== key) {
-        segs.push({ key: key, label: label, country: c, asn: asn });
-      }
-      lastCountry = c || lastCountry;
-      if (isTarget) {
-        reached = true;
-        if (h.timings && h.timings.length > 0 && h.timings[0].rtt !== undefined) {
-          finalRTT = Math.round(h.timings[0].rtt);
+      hopInfos.push({ ip: ip, idx: i + 1, country: c, asn: asnOf(ip), isTarget: isTarget, rtt: rtt, org: null });
+    }
+    // 需要二次查询的跳：国家未知、且 ASN 也不在补丁表里的（否则已经能显示）
+    var unknowns = [];
+    for (var k = 0; k < hopInfos.length; k++) {
+      var hi = hopInfos[k];
+      if (!hi.country && !(hi.asn && ASN_ORG[hi.asn])) unknowns.push(hi);
+    }
+    var rendered = false;
+    function doRender() {
+      if (rendered) return;
+      rendered = true;
+      // 第二遍：分段（含同 ASN 继承、运营商名、未知）
+      var segs = [];
+      var reached = false;
+      var finalRTT = null;
+      var lastCountry = null;
+      for (var i = 0; i < hopInfos.length; i++) {
+        var hi = hopInfos[i];
+        var c = hi.country;
+        var asn = hi.asn;
+        var prev = segs.length > 0 ? segs[segs.length - 1] : null;
+        if (!c && asn && prev && prev.asn === asn && prev.country) c = prev.country;
+        var label;
+        if (c) {
+          label = c;
+          if (asn) label += 'AS' + asn;
+        } else if (asn && ASN_ORG[asn]) {
+          label = ASN_ORG[asn] + ' AS' + asn;
+        } else if (hi.org) {
+          label = hi.org;
+          if (asn) label += ' AS' + asn;
+        } else {
+          label = '未知';
+          if (asn) label += 'AS' + asn;
+        }
+        var key = (c || '?') + '|' + (asn || '');
+        if (segs.length === 0 || segs[segs.length - 1].key !== key) {
+          segs.push({ key: key, label: label, country: c, asn: asn, firstIdx: hi.idx, lastIdx: hi.idx, count: 1 });
+        } else {
+          var cur = segs[segs.length - 1];
+          cur.lastIdx = hi.idx;
+          cur.count++;
+        }
+        lastCountry = c || lastCountry;
+        if (hi.isTarget) {
+          reached = true;
+          if (hi.rtt !== null) finalRTT = hi.rtt;
         }
       }
-    }
-    var lines = [];
-    lines.push('节点：' + ctx.displayName);
-    lines.push(ctx.egressLine);
-    lines.push('监测点：' + monitor);
-    lines.push('────────────────');
-    if (segs.length === 0) {
-      lines.push('路径：无可用跳数');
-      lines.push('落地：未到达');
-      lines.push('结论：无数据');
+      var hopCount = hopInfos.length;
+      var lines = [];
+      lines.push('节点：' + ctx.displayName);
+      lines.push(ctx.egressLine);
+      lines.push('监测点：' + monitor);
+      lines.push('────────────────');
+      if (segs.length === 0) {
+        lines.push('路径：无可用跳数');
+        lines.push('落地：未到达');
+        lines.push('结论：无数据');
+        finish(lines);
+        return;
+      }
+      // 路径竖排：每段一行，箭头引导视线，一眼看清怎么走；
+      // 每段带跳号范围，无响应跳单独一行点名
+      var gaps = [];
+      if (hopInfos.length > 0) {
+        var seen = {};
+        for (var gi = 0; gi < hopInfos.length; gi++) seen[hopInfos[gi].idx] = true;
+        var rawHops = (first.result && first.result.hops) || [];
+        for (var g = hopInfos[0].idx; g <= hopInfos[hopInfos.length - 1].idx; g++) {
+          if (!seen[g] && rawHops[g - 1] && !rawHops[g - 1].resolvedAddress) gaps.push(g);
+        }
+      }
+      for (var pi = 0; pi < segs.length; pi++) {
+        var s = segs[pi];
+        var range = (s.count === 1) ? s.firstIdx : (s.firstIdx + '-' + s.lastIdx);
+        var segText = s.label + '（' + range + '）';
+        if (pi === 0) lines.push('路径（' + hopCount + ' 跳）：' + segText);
+        else lines.push('  → ' + segText);
+      }
+      if (gaps.length > 0) lines.push('  ✕ 第 ' + gaps.join('、') + ' 跳无响应');
+      if (reached) {
+        var land = '落地：' + maskIP(ctx.target) + ' | ' + (ctx.egress.loc || '') + (ctx.egress.asn ? ' ' + ctx.egress.asn : '') + (finalRTT !== null ? ' | ' + finalRTT + 'ms' : '');
+        lines.push(land);
+        var dest = segs[segs.length - 1].country;
+        var transit = [];
+        for (var t = 0; t < segs.length; t++) {
+          var cc = segs[t].country;
+          if (cc && cc !== '中国' && cc !== dest && transit.indexOf(cc) === -1) transit.push(cc);
+        }
+        lines.push(transit.length > 0 ? '结论：⚠️ 绕路（经' + transit.join('、') + '）' : '结论：✅ 直连，无绕路');
+      } else {
+        lines.push('落地：未到达（最后响应第 ' + lastIdx + ' 跳 · ' + (lastCountry || '未知') + '）');
+        lines.push('结论：⏳ 追踪未到终点，结论仅供参考');
+      }
       finish(lines);
+    }
+    if (unknowns.length === 0) {
+      doRender();
       return;
     }
-    var pathLine = '路径：' + segs.map(function (s) { return s.label; }).join(' → ') + '（' + hopCount + ' 跳）';
-    if (!reached) pathLine += '，未到终点';
-    lines.push(pathLine);
-    if (reached) {
-      var land = '落地：' + maskIP(ctx.target) + ' | ' + (ctx.egress.loc || '') + (ctx.egress.asn ? ' ' + ctx.egress.asn : '') + (finalRTT !== null ? ' | ' + finalRTT + 'ms' : '');
-      lines.push(land);
-      var dest = segs[segs.length - 1].country;
-      var transit = [];
-      for (var k = 0; k < segs.length; k++) {
-        var cc = segs[k].country;
-        if (cc && cc !== '中国' && cc !== dest && transit.indexOf(cc) === -1) transit.push(cc);
-      }
-      lines.push(transit.length > 0 ? '结论：⚠️ 绕路（经' + transit.join('、') + '）' : '结论：✅ 直连，无绕路');
-    } else {
-      lines.push('落地：未到达（最后响应第 ' + lastIdx + ' 跳 · ' + (lastCountry || '未知') + '）');
-      lines.push('结论：⏳ 追踪未到终点，结论仅供参考');
-    }
-    finish(lines);
+    // 二次查询：对未知跳调 ip-api（按 IP 查国家与运营商），走节点，并行查，
+    // 20 秒还没查完就先用已有结果渲染，不无限等
+    var done = 0;
+    setTimeout(function () { doRender(); }, 20000);
+    unknowns.forEach(function (hi) {
+      $httpClient.get({ url: 'http://ip-api.com/json/' + hi.ip + '?fields=status,country,countryCode,as', policy: ctx.policy, timeout: 8 }, function (error, response, data) {
+        try {
+          var j = JSON.parse(data);
+          if (j && j.status === 'success') {
+            if (!hi.country) hi.country = COUNTRY_NAMES[j.countryCode] || j.country || null;
+            if (j.as) {
+              var m = j.as.match(/^AS\d+\s+(.+)$/);
+              if (m) hi.org = m[1];
+            }
+          }
+        } catch (e) {}
+        done++;
+        if (done >= unknowns.length) doRender();
+      });
+    });
   }
 });
