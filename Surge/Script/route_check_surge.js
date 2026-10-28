@@ -37,14 +37,15 @@
 // v5.3：终点那跳不再带运营商（美国/洛杉矶、德国/法兰克福，不再跟 Aiyun 这类
 // 服务商名）；中间跳的运营商保留，那是判断去程的关键信息。
 //
+// v5.4：监测点按西安电信→重庆电信→武汉电信依次找（都是电信，离陕西近）；
+// 三个都没探针时面板明示，不偷偷退到南京等其他探针。
+//
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
-// 监测点首选陕西电信（西安 4134），不在线时依次退到国内电信、国内任意探针；
-// 监测点那行永远显示实际用的探针。社区探针上下线频繁，陕西电信探针不在线
-// 时面板会用其他探针顶上并如实标注，不是偷偷换。
+// 监测点按西安电信→重庆电信→武汉电信依次找；三个都没探针时面板明示。
 var LOCATIONS_CHAIN = [
   [{ country: 'CN', city: "Xi'an", asn: 4134, limit: 2 }],
-  [{ country: 'CN', asn: 4134, limit: 2 }],
-  [{ country: 'CN', limit: 2 }],
+  [{ country: 'CN', city: 'Chongqing', asn: 4134, limit: 2 }],
+  [{ country: 'CN', city: 'Wuhan', asn: 4134, limit: 2 }],
 ];
 var CITY_NAMES = {
   "Xi'an": '西安', Shanghai: '上海', Changsha: '长沙', Guangzhou: '广州',
@@ -394,12 +395,12 @@ resolveNode(function (nodeName) {
     // 第二步：Globalping 建任务。注意：建任务和轮询都走节点（policy），不直连——
     // api.globalping.io 从国内直连不稳定（v2 实测建任务失败），走节点更稳；
     // 探针选择在服务端按 locations 定，不影响追踪起点。
-    // 按 LOCATIONS_CHAIN 依次尝试，首选陕西电信
+    // 按西安→重庆→武汉电信依次尝试
     var ctx = { displayName: displayName, egressLine: egressLine, egress: egress, target: target, policy: policy, proto: 'TCP', retried: false };
     var apiReachable = false;
     function tryCreate(i) {
       if (i >= LOCATIONS_CHAIN.length) {
-        finish(['节点：' + displayName, egressLine, apiReachable ? '路径：国内暂无探针在线' : '路径：Globalping 接口无响应']);
+        finish(['节点：' + displayName, egressLine, apiReachable ? '路径：西安/重庆/武汉电信探针均不在线' : '路径：Globalping 接口无响应']);
         return;
       }
       $httpClient.post({
