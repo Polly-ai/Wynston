@@ -8,7 +8,7 @@
  *
  * 配置 (Surge):
  *   [Panel]
- *   节点阻断检测 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=shield.checkered, icon-color=#467fcf
+ *   节点阻断检测 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check, icon=shield.checkered, icon-color=#64D2FF
  *
  *   [Script]
  *   block_check = type=generic, script-path=block_check_surge.js, argument=Proxy, timeout=30
@@ -542,7 +542,7 @@ function render(tag, node, direct, remote, gpData, forced) {
     title: "节点阻断检测",
     content: lines.join("\n"),
     icon: "shield.checkered",
-    "icon-color": "#467fcf"
+    "icon-color": "#64D2FF"
   });
 }
 

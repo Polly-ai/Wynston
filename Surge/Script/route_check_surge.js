@@ -45,6 +45,8 @@
 // 电信按 ASN 也能成功）。链尾加国内电信兜底：前面三个城市都接不了任务时
 // 退到国内电信，保证面板有路线出（监测点可能又是南京，先说明）。
 //
+// v5.6：面板图标颜色由蓝色 #3D90ED 改为紫色 #BF5AF2（脚本与模块两处同步改）。
+//
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
 // 监测点按西安电信→重庆电信→武汉电信→国内电信依次找；都没探针时面板明示。
 var LOCATIONS_CHAIN = [
@@ -177,7 +179,7 @@ var REGION_NAMES = {
 var IP_API = 'http://ip-api.com/json/?fields=status,message,country,countryCode,regionName,city,isp,org,as,query';
 var GP_CREATE = 'https://api.globalping.io/v1/measurements';
 var ICON = 'point.topleft.down.to.point.bottomright.curvepath';
-var ICON_COLOR = '#3D90ED';
+var ICON_COLOR = '#BF5AF2';
 var POLL_INTERVAL = 5000;
 var POLL_MAX = 10;
 
