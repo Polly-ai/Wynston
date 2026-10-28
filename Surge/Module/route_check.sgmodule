@@ -1,9 +1,9 @@
 #!name = 节点去程
-#!desc = 当前节点去程路径摘要与绕路判断（经国内探针追踪出口 IP，面板显示国家路径序列）
+#!desc = 当前节点去程路径详情与落地（首选陕西电信探针追踪出口 IP，面板显示国家/ASN 路径段与落地点）
 #!category = Polly-ai
 
 [Panel]
-route_check = title="节点去程",content="轻点刷新查看去程",script-name=route_check,icon=network,icon-color=#3D90ED
+route_check = title="节点去程",content="轻点刷新查看去程",script-name=route_check,icon=point.topleft.down.to.point.bottomright.curvepath,icon-color=#3D90ED
 
 [Script]
 route_check = type=generic,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/route_check_surge.js,timeout=60
