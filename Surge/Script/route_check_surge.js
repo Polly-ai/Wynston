@@ -34,6 +34,9 @@
 // 能多看到几跳），TCP 到不了终点自动回落 ICMP；每次取 2 条探针结果，挑响应
 // 跳最多的那条显示（有的探针路径全程不响应，换一条就有）。
 //
+// v5.3：终点那跳不再带运营商（美国/洛杉矶、德国/法兰克福，不再跟 Aiyun 这类
+// 服务商名）；中间跳的运营商保留，那是判断去程的关键信息。
+//
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
 // 监测点首选陕西电信（西安 4134），不在线时依次退到国内电信、国内任意探针；
 // 监测点那行永远显示实际用的探针。社区探针上下线频繁，陕西电信探针不在线
@@ -235,8 +238,9 @@ function geoLabel(j) {
   if (country === '中国') pushPart(REGION_NAMES[j.regionName] || j.regionName || '');
   // 国内城市没录入的直接省略城市名（不显示拼音）；国外城市本来就是英文名，保留
   pushPart(country === '中国' ? (CITY_NAMES[j.city] || '') : (CITY_NAMES[j.city] || j.city || ''));
+  var labelNoCarrier = parts.join('/');
   pushPart(ispShort(j.isp || j.org));
-  return { label: parts.join('/'), country: country || null };
+  return { label: parts.join('/'), labelNoCarrier: labelNoCarrier, country: country || null };
 }
 
 function maskIP(ip) {
@@ -368,7 +372,7 @@ resolveNode(function (nodeName) {
   $httpClient.get(getOpts(IP_API, policy), function (error, response, data) {
     var target = null;
     var egressLine = '出口：查询失败';
-    var egress = { loc: '', asn: '', countryCn: '', geo: '' };
+    var egress = { loc: '', asn: '', countryCn: '', geo: '', geoNoCarrier: '' };
     try {
       var j = JSON.parse(data);
       if (j && j.status === 'success') {
@@ -377,7 +381,9 @@ resolveNode(function (nodeName) {
         var cityCn = CITY_NAMES[j.city] || j.city || '';
         egress.loc = [egress.countryCn, cityCn].filter(function (x) { return !!x; }).join(' ');
         egress.asn = (j.as || '').split(' ')[0];
-        egress.geo = geoLabel(j).label;
+        var eg = geoLabel(j);
+        egress.geo = eg.label;
+        egress.geoNoCarrier = eg.labelNoCarrier;
         egressLine = '出口：' + maskIP(j.query) + (egress.loc ? ' | ' + egress.loc : '');
       }
     } catch (e) {}
@@ -501,8 +507,8 @@ resolveNode(function (nodeName) {
         geo = bb.label;
         geoCountry = '中国';
         asn = bb.asn;
-      } else if (isTarget && ctx.egress.geo) {
-        geo = ctx.egress.geo;
+      } else if (isTarget && (ctx.egress.geoNoCarrier || ctx.egress.geo)) {
+        geo = ctx.egress.geoNoCarrier || ctx.egress.geo;
         geoCountry = ctx.egress.countryCn;
       } else if (!priv) {
         c = countryOf(ip, h.resolvedHostname);
