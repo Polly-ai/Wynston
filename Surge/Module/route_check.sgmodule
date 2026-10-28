@@ -1,0 +1,9 @@
+#!name = 节点去程
+#!desc = 当前节点出口信息与到关键目标的延迟（Surge 脚本无 traceroute 接口，逐跳做不了，这是上限）
+#!category = Polly-ai
+
+[Panel]
+route_check = title="节点去程",content="轻点刷新查看去程",script-name=route_check,icon=network,icon-color=#3D90ED
+
+[Script]
+route_check = type=generic,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/route_check_surge.js,timeout=30
