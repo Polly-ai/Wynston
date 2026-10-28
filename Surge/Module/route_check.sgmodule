@@ -1,9 +1,9 @@
 #!name = 路由追踪
-#!desc = 当前节点路由追踪与落地（首选陕西电信探针，面板显示国家/ASN 路径段与落地点）
+#!desc = 当前节点路由追踪与落地（首选陕西电信探针，面板显示地理位置路径段与落地点）
 #!category = Polly-ai
 
 [Panel]
 route_check = title="路由追踪",content="轻点刷新查看路由",script-name=route_check,icon=point.topleft.down.to.point.bottomright.curvepath,icon-color=#3D90ED
 
 [Script]
-route_check = type=generic,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/route_check_surge.js,timeout=60
+route_check = type=generic,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/route_check_surge.js,timeout=120
