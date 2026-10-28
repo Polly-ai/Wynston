@@ -29,14 +29,19 @@
 // 行一致，不再乱标局域网）；运营商兜底只认单字名，多字匹配不到关键词的宁可
 // 不写（避免把 "Zhejiang Aiyun ..." 错写成浙江）；补桂林等城市中文名。
 //
+// v5.2：监测点与国内路径城市一律不显示拼音（没录入的城市直接省略城市名，
+// 监测点则显示国内电信）；追踪改 TCP 优先（443 端口，防火墙挡 ICMP 时 often
+// 能多看到几跳），TCP 到不了终点自动回落 ICMP；每次取 2 条探针结果，挑响应
+// 跳最多的那条显示（有的探针路径全程不响应，换一条就有）。
+//
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
 // 监测点首选陕西电信（西安 4134），不在线时依次退到国内电信、国内任意探针；
 // 监测点那行永远显示实际用的探针。社区探针上下线频繁，陕西电信探针不在线
 // 时面板会用其他探针顶上并如实标注，不是偷偷换。
 var LOCATIONS_CHAIN = [
-  [{ country: 'CN', city: "Xi'an", asn: 4134 }],
-  [{ country: 'CN', asn: 4134 }],
-  [{ country: 'CN' }],
+  [{ country: 'CN', city: "Xi'an", asn: 4134, limit: 2 }],
+  [{ country: 'CN', asn: 4134, limit: 2 }],
+  [{ country: 'CN', limit: 2 }],
 ];
 var CITY_NAMES = {
   "Xi'an": '西安', Shanghai: '上海', Changsha: '长沙', Guangzhou: '广州',
@@ -59,6 +64,84 @@ var CITY_NAMES = {
   Kunming: '昆明', Guiyang: '贵阳', Haikou: '海口', Sanya: '三亚',
   Xining: '西宁', Lanzhou: '兰州', Yinchuan: '银川', Urumqi: '乌鲁木齐',
   Lhasa: '拉萨', Hohhot: '呼和浩特', Nanchang: '南昌',
+  // 广东全部地级市（探针常落广东；其余省份补主要地级市）
+  Dongguan: '东莞', Foshan: '佛山', Zhuhai: '珠海', Huizhou: '惠州',
+  Jiangmen: '江门', Zhanjiang: '湛江', Maoming: '茂名', Zhaoqing: '肇庆',
+  Jieyang: '揭阳', Chaozhou: '潮州', Meizhou: '梅州', Shanwei: '汕尾',
+  Heyuan: '河源', Yangjiang: '阳江', Qingyuan: '清远', Yunfu: '云浮',
+  Shaoguan: '韶关',
+  // 华北
+  Tangshan: '唐山', Baoding: '保定', Handan: '邯郸', Qinhuangdao: '秦皇岛',
+  Cangzhou: '沧州', Langfang: '廊坊', Xingtai: '邢台', Zhangjiakou: '张家口',
+  Chengde: '承德', Hengshui: '衡水', Datong: '大同', Yuncheng: '运城',
+  Linfen: '临汾', Yangquan: '阳泉', Jinzhong: '晋中', Jincheng: '晋城',
+  Changzhi: '长治', Shuozhou: '朔州', Xinzhou: '忻州', Luliang: '吕梁',
+  Baotou: '包头', Ordos: '鄂尔多斯', Chifeng: '赤峰', Tongliao: '通辽',
+  Hulunbuir: '呼伦贝尔', Bayannur: '巴彦淖尔', Ulanqab: '乌兰察布',
+  Xilingol: '锡林郭勒', Wuhai: '乌海',
+  // 东北
+  Anshan: '鞍山', Fushun: '抚顺', Jinzhou: '锦州', Dandong: '丹东',
+  Yingkou: '营口', Fuxin: '阜新', Liaoyang: '辽阳', Panjin: '盘锦',
+  Tieling: '铁岭', Chaoyang: '朝阳', Huludao: '葫芦岛', Benxi: '本溪',
+  Jilin: '吉林', Siping: '四平', Liaoyuan: '辽源', Tonghua: '通化',
+  Baishan: '白山', Songyuan: '松原', Baicheng: '白城', Yanji: '延吉',
+  Qiqihar: '齐齐哈尔', Mudanjiang: '牡丹江', Jiamusi: '佳木斯', Daqing: '大庆',
+  Jixi: '鸡西', Hegang: '鹤岗', Shuangyashan: '双鸭山', Qitaihe: '七台河',
+  Heihe: '黑河', Suihua: '绥化',
+  // 华东
+  Changzhou: '常州', Nantong: '南通', Yancheng: '盐城', Yangzhou: '扬州',
+  Zhenjiang: '镇江', Xuzhou: '徐州', Lianyungang: '连云港', Huaian: '淮安',
+  Suqian: '宿迁', Jiaxing: '嘉兴', Huzhou: '湖州', Shaoxing: '绍兴',
+  Jinhua: '金华', Quzhou: '衢州', Zhoushan: '舟山', Lishui: '丽水',
+  Quanzhou: '泉州', Zhangzhou: '漳州', Putian: '莆田', Sanming: '三明',
+  Longyan: '龙岩', Ningde: '宁德', Nanping: '南平',
+  Zibo: '淄博', Yantai: '烟台', Weifang: '潍坊', Jining: '济宁',
+  Taian: '泰安', Weihai: '威海', Rizhao: '日照', Linyi: '临沂',
+  Dezhou: '德州', Liaocheng: '聊城', Binzhou: '滨州', Heze: '菏泽',
+  Wuhu: '芜湖', Maanshan: '马鞍山', Anqing: '安庆', Fuyang: '阜阳',
+  Bengbu: '蚌埠', Chuzhou: '滁州', Xuancheng: '宣城', Huangshan: '黄山',
+  Chizhou: '池州', Bozhou: '亳州', Liuan: '六安', Huaibei: '淮北',
+  Tongling: '铜陵', Ganzhou: '赣州', Jiujiang: '九江', Shangrao: '上饶',
+  "Ji'an": '吉安', Jingdezhen: '景德镇', Pingxiang: '萍乡', Xinyu: '新余',
+  Yingtan: '鹰潭',
+  // 华中
+  Luoyang: '洛阳', Kaifeng: '开封', Anyang: '安阳', Xinxiang: '新乡',
+  Jiaozuo: '焦作', Xuchang: '许昌', Luohe: '漯河', Sanmenxia: '三门峡',
+  Nanyang: '南阳', Shangqiu: '商丘', Xinyang: '信阳', Zhoukou: '周口',
+  Zhumadian: '驻马店', Pingdingshan: '平顶山', Hebi: '鹤壁', Puyang: '濮阳',
+  Xiangyang: '襄阳', Yichang: '宜昌', Jingzhou: '荆州', Shiyan: '十堰',
+  Huangshi: '黄石', Xiaogan: '孝感', Huanggang: '黄冈', Xianning: '咸宁',
+  Suizhou: '随州', Enshi: '恩施', Ezhou: '鄂州',
+  Zhuzhou: '株洲', Xiangtan: '湘潭', Hengyang: '衡阳', Shaoyang: '邵阳',
+  Yueyang: '岳阳', Changde: '常德', Zhangjiajie: '张家界', Yiyang: '益阳',
+  Chenzhou: '郴州', Yongzhou: '永州', Huaihua: '怀化', Loudi: '娄底',
+  // 西南、西北
+  Mianyang: '绵阳', Deyang: '德阳', Yibin: '宜宾', Nanchong: '南充',
+  Dazhou: '达州', Luzhou: '泸州', Zigong: '自贡', Panzhihua: '攀枝花',
+  Leshan: '乐山', Neijiang: '内江', Suining: '遂宁', Guangan: '广安',
+  Meishan: '眉山', Yaan: '雅安', Bazhong: '巴中', Ziyang: '资阳',
+  Zunyi: '遵义', Anshun: '安顺', Bijie: '毕节', Tongren: '铜仁',
+  Liupanshui: '六盘水', Yuxi: '玉溪', Qujing: '曲靖', Baoshan: '保山',
+  Zhaotong: '昭通', Lijiang: '丽江', Puer: '普洱', Lincang: '临沧',
+  Dali: '大理', Chuxiong: '楚雄', Honghe: '红河', Wenshan: '文山',
+  Xishuangbanna: '西双版纳', Xianyang: '咸阳', Baoji: '宝鸡', Weinan: '渭南',
+  Yanan: '延安', Hanzhong: '汉中', Ankang: '安康', Shangluo: '商洛',
+  Tongchuan: '铜川', Tianshui: '天水', Baiyin: '白银', Pingliang: '平凉',
+  Jiuquan: '酒泉', Jiayuguan: '嘉峪关', Wuwei: '武威', Zhangye: '张掖',
+  Qingyang: '庆阳', Dingxi: '定西', Longnan: '陇南', Linxia: '临夏',
+  Shizuishan: '石嘴山', Wuzhong: '吴忠', Guyuan: '固原', Zhongwei: '中卫',
+  Haidong: '海东', Haibei: '海北', Huangnan: '黄南', Guoluo: '果洛',
+  Yushu: '玉树', Haixi: '海西', Karamay: '克拉玛依', Turpan: '吐鲁番',
+  Hami: '哈密', Changji: '昌吉', Aksu: '阿克苏', Kashgar: '喀什',
+  Hotan: '和田', Ili: '伊犁', Tacheng: '塔城', Altay: '阿勒泰',
+  Shihezi: '石河子', Bortala: '博尔塔拉', Bayingolin: '巴音郭楞',
+  Kizilsu: '克孜勒苏', Shigatse: '日喀则', Qamdo: '昌都', Shannan: '山南',
+  Nyingchi: '林芝', Nagqu: '那曲', Ngari: '阿里',
+  // 广西、海南、港澳（南宁、桂林、柳州已在上文）
+  Wuzhou: '梧州', Beihai: '北海', Fangchenggang: '防城港', Qinzhou: '钦州',
+  Guigang: '贵港', Hezhou: '贺州', Baise: '百色', Hechi: '河池',
+  Laibin: '来宾', Chongzuo: '崇左', Qionghai: '琼海', Danzhou: '儋州',
+  Wanning: '万宁', Wenchang: '文昌', Dongfang: '东方', Macau: '澳门',
 };
 var REGION_NAMES = {
   Guangdong: '广东', Zhejiang: '浙江', Jiangsu: '江苏', Fujian: '福建',
@@ -150,7 +233,8 @@ function geoLabel(j) {
   }
   pushPart(country);
   if (country === '中国') pushPart(REGION_NAMES[j.regionName] || j.regionName || '');
-  pushPart(CITY_NAMES[j.city] || j.city || '');
+  // 国内城市没录入的直接省略城市名（不显示拼音）；国外城市本来就是英文名，保留
+  pushPart(country === '中国' ? (CITY_NAMES[j.city] || '') : (CITY_NAMES[j.city] || j.city || ''));
   pushPart(ispShort(j.isp || j.org));
   return { label: parts.join('/'), country: country || null };
 }
@@ -162,6 +246,31 @@ function maskIP(ip) {
   var v6 = ip.split(':');
   if (v6.length > 2) return v6[0] + ':' + v6[1] + '::xxxx';
   return ip;
+}
+
+// 多条探针结果里挑最好的：先看是否到终点，再看响应跳数
+function pickBest(results, target) {
+  var best = null;
+  var bestScore = -1;
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+    if (!r || !r.result || !r.result.hops) continue;
+    var hops = r.result.hops;
+    var n = 0;
+    var reached = false;
+    for (var j = 0; j < hops.length; j++) {
+      if (hops[j].resolvedAddress) {
+        n++;
+        if (hops[j].resolvedAddress === target) reached = true;
+      }
+    }
+    var score = n + (reached ? 1000 : 0);
+    if (score > bestScore) {
+      bestScore = score;
+      best = r;
+    }
+  }
+  return best;
 }
 
 function isPrivateIP(ip) {
@@ -280,9 +389,9 @@ resolveNode(function (nodeName) {
     // api.globalping.io 从国内直连不稳定（v2 实测建任务失败），走节点更稳；
     // 探针选择在服务端按 locations 定，不影响追踪起点。
     // 按 LOCATIONS_CHAIN 依次尝试，首选陕西电信
-    var ctx = { displayName: displayName, egressLine: egressLine, egress: egress, target: target, policy: policy };
+    var ctx = { displayName: displayName, egressLine: egressLine, egress: egress, target: target, policy: policy, proto: 'TCP', retried: false };
     var apiReachable = false;
-    (function tryCreate(i) {
+    function tryCreate(i) {
       if (i >= LOCATIONS_CHAIN.length) {
         finish(['节点：' + displayName, egressLine, apiReachable ? '路径：国内暂无探针在线' : '路径：Globalping 接口无响应']);
         return;
@@ -293,7 +402,7 @@ resolveNode(function (nodeName) {
           type: 'traceroute',
           target: target,
           locations: LOCATIONS_CHAIN[i],
-          measurementOptions: { protocol: 'ICMP' },
+          measurementOptions: ctx.proto === 'TCP' ? { protocol: 'TCP', port: 443 } : { protocol: 'ICMP' },
         },
         policy: ctx.policy,
         timeout: 20,
@@ -312,7 +421,15 @@ resolveNode(function (nodeName) {
           tryCreate(i + 1);
         }
       });
-    })(0);
+    }
+    // TCP 到不了终点时回落 ICMP 再跑一次（终点防火墙可能挡 TCP）
+    ctx.retryWithICMP = function () {
+      if (ctx.retried) return;
+      ctx.retried = true;
+      ctx.proto = 'ICMP';
+      tryCreate(0);
+    };
+    tryCreate(0);
   });
 
   function poll(id, attempt, ctx) {
@@ -328,11 +445,27 @@ resolveNode(function (nodeName) {
         status = r.status;
         first = r.results && r.results[0];
       } catch (e) {}
-      if (status === 'finished' && first && first.result) {
-        render(first, ctx);
-        return;
+      if (status === 'finished' && r.results && r.results.length > 0) {
+        var best = pickBest(r.results, ctx.target);
+        if (best && best.result) {
+          var reached = false;
+          var bhops = best.result.hops || [];
+          for (var bi = 0; bi < bhops.length; bi++) {
+            if (bhops[bi].resolvedAddress === ctx.target) { reached = true; break; }
+          }
+          if (!reached && ctx.proto === 'TCP' && !ctx.retried && ctx.retryWithICMP) {
+            ctx.retryWithICMP();
+            return;
+          }
+          render(best, ctx);
+          return;
+        }
       }
       if (status === 'failed') {
+        if (ctx.proto === 'TCP' && !ctx.retried && ctx.retryWithICMP) {
+          ctx.retryWithICMP();
+          return;
+        }
         finish(['节点：' + ctx.displayName, ctx.egressLine, '路径：探针追踪失败']);
         return;
       }
@@ -343,7 +476,7 @@ resolveNode(function (nodeName) {
   function render(first, ctx) {
     var probe = first.probe || {};
     var hops = (first.result && first.result.hops) || [];
-    var monitor = (CITY_NAMES[probe.city] || probe.city || '国内') + (carrierOf(probe.network) || '');
+    var monitor = (CITY_NAMES[probe.city] || '国内') + (carrierOf(probe.network) || '');
     // 第一遍：每跳的基础信息。地理位置优先用 ip-api（省/市/运营商），
     // 本地 geoip/asn 只作 ip-api 查不到时的后备；骨干网直接定标签；
     // 内网跳只认开头的局域网（探针自己的内网），途中出现的内网地址标为 --
