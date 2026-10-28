@@ -1,0 +1,9 @@
+#!name=节点阻断检测
+#!desc=检测策略组当前节点连通性，并判断是否被运营商/GFW 阻断（脚本文件：block_check_surge.js）
+#!author=Muse (原作 RavelloH)
+
+[Panel]
+节点阻断检测3 = title="节点阻断检测", content="点刷新开始检测", script-name=block_check3, icon=shield.checkered, icon-color=#64D2FF
+
+[Script]
+block_check3 = type=generic, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/block_check_surge2.js, argument=Proxy, timeout=60
