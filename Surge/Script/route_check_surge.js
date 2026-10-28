@@ -169,12 +169,15 @@ resolveNode(function (nodeName) {
       finish(['节点：' + displayName, egressLine, '路径：出口查不到，无法追踪']);
       return;
     }
-    // 第二步：Globalping 建任务（这一步不走节点，直连即可）；
+    // 第二步：Globalping 建任务。注意：建任务和轮询都走节点（policy），不直连——
+    // api.globalping.io 从国内直连不稳定（v2 实测建任务失败），走节点更稳；
+    // 探针选择在服务端按 locations 定，不影响追踪起点。
     // 按 LOCATIONS_CHAIN 依次尝试，首选陕西电信
-    var ctx = { displayName: displayName, egressLine: egressLine, egress: egress, target: target };
+    var ctx = { displayName: displayName, egressLine: egressLine, egress: egress, target: target, policy: policy };
+    var apiReachable = false;
     (function tryCreate(i) {
       if (i >= LOCATIONS_CHAIN.length) {
-        finish(['节点：' + displayName, egressLine, '路径：国内暂无探针在线']);
+        finish(['节点：' + displayName, egressLine, apiReachable ? '路径：国内暂无探针在线' : '路径：Globalping 接口无响应']);
         return;
       }
       $httpClient.post({
@@ -185,12 +188,14 @@ resolveNode(function (nodeName) {
           locations: LOCATIONS_CHAIN[i],
           measurementOptions: { protocol: 'ICMP' },
         },
-        timeout: 10,
+        policy: ctx.policy,
+        timeout: 20,
       }, function (error2, response2, data2) {
         var id = null;
         var probesCount = -1;
         try {
           var r = JSON.parse(data2);
+          apiReachable = true;
           id = r.id;
           probesCount = r.probesCount;
         } catch (e) {}
@@ -208,7 +213,7 @@ resolveNode(function (nodeName) {
       finish(['节点：' + ctx.displayName, ctx.egressLine, '路径：追踪超时（探针未返回）']);
       return;
     }
-    $httpClient.get({ url: GP_CREATE + '/' + id, timeout: 10 }, function (error, response, data) {
+    $httpClient.get({ url: GP_CREATE + '/' + id, policy: ctx.policy, timeout: 15 }, function (error, response, data) {
       var status = '';
       var first = null;
       try {
