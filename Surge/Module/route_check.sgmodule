@@ -3,7 +3,7 @@
 #!category = Polly-ai
 
 [Panel]
-route_check = title="路由追踪",content="轻点刷新查看路由",script-name=route_check,icon=point.topleft.down.to.point.bottomright.curvepath,icon-color=#BF5AF2
+route_check2 = title="路由追踪",content="轻点刷新查看路由",script-name=route_check2,icon=point.topleft.down.to.point.bottomright.curvepath,icon-color=#BF5AF2
 
 [Script]
-route_check = type=generic,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/route_check_surge.js,timeout=120
+route_check2 = type=generic,script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/route_check_surge.js,timeout=120
