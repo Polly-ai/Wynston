@@ -1,4 +1,4 @@
-// 路由追踪（Surge 面板脚本 v4.1）
+// 路由追踪（Surge 面板脚本 v5）
 //
 // 显示目标：去程怎么走、有没有绕路，落地点在哪，不是延迟。
 // 面板卡片装不下 16 行完整跳数表，所以这里显示压缩版：
@@ -19,6 +19,11 @@
 // 段与段之间的无响应跳也点名（如 第 4 跳无响应），不再只给总数。
 // 路径竖排显示：每段一行、箭头引导，一眼看清去程怎么走，
 // 同时保留跳号范围与无响应跳点名（完整与一目了然兼顾）。
+// 对齐：路径标题单独一行，之后每段统一用“  → ”开头，标签左边缘严格对齐。
+//
+// v5：路径主标签改成地理位置（itdog 表格风格）：局域网 / 中国/广东/中山/电信 /
+// 骨干网/电信 / 中国/电信CN2 / 美国/洛杉矶/Cogent；每跳 ip-api 查省市运营商，
+// 骨干网段按知名 IP 段直接定性，查不到才回退到国家/运营商/未知。
 //
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
 // 监测点首选陕西电信（西安 4134），不在线时依次退到国内电信、国内任意探针；
@@ -40,17 +45,38 @@ var CITY_NAMES = {
   'Hong Kong': '香港', Taipei: '台北', Mumbai: '孟买', Toronto: '多伦多',
   Chicago: '芝加哥', Dallas: '达拉斯', Miami: '迈阿密', 'New York': '纽约',
   'San Francisco': '旧金山', Ashburn: '阿什本', 'Salt Lake City': '盐湖城',
+  // 国内城市（ip-api 英文 -> 中文；查不到的城市原样显示英文）
+  Zhongshan: '中山', Shantou: '汕头', Xiamen: '厦门', Fuzhou: '福州',
+  Suzhou: '苏州', Wuxi: '无锡', Ningbo: '宁波', Wenzhou: '温州',
+  Hefei: '合肥', Jinan: '济南', Qingdao: '青岛', Shenyang: '沈阳',
+  Dalian: '大连', Changchun: '长春', Harbin: '哈尔滨', Tianjin: '天津',
+  Chongqing: '重庆', Taiyuan: '太原', Shijiazhuang: '石家庄',
+  Kunming: '昆明', Guiyang: '贵阳', Haikou: '海口', Sanya: '三亚',
+  Xining: '西宁', Lanzhou: '兰州', Yinchuan: '银川', Urumqi: '乌鲁木齐',
+  Lhasa: '拉萨', Hohhot: '呼和浩特', Nanchang: '南昌',
+};
+var REGION_NAMES = {
+  Guangdong: '广东', Zhejiang: '浙江', Jiangsu: '江苏', Fujian: '福建',
+  Shandong: '山东', Henan: '河南', Hubei: '湖北', Hunan: '湖南',
+  Sichuan: '四川', Shaanxi: '陕西', Liaoning: '辽宁', Jilin: '吉林',
+  Heilongjiang: '黑龙江', Hebei: '河北', Shanxi: '山西', Anhui: '安徽',
+  Jiangxi: '江西', Guizhou: '贵州', Yunnan: '云南', Gansu: '甘肃',
+  Qinghai: '青海', Ningxia: '宁夏', Xinjiang: '新疆', Tibet: '西藏',
+  'Inner Mongolia': '内蒙古', Guangxi: '广西', Hainan: '海南',
+  Beijing: '北京', Tianjin: '天津', Shanghai: '上海', Chongqing: '重庆',
+  'Hong Kong': '香港', Taiwan: '台湾', Macau: '澳门',
 };
 
 // 工作方式：
 // 1. 当前节点（选中策略组决定，拿不到时读全局出站策略）
 // 2. 经该节点查出口 IP（ip-api），这个 IP 就是追踪目标（VPS 节点出口即服务器 IP）
 // 3. Globalping 从国内探针追踪该 IP，取 hops
-// 4. 每跳 IP 用 $utils.geoip 取国家、$utils.ipasn 取 ASN，连续相同（国家+ASN）
-//    合并成一段；终点国家之外的途经国家 = 绕路
+// 4. 每跳先定骨干网段（202.97/59.43/219.158），再用 ip-api 查省/市/运营商；
+//    查不到回退到 geoip 国家 + ipasn ASN；连续相同标签合并成一段，带跳号范围；
+//    终点国家之外的途经国家 = 绕路
 // IP 显示按惯例只留前两段。
 
-var IP_API = 'http://ip-api.com/json/?fields=status,message,country,countryCode,city,isp,org,as,query';
+var IP_API = 'http://ip-api.com/json/?fields=status,message,country,countryCode,regionName,city,isp,org,as,query';
 var GP_CREATE = 'https://api.globalping.io/v1/measurements';
 var ICON = 'point.topleft.down.to.point.bottomright.curvepath';
 var ICON_COLOR = '#3D90ED';
@@ -76,6 +102,50 @@ var ASN_ORG = {
   3491: 'PCCW', 2914: 'NTT', 45090: '腾讯云', 37963: '阿里云', 55990: '华为云',
   219498: 'TRIFONOV',
 };
+// 知名骨干网段（itdog 同款定性）：202.97 电信骨干、59.43 电信 CN2、219.158 联通骨干
+function backboneOf(ip) {
+  if (!ip) return null;
+  if (ip.indexOf('202.97.') === 0) return { label: '骨干网/电信', asn: '4134' };
+  if (ip.indexOf('59.43.') === 0) return { label: '中国/电信CN2', asn: '4134' };
+  if (ip.indexOf('219.158.') === 0) return { label: '骨干网/联通', asn: '4837' };
+  return null;
+}
+function ispShort(isp) {
+  if (!isp) return '';
+  var s = isp.toUpperCase();
+  if (s.indexOf('TELECOM') !== -1 || s.indexOf('CHINANET') !== -1) return '电信';
+  if (s.indexOf('UNICOM') !== -1) return '联通';
+  if (s.indexOf('MOBILE') !== -1) return '移动';
+  if (s.indexOf('COGENT') !== -1) return 'Cogent';
+  if (s.indexOf('HURRICANE') !== -1) return 'HE';
+  if (s.indexOf('RETN') !== -1) return 'RETN';
+  if (s.indexOf('TELIA') !== -1) return 'Telia';
+  if (s.indexOf('LUMEN') !== -1 || s.indexOf('LEVEL 3') !== -1) return 'Lumen';
+  if (s.indexOf('PCCW') !== -1) return 'PCCW';
+  if (s.indexOf('NTT') !== -1) return 'NTT';
+  if (s.indexOf('CLOUDFLARE') !== -1) return 'Cloudflare';
+  if (s.indexOf('GOOGLE') !== -1) return 'Google';
+  if (s.indexOf('AMAZON') !== -1) return 'AWS';
+  if (s.indexOf('MICROSOFT') !== -1) return 'Azure';
+  if (s.indexOf('ALIBABA') !== -1) return '阿里云';
+  if (s.indexOf('TENCENT') !== -1) return '腾讯云';
+  if (s.indexOf('HUAWEI') !== -1) return '华为云';
+  var w = isp.split(/[\s,]+/)[0];
+  return w || '';
+}
+// ip-api 结果 -> 地理位置标签（itdog 风格，斜杠分隔；国内带省，国外不带州）
+function geoLabel(j) {
+  var country = COUNTRY_NAMES[j.countryCode] || j.country || '';
+  var parts = [];
+  function pushPart(x) {
+    if (x && (parts.length === 0 || parts[parts.length - 1] !== x)) parts.push(x);
+  }
+  pushPart(country);
+  if (country === '中国') pushPart(REGION_NAMES[j.regionName] || j.regionName || '');
+  pushPart(CITY_NAMES[j.city] || j.city || '');
+  pushPart(ispShort(j.isp || j.org));
+  return { label: parts.join('/'), country: country || null };
+}
 
 function maskIP(ip) {
   if (!ip) return '未知';
@@ -181,7 +251,7 @@ resolveNode(function (nodeName) {
   $httpClient.get(getOpts(IP_API, policy), function (error, response, data) {
     var target = null;
     var egressLine = '出口：查询失败';
-    var egress = { loc: '', asn: '', countryCn: '' };
+    var egress = { loc: '', asn: '', countryCn: '', geo: '' };
     try {
       var j = JSON.parse(data);
       if (j && j.status === 'success') {
@@ -190,6 +260,7 @@ resolveNode(function (nodeName) {
         var cityCn = CITY_NAMES[j.city] || j.city || '';
         egress.loc = [egress.countryCn, cityCn].filter(function (x) { return !!x; }).join(' ');
         egress.asn = (j.as || '').split(' ')[0];
+        egress.geo = geoLabel(j).label;
         egressLine = '出口：' + maskIP(j.query) + (egress.loc ? ' | ' + egress.loc : '');
       }
     } catch (e) {}
@@ -265,7 +336,8 @@ resolveNode(function (nodeName) {
     var probe = first.probe || {};
     var hops = (first.result && first.result.hops) || [];
     var monitor = (CITY_NAMES[probe.city] || probe.city || '国内') + (carrierOf(probe.network) || '');
-    // 第一遍：只算每跳的基础国家（geoip/hostname/终点 ip-api）和 ASN，不分段
+    // 第一遍：每跳的基础信息。地理位置优先用 ip-api（省/市/运营商），
+    // 本地 geoip/asn 只作 ip-api 查不到时的后备；局域网与骨干网直接定标签
     var hopInfos = [];
     var lastIdx = 0;
     for (var i = 0; i < hops.length; i++) {
@@ -273,53 +345,75 @@ resolveNode(function (nodeName) {
       var ip = h.resolvedAddress;
       if (!ip) continue;
       lastIdx = i + 1;
-      if (isPrivateIP(ip)) continue;
       var isTarget = (ip === ctx.target);
-      var c = countryOf(ip, h.resolvedHostname);
-      if (isTarget && ctx.egress.countryCn) c = ctx.egress.countryCn;
+      var priv = isPrivateIP(ip);
+      var bb = priv ? null : backboneOf(ip);
+      var c = null;
+      var asn = null;
+      var geo = null;
+      var geoCountry = null;
+      if (bb) {
+        geo = bb.label;
+        geoCountry = '中国';
+        asn = bb.asn;
+      } else if (isTarget && ctx.egress.geo) {
+        geo = ctx.egress.geo;
+        geoCountry = ctx.egress.countryCn;
+      } else if (!priv) {
+        c = countryOf(ip, h.resolvedHostname);
+        if (isTarget && ctx.egress.countryCn) c = ctx.egress.countryCn;
+        asn = asnOf(ip);
+      }
       var rtt = null;
       if (isTarget && h.timings && h.timings.length > 0 && h.timings[0].rtt !== undefined) {
         rtt = Math.round(h.timings[0].rtt);
       }
-      hopInfos.push({ ip: ip, idx: i + 1, country: c, asn: asnOf(ip), isTarget: isTarget, rtt: rtt, org: null });
+      hopInfos.push({ ip: ip, idx: i + 1, priv: priv, country: c, asn: asn, geo: geo, geoCountry: geoCountry, isTarget: isTarget, rtt: rtt, org: null });
     }
-    // 需要二次查询的跳：国家未知、且 ASN 也不在补丁表里的（否则已经能显示）
-    var unknowns = [];
+    // 需要查 ip-api 的跳：公网、非骨干、非终点（终点直接用出口查询的结果）
+    var toQuery = [];
     for (var k = 0; k < hopInfos.length; k++) {
       var hi = hopInfos[k];
-      if (!hi.country && !(hi.asn && ASN_ORG[hi.asn])) unknowns.push(hi);
+      if (!hi.priv && !hi.geo) toQuery.push(hi);
     }
     var rendered = false;
     function doRender() {
       if (rendered) return;
       rendered = true;
-      // 第二遍：分段（含同 ASN 继承、运营商名、未知）
+      // 第二遍：分段。标签优先地理位置（局域网/骨干网/ip-api 省市运营商），
+      // 查不到才回退到国家/运营商/未知；连续相同标签合并成一段，带跳号范围。
       var segs = [];
       var reached = false;
       var finalRTT = null;
       var lastCountry = null;
       for (var i = 0; i < hopInfos.length; i++) {
         var hi = hopInfos[i];
-        var c = hi.country;
+        var c = hi.geoCountry || hi.country;
         var asn = hi.asn;
-        var prev = segs.length > 0 ? segs[segs.length - 1] : null;
-        if (!c && asn && prev && prev.asn === asn && prev.country) c = prev.country;
-        var label;
-        if (c) {
-          label = c;
-          if (asn) label += 'AS' + asn;
-        } else if (asn && ASN_ORG[asn]) {
-          label = ASN_ORG[asn] + ' AS' + asn;
-        } else if (hi.org) {
-          label = hi.org;
-          if (asn) label += ' AS' + asn;
+        var label = null;
+        if (hi.priv) {
+          label = '局域网';
+          c = null;
+        } else if (hi.geo) {
+          label = hi.geo;
         } else {
-          label = '未知';
-          if (asn) label += 'AS' + asn;
+          var prev = segs.length > 0 ? segs[segs.length - 1] : null;
+          if (!c && asn && prev && prev.asn === asn && prev.country) c = prev.country;
+          if (c) {
+            label = c;
+            if (asn) label += 'AS' + asn;
+          } else if (asn && ASN_ORG[asn]) {
+            label = ASN_ORG[asn] + ' AS' + asn;
+          } else if (hi.org) {
+            label = hi.org;
+            if (asn) label += ' AS' + asn;
+          } else {
+            label = '未知';
+            if (asn) label += 'AS' + asn;
+          }
         }
-        var key = (c || '?') + '|' + (asn || '');
-        if (segs.length === 0 || segs[segs.length - 1].key !== key) {
-          segs.push({ key: key, label: label, country: c, asn: asn, firstIdx: hi.idx, lastIdx: hi.idx, count: 1 });
+        if (segs.length === 0 || segs[segs.length - 1].label !== label) {
+          segs.push({ label: label, country: c, asn: asn, firstIdx: hi.idx, lastIdx: hi.idx, count: 1 });
         } else {
           var cur = segs[segs.length - 1];
           cur.lastIdx = hi.idx;
@@ -344,8 +438,7 @@ resolveNode(function (nodeName) {
         finish(lines);
         return;
       }
-      // 路径竖排：每段一行，箭头引导视线，一眼看清怎么走；
-      // 每段带跳号范围，无响应跳单独一行点名
+      // 未响应的跳（第一跳与最后一跳之间、没有返回 IP 的位置）
       var gaps = [];
       if (hopInfos.length > 0) {
         var seen = {};
@@ -355,12 +448,13 @@ resolveNode(function (nodeName) {
           if (!seen[g] && rawHops[g - 1] && !rawHops[g - 1].resolvedAddress) gaps.push(g);
         }
       }
+      // 路径竖排对齐：标题单独一行，之后每段统一用“  → ”开头，
+      // 标签左边缘严格对齐；无响应跳单独一行点名
+      lines.push('路径（' + hopCount + ' 跳）：');
       for (var pi = 0; pi < segs.length; pi++) {
         var s = segs[pi];
         var range = (s.count === 1) ? s.firstIdx : (s.firstIdx + '-' + s.lastIdx);
-        var segText = s.label + '（' + range + '）';
-        if (pi === 0) lines.push('路径（' + hopCount + ' 跳）：' + segText);
-        else lines.push('  → ' + segText);
+        lines.push('  → ' + s.label + '（' + range + '）');
       }
       if (gaps.length > 0) lines.push('  ✕ 第 ' + gaps.join('、') + ' 跳无响应');
       if (reached) {
@@ -379,28 +473,30 @@ resolveNode(function (nodeName) {
       }
       finish(lines);
     }
-    if (unknowns.length === 0) {
+    if (toQuery.length === 0) {
       doRender();
       return;
     }
-    // 二次查询：对未知跳调 ip-api（按 IP 查国家与运营商），走节点，并行查，
-    // 20 秒还没查完就先用已有结果渲染，不无限等
+    // 查 ip-api 拿每跳的省/市/运营商（走节点，并行查，20 秒没查完先用已有结果渲染）
     var done = 0;
     setTimeout(function () { doRender(); }, 20000);
-    unknowns.forEach(function (hi) {
-      $httpClient.get({ url: 'http://ip-api.com/json/' + hi.ip + '?fields=status,country,countryCode,as', policy: ctx.policy, timeout: 8 }, function (error, response, data) {
+    toQuery.forEach(function (hi) {
+      $httpClient.get({ url: 'http://ip-api.com/json/' + hi.ip + '?fields=status,country,countryCode,regionName,city,isp,org,as', policy: ctx.policy, timeout: 8 }, function (error, response, data) {
         try {
           var j = JSON.parse(data);
           if (j && j.status === 'success') {
-            if (!hi.country) hi.country = COUNTRY_NAMES[j.countryCode] || j.country || null;
-            if (j.as) {
+            var gl = geoLabel(j);
+            if (gl.label) {
+              hi.geo = gl.label;
+              hi.geoCountry = gl.country;
+            } else if (j.as) {
               var m = j.as.match(/^AS\d+\s+(.+)$/);
               if (m) hi.org = m[1];
             }
           }
         } catch (e) {}
         done++;
-        if (done >= unknowns.length) doRender();
+        if (done >= toQuery.length) doRender();
       });
     });
   }
