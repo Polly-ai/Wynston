@@ -40,12 +40,18 @@
 // v5.4：监测点按西安电信→重庆电信→武汉电信依次找（都是电信，离陕西近）；
 // 三个都没探针时面板明示，不偷偷退到南京等其他探针。
 //
+// v5.5：教训——探针列表显示在线不等于能接任务，实测建任务为准（西安、重庆
+// 探针列表上有，建任务却返回 no_probes_found；南京按城市+ASN 能成功，国内
+// 电信按 ASN 也能成功）。链尾加国内电信兜底：前面三个城市都接不了任务时
+// 退到国内电信，保证面板有路线出（监测点可能又是南京，先说明）。
+//
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
-// 监测点按西安电信→重庆电信→武汉电信依次找；三个都没探针时面板明示。
+// 监测点按西安电信→重庆电信→武汉电信→国内电信依次找；都没探针时面板明示。
 var LOCATIONS_CHAIN = [
   [{ country: 'CN', city: "Xi'an", asn: 4134, limit: 2 }],
   [{ country: 'CN', city: 'Chongqing', asn: 4134, limit: 2 }],
   [{ country: 'CN', city: 'Wuhan', asn: 4134, limit: 2 }],
+  [{ country: 'CN', asn: 4134, limit: 2 }],
 ];
 var CITY_NAMES = {
   "Xi'an": '西安', Shanghai: '上海', Changsha: '长沙', Guangzhou: '广州',
@@ -395,12 +401,12 @@ resolveNode(function (nodeName) {
     // 第二步：Globalping 建任务。注意：建任务和轮询都走节点（policy），不直连——
     // api.globalping.io 从国内直连不稳定（v2 实测建任务失败），走节点更稳；
     // 探针选择在服务端按 locations 定，不影响追踪起点。
-    // 按西安→重庆→武汉电信依次尝试
+    // 按西安→重庆→武汉→国内电信依次尝试
     var ctx = { displayName: displayName, egressLine: egressLine, egress: egress, target: target, policy: policy, proto: 'TCP', retried: false };
     var apiReachable = false;
     function tryCreate(i) {
       if (i >= LOCATIONS_CHAIN.length) {
-        finish(['节点：' + displayName, egressLine, apiReachable ? '路径：西安/重庆/武汉电信探针均不在线' : '路径：Globalping 接口无响应']);
+        finish(['节点：' + displayName, egressLine, apiReachable ? '路径：国内电信探针均不在线' : '路径：Globalping 接口无响应']);
         return;
       }
       $httpClient.post({
