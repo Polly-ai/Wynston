@@ -25,6 +25,10 @@
 // 骨干网/电信 / 中国/电信CN2 / 美国/洛杉矶/Cogent；每跳 ip-api 查省市运营商，
 // 骨干网段按知名 IP 段直接定性，查不到才回退到国家/运营商/未知。
 //
+// v5.1：内网跳只认开头的局域网，途中出现的内网地址显示为 --（跟 itdog 的 --
+// 行一致，不再乱标局域网）；运营商兜底只认单字名，多字匹配不到关键词的宁可
+// 不写（避免把 "Zhejiang Aiyun ..." 错写成浙江）；补桂林等城市中文名。
+//
 // 数据来源：Globalping 公开免费接口（免 key，纯 REST：POST 建任务 + 轮询取结果）。
 // 监测点首选陕西电信（西安 4134），不在线时依次退到国内电信、国内任意探针；
 // 监测点那行永远显示实际用的探针。社区探针上下线频繁，陕西电信探针不在线
@@ -47,6 +51,7 @@ var CITY_NAMES = {
   'San Francisco': '旧金山', Ashburn: '阿什本', 'Salt Lake City': '盐湖城',
   // 国内城市（ip-api 英文 -> 中文；查不到的城市原样显示英文）
   Zhongshan: '中山', Shantou: '汕头', Xiamen: '厦门', Fuzhou: '福州',
+  Guilin: '桂林', Liuzhou: '柳州',
   Suzhou: '苏州', Wuxi: '无锡', Ningbo: '宁波', Wenzhou: '温州',
   Hefei: '合肥', Jinan: '济南', Qingdao: '青岛', Shenyang: '沈阳',
   Dalian: '大连', Changchun: '长春', Harbin: '哈尔滨', Tianjin: '天津',
@@ -130,8 +135,11 @@ function ispShort(isp) {
   if (s.indexOf('ALIBABA') !== -1) return '阿里云';
   if (s.indexOf('TENCENT') !== -1) return '腾讯云';
   if (s.indexOf('HUAWEI') !== -1) return '华为云';
-  var w = isp.split(/[\s,]+/)[0];
-  return w || '';
+  if (s.indexOf('AIYUN') !== -1) return 'Aiyun';
+  // 兜底：单字运营商直接用；多字又匹配不到关键词的，宁可不写运营商，也别写错
+  // （比如 "Zhejiang Aiyun ..." 取首字会错写成浙江）
+  var w = isp.split(/[\s,]+/);
+  return (w.length === 1) ? w[0] : '';
 }
 // ip-api 结果 -> 地理位置标签（itdog 风格，斜杠分隔；国内带省，国外不带州）
 function geoLabel(j) {
@@ -337,9 +345,11 @@ resolveNode(function (nodeName) {
     var hops = (first.result && first.result.hops) || [];
     var monitor = (CITY_NAMES[probe.city] || probe.city || '国内') + (carrierOf(probe.network) || '');
     // 第一遍：每跳的基础信息。地理位置优先用 ip-api（省/市/运营商），
-    // 本地 geoip/asn 只作 ip-api 查不到时的后备；局域网与骨干网直接定标签
+    // 本地 geoip/asn 只作 ip-api 查不到时的后备；骨干网直接定标签；
+    // 内网跳只认开头的局域网（探针自己的内网），途中出现的内网地址标为 --
     var hopInfos = [];
     var lastIdx = 0;
+    var seenPublic = false;
     for (var i = 0; i < hops.length; i++) {
       var h = hops[i];
       var ip = h.resolvedAddress;
@@ -347,6 +357,8 @@ resolveNode(function (nodeName) {
       lastIdx = i + 1;
       var isTarget = (ip === ctx.target);
       var priv = isPrivateIP(ip);
+      var privLabel = priv ? (seenPublic ? '--' : '局域网') : null;
+      if (!priv) seenPublic = true;
       var bb = priv ? null : backboneOf(ip);
       var c = null;
       var asn = null;
@@ -368,7 +380,7 @@ resolveNode(function (nodeName) {
       if (isTarget && h.timings && h.timings.length > 0 && h.timings[0].rtt !== undefined) {
         rtt = Math.round(h.timings[0].rtt);
       }
-      hopInfos.push({ ip: ip, idx: i + 1, priv: priv, country: c, asn: asn, geo: geo, geoCountry: geoCountry, isTarget: isTarget, rtt: rtt, org: null });
+      hopInfos.push({ ip: ip, idx: i + 1, priv: priv, privLabel: privLabel, country: c, asn: asn, geo: geo, geoCountry: geoCountry, isTarget: isTarget, rtt: rtt, org: null });
     }
     // 需要查 ip-api 的跳：公网、非骨干、非终点（终点直接用出口查询的结果）
     var toQuery = [];
@@ -380,7 +392,7 @@ resolveNode(function (nodeName) {
     function doRender() {
       if (rendered) return;
       rendered = true;
-      // 第二遍：分段。标签优先地理位置（局域网/骨干网/ip-api 省市运营商），
+      // 第二遍：分段。标签优先地理位置（局域网/--/骨干网/ip-api 省市运营商），
       // 查不到才回退到国家/运营商/未知；连续相同标签合并成一段，带跳号范围。
       var segs = [];
       var reached = false;
@@ -392,7 +404,7 @@ resolveNode(function (nodeName) {
         var asn = hi.asn;
         var label = null;
         if (hi.priv) {
-          label = '局域网';
+          label = hi.privLabel;
           c = null;
         } else if (hi.geo) {
           label = hi.geo;
