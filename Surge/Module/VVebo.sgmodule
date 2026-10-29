@@ -1,0 +1,17 @@
+#!name = VVebo
+#!desc = 修复VVebo用户主页时间线显示和粉丝列表（Surge适配版）
+#!category = Polly-ai
+#!author = suiyuran
+
+# 转换自 QX 格式，上游：https://github.com/androidcn/userscripts/raw/main/VVebo.snippet
+# Surge 适配说明：原 QX 脚本的 $prefs.setValueForKey/valueForKey 已改为 Surge 的 $persistentStore.write/read（见 Surge/Script/VVeboTimeline_surge.js）；粉丝脚本不含 QX 专属 API，逻辑原样镜像至 Surge/Script/VVeboFans_surge.js。
+# 原样保留的一处特性：cardlist 规则对应脚本只对 selffans 请求生效，其他 cardlist 请求原样放行。
+
+[Script]
+vvebo_1 = type=http-request, pattern=^https:\/\/api\.weibo\.cn\/2\/remind\/unread_count\?, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/VVeboTimeline_surge.js
+vvebo_2 = type=http-request, pattern=^https:\/\/api\.weibo\.cn\/2\/statuses\/user_timeline\?, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/VVeboTimeline_surge.js
+vvebo_3 = type=http-response, pattern=^https:\/\/api\.weibo\.cn\/2\/profile\/statuses\/tab\?, requires-body=true, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/VVeboTimeline_surge.js
+vvebo_4 = type=http-response, pattern=^https:\/\/api\.weibo\.cn\/2\/cardlist\?, requires-body=true, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/VVeboFans_surge.js
+
+[MITM]
+hostname = %APPEND% api.weibo.cn
