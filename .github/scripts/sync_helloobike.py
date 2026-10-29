@@ -33,8 +33,11 @@ JS Surge 适配（每次同步都重新从上游原版生成，改动点固定�
        不补这一项，密钥捕获那句 Number(undefined) !== 200 会永远提前返回）
   2. hbeContextKey：QX 只接受纯数字 sessionIndex（/^\\d{1,24}$/），Surge 的
      $request.id 不是纯数字，原校验会永远返回空串、上下文关联全断。
-     改为接受任意非空字符串（长度上限 128），槽位改按字符码累加再 mod 64，
-     仍保留 64 槽位设计。
+     改为用完整 $request.id 作键（仅清洗掉键名非法字符），不再哈希、不再设槽位上限，
+     一个请求一个键。原因是 QX 的 sessionIndex 顺序递增、64 槽位基本不撞，
+     而 Surge 的 $request.id 不是顺序数字，哈希到 64 槽位后首页多请求并发时极易撞槽，
+     后一个请求会覆盖前一个的上下文，响应取到错误或失效的上下文就原样放行，
+     表现为部分清理、部分漏网。
   3. echo 分支的状态：QX 返回 "HTTP/1.1 200 OK" / "HTTP/1.1 503 Service
      Unavailable" 字符串，Surge 的 $done 要求 status 为数字，改为 200 / 503。
 
@@ -74,7 +77,7 @@ SHIM = """// easybike-ad_surge.js - Surge 适配版
 // - $prefs -> $persistentStore，$notify -> $notification.post（见下方 shim）
 // - $request.sessionIndex / $response.sessionIndex -> Surge 的 $request.id
 // - $response.statusCode -> $response.status
-// - hbeContextKey 改为接受任意字符串 ID（QX 只接受纯数字），槽位按字符码累加 mod 64
+// - hbeContextKey 改为用完整 $request.id 作键，不再哈希到 64 槽位（并发易撞槽，见同步脚本注释）
 // - echo 分支的 HTTP 状态字符串改为 Surge 要求的数字（200 / 503）
 if (typeof $prefs === "undefined" && typeof $persistentStore !== "undefined") {
   var $prefs = {
@@ -86,7 +89,7 @@ if (typeof $prefs === "undefined" && typeof $persistentStore !== "undefined") {
 if (typeof $notify === "undefined" && typeof $notification !== "undefined") {
   var $notify = function (t, s, b) { $notification.post(t, s, b); };
 }
-if (typeof $request !== "undefined" && $request && typeof $request.id === "string") {
+if (typeof $request !== "undefined" && $request && typeof $request.id !== "undefined") {
   try { $request.sessionIndex = $request.id; } catch (e) {}
   if (typeof $response !== "undefined" && $response) {
     try { $response.sessionIndex = $request.id; } catch (e) {}
@@ -204,21 +207,17 @@ def adapt_js(js_text):
         if marker not in js_text:
             fail(f"上游 JS 缺少预期标记（结构可能已变，已中止）：{marker}")
 
-    # 1. hbeContextKey：接受任意字符串 ID，槽位按字符码累加。
-    new_text, n = re.subn(
-        r'if \(!/\^\\d\{1,24\}\$/.test\(hbeID\)\) return "";',
-        'if (typeof hbeID !== "string" || !hbeID || hbeID.length > 128) return "";',
-        js_text, count=1)
-    if n != 1:
-        fail("hbeContextKey 校验行未匹配到恰好 1 处，上游可能已改写该函数")
-    js_text = new_text
-    new_text, n = re.subn(
-        r"hbeSlot = \(hbeSlot \* 10 \+ Number\(hbeID\.charAt\(hbeI\)\)\) % 64;",
-        "hbeSlot = (hbeSlot * 31 + hbeID.charCodeAt(hbeI)) % 64;",
-        js_text, count=1)
-    if n != 1:
-        fail("hbeContextKey 槽位计算行未匹配到恰好 1 处，上游可能已改写该函数")
-    js_text = new_text
+    # 1. hbeContextKey：用完整请求 ID 作键，不再哈希到 64 槽位。
+    # QX 的 64 槽位设计依赖 sessionIndex 顺序递增；Surge 的 $request.id
+    # 不是顺序数字，哈希后并发请求极易撞槽，导致部分响应取错上下文。
+    _hbe_new = ("function hbeContextKey(hbeID) {\n"
+                "    var hbeIDStr = String(hbeID || \"\");\n"
+                "    if (!hbeIDStr || hbeIDStr === \"undefined\" || hbeIDStr.length > 256) return \"\";\n"
+                "    return \"HelloBikeQXRequestV2_\" + hbeIDStr.replace(/[^A-Za-z0-9_.-]/g, \"_\");\n"
+                "}")
+    js_text, _hbe_n = re.subn(r'function hbeContextKey\(hbeID\) \{.*?\n\}', lambda m: _hbe_new, js_text, count=1, flags=re.DOTALL)
+    if _hbe_n != 1:
+        fail("hbeContextKey 函数未匹配到恰好 1 处，上游可能已改写该函数")
 
     # 2. echo 分支状态字符串 -> 数字。
     for old, new in (('"HTTP/1.1 200 OK"', "200"),
