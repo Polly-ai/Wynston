@@ -10,7 +10,8 @@
   - host, X, reject -> [Rule] DOMAIN,X,REJECT
   - ip-cidr, X, reject -> [Rule] IP-CIDR,X,REJECT,no-resolve
     （模块里的 IP 规则一律加 no-resolve，否则域名请求会先触发 DNS 解析）
-  - ^... url reject-dict -> [URL Rewrite] pattern _ reject-dict
+  - ^... url reject-dict -> [Map Local] pattern data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+    （Surge 的 [URL Rewrite] 只有 header/302/307/reject，没有 reject-dict，直接照搬动作名会使规则不生效）
   - ^... url jsonjq-response-body 'jq' -> [Body Rewrite]
     http-response-jq pattern 'jq'（jq 原文不动，需 Surge iOS 5.14.0+ / Mac 5.9.0+）
   - hostname = ... -> [MITM] hostname = %APPEND% ...
@@ -58,7 +59,7 @@ def fetch_text(url, from_file):
 
 def convert_snippet(text):
     rules = []
-    url_rewrites = []
+    map_locals = []
     body_rewrites = []
     mitm_hosts = []
 
@@ -84,7 +85,7 @@ def convert_snippet(text):
             pattern = line[: -len(" url reject-dict")]
             if not pattern:
                 fail(f"无法识别的 reject-dict 行，已中止：{raw_line}")
-            url_rewrites.append(f"{pattern} _ reject-dict")
+            map_locals.append(f'{pattern} data-type=text data="{{}}" status-code=200 header="Content-Type:application/json"')
         elif line.startswith("^") and " url jsonjq-response-body " in line:
             pattern, jq_quoted = line.split(" url jsonjq-response-body ", 1)
             jq_quoted = jq_quoted.strip()
@@ -107,8 +108,8 @@ def convert_snippet(text):
         else:
             fail(f"无法识别的上游行，已中止：{raw_line}")
 
-    if not rules or not url_rewrites or not body_rewrites or not mitm_hosts:
-        fail("转换后某一段为空（Rule/URL Rewrite/Body Rewrite/MITM 至少一段为空），上游结构可能已变，已中止")
+    if not rules or not map_locals or not body_rewrites or not mitm_hosts:
+        fail("转换后某一段为空（Rule/Map Local/Body Rewrite/MITM 至少一段为空），上游结构可能已变，已中止")
 
     out = []
     out.append(f"#!name = {MODULE_NAME}")
@@ -117,14 +118,15 @@ def convert_snippet(text):
     out.append(f"#!author = {MODULE_AUTHOR}")
     out.append("")
     out.append("# 转换自 QX 格式，上游：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Didichuxing.snippet")
-    out.append("# 注意：[Body Rewrite] 的 http-response-jq 需 Surge iOS 5.14.0+ / Mac 5.9.0+，低版本 Surge 上这部分规则不生效；[Rule] 与 [URL Rewrite] 不受此限制。")
+    out.append("# 注意：[Body Rewrite] 的 http-response-jq 需 Surge iOS 5.14.0+ / Mac 5.9.0+，低版本 Surge 上这部分规则不生效；[Rule] 与 [Map Local] 不受此限制。")
+    out.append("# [Map Local] 的 {} 返回即 QX reject-dict 的等价写法；Surge [URL Rewrite] 没有 reject-dict 模式，直接照搬会使规则不生效。")
     out.append("# MITM 中的 IP 通配（如 117.51.168.*）按上游原样保留；URL 规则所用的域名均已在 MITM 列表中。")
     out.append("")
     out.append("[Rule]")
     out.extend(rules)
     out.append("")
-    out.append("[URL Rewrite]")
-    out.extend(url_rewrites)
+    out.append("[Map Local]")
+    out.extend(map_locals)
     out.append("")
     out.append("[Body Rewrite]")
     out.extend(body_rewrites)
@@ -132,7 +134,7 @@ def convert_snippet(text):
     out.append("[MITM]")
     out.append("hostname = %APPEND% " + ", ".join(mitm_hosts))
     out.append("")
-    return "\n".join(out), len(rules), len(url_rewrites), len(body_rewrites), len(mitm_hosts)
+    return "\n".join(out), len(rules), len(map_locals), len(body_rewrites), len(mitm_hosts)
 
 
 def main(argv):
@@ -142,7 +144,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     text = fetch_text(UPSTREAM_SNIPPET_URL, args.snippet_file)
-    module_text, n_rule, n_rewrite, n_body, n_mitm = convert_snippet(text)
+    module_text, n_rule, n_map, n_body, n_mitm = convert_snippet(text)
 
     try:
         with open(args.output_module, "r", encoding="utf-8") as f:
@@ -154,7 +156,7 @@ def main(argv):
         return 0
     with open(args.output_module, "w", encoding="utf-8") as f:
         f.write(module_text)
-    print(f"sync_didichuxing: 已写入 {args.output_module}（Rule {n_rule}、URL Rewrite {n_rewrite}、Body Rewrite {n_body}、MITM {n_mitm}）")
+    print(f"sync_didichuxing: 已写入 {args.output_module}（Rule {n_rule}、Map Local {n_map}、Body Rewrite {n_body}、MITM {n_mitm}）")
     return 0
 
 
