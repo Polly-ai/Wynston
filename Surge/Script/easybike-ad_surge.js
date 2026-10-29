@@ -4,6 +4,7 @@
 // - $request.sessionIndex / $response.sessionIndex -> Surge 的 $request.id
 // - $response.statusCode -> $response.status
 // - hbeContextKey 改为用完整 $request.id 作键，不再哈希到 64 槽位（并发易撞槽，见同步脚本注释）
+// - 钱包模块匹配放宽：只要模块名是 LEGO_MY_PAGE_MY_WALLET 就删（原版 5 道门在用户账号上对不上，见同步脚本注释）
 // - echo 分支的 HTTP 状态字符串改为 Surge 要求的数字（200 / 503）
 if (typeof $prefs === "undefined" && typeof $persistentStore !== "undefined") {
   var $prefs = {
@@ -418,17 +419,7 @@ function hbeMyCapitalCleanup(hbeModule, hbeNumbers) {
     return hbeChanged;
 }
 function hbeMyWalletMatches(hbeModule, hbeNumbers) {
-    if (!hbeUIDict(hbeModule) || hbeModule.moduleKey !== "LEGO_MY_PAGE_MY_WALLET" || !hbeHas(hbeModule, "moduleType") || hbeNumberText(hbeModule.moduleType, hbeNumbers) !== "2" || !hbeHas(hbeModule, "moduleData") || !hbeUIDict(hbeModule.moduleData)) return false;
-    var hbeData = hbeModule.moduleData;
-    var hbeStyle = hbeHas(hbeData, "dslUrl") ? hbeStyleURLInfo(hbeData.dslUrl, "https://resource.51downapp.cn/2c616bdaab8255dec1c8428d5b9c18b4.json") : null;
-    if (hbeHas(hbeModule, "dslUrl") && hbeModule.dslUrl && hbeModule.dslUrl !== hbeData.dslUrl) return false;
-    if (!hbeHas(hbeData, "financeEntries") || !Array.isArray(hbeData.financeEntries)) return false;
-    var hbeExpectedTypes = ["helloRent", "lending", "insurance"];
-    for (var hbeI = 0; hbeI < hbeData.financeEntries.length; hbeI++) {
-        var hbeItem = hbeData.financeEntries[hbeI];
-        if (!hbeUIDict(hbeItem) || !hbeHas(hbeItem, "type") || hbeExpectedTypes.indexOf(hbeItem.type) === -1) return false;
-    }
-    return !!(hbeStyle && hbeStyle.md5 === "2c616bdaab8255dec1c8428d5b9c18b4" && hbeHas(hbeData, "walletUrl") && typeof hbeData.walletUrl === "string");
+    return !!(hbeModule && typeof hbeModule === "object" && !Array.isArray(hbeModule) && hbeModule.moduleKey === "LEGO_MY_PAGE_MY_WALLET" && hbeModule.moduleData && typeof hbeModule.moduleData === "object" && !Array.isArray(hbeModule.moduleData));
 }
 function hbeCapitalTemplateEcho(hbeRequest) {
     var hbeFail = { status: 503, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: "{}" };
