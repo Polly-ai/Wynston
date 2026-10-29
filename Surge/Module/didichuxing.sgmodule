@@ -4,7 +4,8 @@
 #!author = 怎么肥事
 
 # 转换自 QX 格式，上游：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Didichuxing.snippet
-# 注意：[Body Rewrite] 的 http-response-jq 需 Surge iOS 5.14.0+ / Mac 5.9.0+，低版本 Surge 上这部分规则不生效；[Rule] 与 [URL Rewrite] 不受此限制。
+# 注意：[Body Rewrite] 的 http-response-jq 需 Surge iOS 5.14.0+ / Mac 5.9.0+，低版本 Surge 上这部分规则不生效；[Rule] 与 [Map Local] 不受此限制。
+# [Map Local] 的 {} 返回即 QX reject-dict 的等价写法；Surge [URL Rewrite] 没有 reject-dict 模式，直接照搬会使规则不生效。
 # MITM 中的 IP 通配（如 117.51.168.*）按上游原样保留；URL 规则所用的域名均已在 MITM 列表中。
 
 [Rule]
@@ -25,19 +26,19 @@ IP-CIDR,116.85.1.17/32,REJECT,no-resolve
 IP-CIDR,116.85.1.22/32,REJECT,no-resolve
 IP-CIDR,116.85.3.25/32,REJECT,no-resolve
 
-[URL Rewrite]
-^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/getMulti\? _ reject-dict
-^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/xpget _ reject-dict
-^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds _ reject-dict
-^https:\/\/freight\.xiaojukeji\.com\/gateway _ reject-dict
-^https:\/\/daijia\.kuaidadi\.com:443\/gateway _ reject-dict
-^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget _ reject-dict
-^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v\d\/other\/fast _ reject-dict
-^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v\d\/other\/slow _ reject-dict
-^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf _ reject-dict
-^https:\/\/api\.udache\.com\/gulfstream\/watson\/v1\/bubble\/getBubble _ reject-dict
-^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/getInsActivityV2 _ reject-dict
-^https:\/\/conf\.diditaxi\.com\.cn\/ota\/na\/yuantu\/infoList _ reject-dict
+[Map Local]
+^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/getMulti\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/xpget data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/freight\.xiaojukeji\.com\/gateway data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/daijia\.kuaidadi\.com:443\/gateway data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v\d\/other\/fast data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v\d\/other\/slow data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.udache\.com\/gulfstream\/watson\/v1\/bubble\/getBubble data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/getInsActivityV2 data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/conf\.diditaxi\.com\.cn\/ota\/na\/yuantu\/infoList data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Body Rewrite]
 http-response-jq ^https:\/\/common\.diditaxi\.com\.cn\/common\/v[5-9]\/usercenter\/layout '.data.layout.order |= map(select(. == "center_base_info_card" or . == "center_order_related_card" or . == "center_wallet_finance_card")) | (.data.instances.center_wallet_finance_card.data.view_info |= map(select(.title == "优惠卡券"))) | del(.data.instances.center_marketing_card, .data.instances.center_member_card, .data.instances.center_tool_card, .data.instances.center_widget_list)'
