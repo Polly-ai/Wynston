@@ -41,6 +41,13 @@ JS Surge 适配（每次同步都重新从上游原版生成，改动点固定�
   3. echo 分支的状态：QX 返回 "HTTP/1.1 200 OK" / "HTTP/1.1 503 Service
      Unavailable" 字符串，Surge 的 $done 要求 status 为数字，改为 200 / 503。
 
+  4. 钱包模块匹配放宽：原版 hbeMyWalletMatches 要求 5 道门全过（模块名、
+     类型 2、内外 dsl 一致、金融条目类型、dsl 指纹、walletUrl），用户账号上
+     某道门对不上导致钱包金融整排残留，截图无法确定是哪道门；用户已选
+     直接放宽，接受余额显示若在同一模块内会一并消失的风险。改为只要模块名
+     是 LEGO_MY_PAGE_MY_WALLET 且 moduleData 是字典就删。这是 Surge 侧对上游
+     的偏离，同步时必须保留，否则次日同步会还原。
+
 固定不变的头部（同步时不被上游覆盖）：
   - #!name、#!desc、#!category、#!author
 
@@ -78,6 +85,7 @@ SHIM = """// easybike-ad_surge.js - Surge 适配版
 // - $request.sessionIndex / $response.sessionIndex -> Surge 的 $request.id
 // - $response.statusCode -> $response.status
 // - hbeContextKey 改为用完整 $request.id 作键，不再哈希到 64 槽位（并发易撞槽，见同步脚本注释）
+// - 钱包模块匹配放宽：只要模块名是 LEGO_MY_PAGE_MY_WALLET 就删（原版 5 道门在用户账号上对不上，见同步脚本注释）
 // - echo 分支的 HTTP 状态字符串改为 Surge 要求的数字（200 / 503）
 if (typeof $prefs === "undefined" && typeof $persistentStore !== "undefined") {
   var $prefs = {
@@ -218,6 +226,16 @@ def adapt_js(js_text):
     js_text, _hbe_n = re.subn(r'function hbeContextKey\(hbeID\) \{.*?\n\}', lambda m: _hbe_new, js_text, count=1, flags=re.DOTALL)
     if _hbe_n != 1:
         fail("hbeContextKey 函数未匹配到恰好 1 处，上游可能已改写该函数")
+
+    # 钱包模块匹配放宽：只要模块名是 LEGO_MY_PAGE_MY_WALLET 就删。
+    # 原版 5 道门全过才删，用户账号上某道门对不上导致钱包金融整排残留，
+    # 用户已选直接放宽（接受同模块内余额显示一并消失的风险）。
+    _hbe_wallet_new = ("function hbeMyWalletMatches(hbeModule, hbeNumbers) {\n"
+                       "    return !!(hbeModule && typeof hbeModule === \"object\" && !Array.isArray(hbeModule) && hbeModule.moduleKey === \"LEGO_MY_PAGE_MY_WALLET\" && hbeModule.moduleData && typeof hbeModule.moduleData === \"object\" && !Array.isArray(hbeModule.moduleData));\n"
+                       "}")
+    js_text, _hbe_wallet_n = re.subn(r'function hbeMyWalletMatches\(hbeModule, hbeNumbers\) \{.*?\n\}', lambda m: _hbe_wallet_new, js_text, count=1, flags=re.DOTALL)
+    if _hbe_wallet_n != 1:
+        fail("hbeMyWalletMatches 函数未匹配到恰好 1 处，上游可能已改写该函数")
 
     # 2. echo 分支状态字符串 -> 数字。
     for old, new in (('"HTTP/1.1 200 OK"', "200"),
