@@ -1,0 +1,39 @@
+name: Sync HelloBike module from upstream
+
+# 每天北京时间 07:30（UTC 23:30）从 ZenmoFeiShi 的 Qx helloobike.snippet
+# 与 easybike-ad.js 重新转换一次 Surge 模块并做 Surge 适配；
+# 上游没变时不产生提交。也可以在仓库 Actions 页面手动点 Run workflow 立即跑一次。
+on:
+  schedule:
+    - cron: "30 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Convert upstream snippet and adapt JS to Surge
+        run: python3 .github/scripts/sync_helloobike.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Surge/Module/helloobike.sgmodule Surge/Script/easybike-ad_surge.js
+          if ! git diff --cached --quiet; then
+            git commit -m "Sync helloobike.sgmodule and easybike-ad_surge.js from upstream"
+            git push
+          else
+            echo "No changes to commit"
+          fi
