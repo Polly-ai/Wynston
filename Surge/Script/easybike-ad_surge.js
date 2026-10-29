@@ -3,7 +3,7 @@
 // - $prefs -> $persistentStore，$notify -> $notification.post（见下方 shim）
 // - $request.sessionIndex / $response.sessionIndex -> Surge 的 $request.id
 // - $response.statusCode -> $response.status
-// - hbeContextKey 改为接受任意字符串 ID（QX 只接受纯数字），槽位按字符码累加 mod 64
+// - hbeContextKey 改为用完整 $request.id 作键，不再哈希到 64 槽位（并发易撞槽，见同步脚本注释）
 // - echo 分支的 HTTP 状态字符串改为 Surge 要求的数字（200 / 503）
 if (typeof $prefs === "undefined" && typeof $persistentStore !== "undefined") {
   var $prefs = {
@@ -15,7 +15,7 @@ if (typeof $prefs === "undefined" && typeof $persistentStore !== "undefined") {
 if (typeof $notify === "undefined" && typeof $notification !== "undefined") {
   var $notify = function (t, s, b) { $notification.post(t, s, b); };
 }
-if (typeof $request !== "undefined" && $request && typeof $request.id === "string") {
+if (typeof $request !== "undefined" && $request && typeof $request.id !== "undefined") {
   try { $request.sessionIndex = $request.id; } catch (e) {}
   if (typeof $response !== "undefined" && $response) {
     try { $response.sessionIndex = $request.id; } catch (e) {}
@@ -144,10 +144,9 @@ function hbeRequestMeta(hbeRequest) {
     } catch (hbeRequestError) { return false; }
 }
 function hbeContextKey(hbeID) {
-    if (typeof hbeID !== "string" || !hbeID || hbeID.length > 128) return "";
-    var hbeSlot = 0;
-    for (var hbeI = 0; hbeI < hbeID.length; hbeI++) hbeSlot = (hbeSlot * 31 + hbeID.charCodeAt(hbeI)) % 64;
-    return "HelloBikeQXRequestV2_" + hbeSlot;
+    var hbeIDStr = String(hbeID || "");
+    if (!hbeIDStr || hbeIDStr === "undefined" || hbeIDStr.length > 256) return "";
+    return "HelloBikeQXRequestV2_" + hbeIDStr.replace(/[^A-Za-z0-9_.-]/g, "_");
 }
 function hbeValidMeta(hbeMeta, hbeRequest) {
     if (!hbeMeta || typeof hbeMeta !== "object" || Array.isArray(hbeMeta) || !["action", "host", "method", "time"].every(function (hbeKey) { return Object.prototype.hasOwnProperty.call(hbeMeta, hbeKey); })) return false;
