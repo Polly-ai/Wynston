@@ -4,7 +4,8 @@
 #!author = 怎么肥事 walala
 
 # 转换自 QX 格式，上游：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Pinduoduo.snippet
-# 注意：[Body Rewrite] 的 http-response-jq 需 Surge iOS 5.14.0+ / Mac 5.9.0+，低版本 Surge 上这部分规则不生效；[Rule] 与 [URL Rewrite] 不受此限制。
+# 注意：[Body Rewrite] 的 http-response-jq 需 Surge iOS 5.14.0+ / Mac 5.9.0+，低版本 Surge 上这部分规则不生效；[Rule] 与 [Map Local] 不受此限制。
+# [Map Local] 的 {} 返回即 QX reject-dict 的等价写法；Surge [URL Rewrite] 没有 reject-dict 模式，直接照搬会使规则不生效。
 # MITM 仅 api.pinduoduo.com 一个域名；[Rule] 的域名/IP 屏蔽不依赖 MITM。
 
 [Rule]
@@ -18,25 +19,25 @@ IP-CIDR,183.194.214.20/32,REJECT,no-resolve
 IP-CIDR,117.185.244.145/32,REJECT,no-resolve
 IP-CIDR,183.194.214.14/32,REJECT,no-resolve
 
-[URL Rewrite]
-^https:\/\/api\.pinduoduo\.com\/api\/engels\/wait\/receive\/review _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/unrated_order_for_unreceived_tab _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/query_order_list_tabs_element _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/aquarius\/hungary\/global\/homepage\? _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_express_group _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/search_hotquery _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/zaire_biz\/chat\/resource\/get_list_data _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/new_chat_group _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/alexa\/goods\/back_up _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/personal _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/brand-olay\/goods_detail\/bybt_guide _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/engels\/reviews\/require\/append _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/my_order_group _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/likes _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/phantom\/gbdbpdv\/extra _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/manufacturer\/cross\/shortcut\/list _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/dunkirk\/liveactivity\/push\/create\/url\/report _ reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/growth\/nagato\/app\/index\/gather _ reject-dict
+[Map Local]
+^https:\/\/api\.pinduoduo\.com\/api\/engels\/wait\/receive\/review data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/unrated_order_for_unreceived_tab data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/query_order_list_tabs_element data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/aquarius\/hungary\/global\/homepage\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_express_group data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/search_hotquery data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/zaire_biz\/chat\/resource\/get_list_data data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/new_chat_group data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/alexa\/goods\/back_up data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/personal data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/brand-olay\/goods_detail\/bybt_guide data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/engels\/reviews\/require\/append data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/my_order_group data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/likes data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/phantom\/gbdbpdv\/extra data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/manufacturer\/cross\/shortcut\/list data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/dunkirk\/liveactivity\/push\/create\/url\/report data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/api\.pinduoduo\.com\/api\/growth\/nagato\/app\/index\/gather data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Body Rewrite]
 http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub 'del(.result.icon_set, .result.search_bar_hot_query, .result.dy_module.irregular_banner_dy,.result.dy_module.recommend_fresh_info) | if .result.bottom_tabs then .result.bottom_tabs |= map(select(.link == "index.html" or .link == "chat_list.html" or .link == "personal.html")) else . end'
