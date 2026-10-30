@@ -7,7 +7,7 @@
     python3 .github/scripts/sync_helloobike.py --snippet-file /tmp/helloobike.snippet --js-file /tmp/easybike-ad.js --output-module /tmp/out.sgmodule --output-js /tmp/out.js
 
 Snippet 转换规则（与手工转换保持一致）：
-  - ^... url reject-200            -> [URL Rewrite] pattern _ reject-200（绝不静默丢弃）
+  - ^... url reject-200            -> [Map Local] pattern data-type=text data="{}" status-code=200 header="Content-Type:application/json"（绝不静默丢弃；Surge [URL Rewrite] 没有 reject-200 模式，直接照搬会使规则不生效，见 2026-10-30 滴滴同类修复）
   - ^... url script-request-body  <js> -> [Script] 唯一脚本名，type=http-request
   - ^... url script-response-body <js> -> [Script] 唯一脚本名，type=http-response
   - ^... url script-echo-response <js> -> [Script] 唯一脚本名，type=http-response
@@ -139,14 +139,14 @@ def convert_snippet(text):
             _joined.append(_ln)
     text = "\n".join(_joined)
 
-    url_rewrites = []
+    map_locals = []
     for raw in text.splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
         m = REJECT200_RE.match(line)
         if m:
-            url_rewrites.append(f"{m.group(1)} _ reject-200")
+            map_locals.append(f'{m.group(1)} data-type=text data="{{}}" status-code=200 header="Content-Type:application/json"')
             continue
         if line.startswith("^") and "script-" in line:
             continue  # 脚本规则由 SCRIPT_RE 统一处理（含换行拆开的情况）
@@ -180,7 +180,7 @@ def convert_snippet(text):
     if m:
         mitm_hosts = ", ".join(h.strip() for h in m.group(1).split(",") if h.strip())
 
-    if not url_rewrites:
+    if not map_locals:
         fail("上游没有解析出任何 reject-200 规则")
     if not scripts:
         fail("上游没有解析出任何脚本规则")
@@ -200,8 +200,8 @@ def convert_snippet(text):
     out.append("[Script]")
     out.extend(scripts)
     out.append("")
-    out.append("[URL Rewrite]")
-    out.extend(url_rewrites)
+    out.append("[Map Local]")
+    out.extend(map_locals)
     out.append("")
     out.append("[MITM]")
     out.append(f"hostname = %APPEND% {mitm_hosts}")
