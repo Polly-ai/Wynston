@@ -13,11 +13,11 @@ helloobike_2 = type=http-response, pattern=^https:\/\/api\.hellobike\.com(?::443
 helloobike_3 = type=http-request, pattern=^https?:\/\/(?:api|marketingapi|entertainment)\.hellobike\.com(?::\d+)?\/api(?:\?|$), requires-body=true, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/easybike-ad_surge.js
 helloobike_4 = type=http-response, pattern=^https?:\/\/(?:api|marketingapi|entertainment)\.hellobike\.com(?::\d+)?\/api(?:\?|$), requires-body=true, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/refs/heads/main/Surge/Script/easybike-ad_surge.js, max-size=4194304
 
-[URL Rewrite]
-^https?:\/\/api-htp\.beizi\.biz\/mb\/sdk0\/json(?:\?|$) _ reject-200
-^https?:\/\/adservice\.sigmob\.cn\/(?:hb\/v2\/ad|ad\/v4)(?:\?|$) _ reject-200
-^https?:\/\/tm\.sigmob\.cn\/(?:waterfall\/v1|strategy\/v6)(?:\?|$) _ reject-200
-^https?:\/\/(?:mi|v2mi)\.gdt\.qq\.com\/(?:gdt_mview\.fcg|server_bidding2)(?:\?|$) _ reject-200
+[Map Local]
+^https?:\/\/api-htp\.beizi\.biz\/mb\/sdk0\/json(?:\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/adservice\.sigmob\.cn\/(?:hb\/v2\/ad|ad\/v4)(?:\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/tm\.sigmob\.cn\/(?:waterfall\/v1|strategy\/v6)(?:\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/(?:mi|v2mi)\.gdt\.qq\.com\/(?:gdt_mview\.fcg|server_bidding2)(?:\?|$) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [MITM]
 hostname = %APPEND% api.hellobike.com, marketingapi.hellobike.com, entertainment.hellobike.com, api-htp.beizi.biz, adservice.sigmob.cn, tm.sigmob.cn, mi.gdt.qq.com, v2mi.gdt.qq.com, resource.51downapp.cn
