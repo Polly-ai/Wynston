@@ -1,6 +1,6 @@
 #!name = eMBY分流
 #!desc = 自用EMBY
-#!category = Emby Rule
+#!category = Polly-ai
 
 [Rule]
 # 垃圾影音
