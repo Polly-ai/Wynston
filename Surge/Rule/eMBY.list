@@ -19,8 +19,10 @@ DOMAIN-SUFFIX,v2.embyplus.org
 DOMAIN-SUFFIX,media.nijigem.by
 # SNTP
 DOMAIN-SUFFIX,lite.cn2gias.uk
-# Paolu
+# 69云
 DOMAIN-SUFFIX,emby1.69yun69.com
+DOMAIN-SUFFIX,emby3.69yun69.com
+DOMAIN-SUFFIX,emby2.69yun69.com
 # Doubon
 DOMAIN-SUFFIX,onatoshi.114514.quest
 # 叶子emby硬盘/网盘
