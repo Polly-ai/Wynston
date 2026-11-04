@@ -1,0 +1,75 @@
+#!name=Telegram
+
+#!desc=Telegram外部链接跳转，可选目标客户端为Telegram、Swiftgram、Nagram、Turrit、iMe、Nicegram、Lingogram，默认选择Telegram跳转至官方客户端。
+
+#!arguments=tgapp:Telegram
+
+#!arguments-desc=由 Loon 插件转换，参数含义与默认值见文件内「# 参数」注释。
+
+# 许可：上游内容 CC BY-NC-SA 4.0 · 来源 LoonLab
+
+# 来源：https://loon.103516.xyz/Plugin/Telegram.lpx
+
+# 原作者：sooyaaabo[https://github.com/sooyaaabo]
+
+# Telegram
+
+# Swiftgram
+
+# 已省略分支：tgapp = "Swiftgram"（其他客户端专用）
+
+# Nagram
+
+# 已省略分支：tgapp = "Nagram"（其他客户端专用）
+
+# Turrit
+
+# 已省略分支：tgapp = "Turrit"（其他客户端专用）
+
+# iMe
+
+# 已省略分支：tgapp = "iMe"（其他客户端专用）
+
+# Nicegram
+
+# 已省略分支：tgapp = "Nicegram"（其他客户端专用）
+
+# Lingogram
+
+# 已省略分支：tgapp = "Lingogram"（其他客户端专用）
+
+# 原始脚本标签：[Telegram]t.me重定向
+
+# 参数 tgapp（Loon: tgapp）= Telegram  跳转至对应客户端
+
+[Rule]
+
+# 策略提示：以下命名策略按原样保留，需在本地 Surge 主配置中存在（模块不创建策略组）：Proxy
+
+# 注意：Surge 模块文档声明规则仅可使用内置策略 DIRECT/REJECT/REJECT-TINYGIF；若安装报错请按上一条提示调整。
+
+DOMAIN-SUFFIX,nagram.app,Proxy
+
+DOMAIN-SUFFIX,swiftgram.app,Proxy
+
+DOMAIN-SUFFIX,iturrit.com,Proxy
+
+DOMAIN-SUFFIX,imem.app,Proxy
+
+DOMAIN-SUFFIX,nicegram.app,Proxy
+
+DOMAIN-SUFFIX,nicegram.cloud,Proxy
+
+DOMAIN-SUFFIX,intentchat.app,Proxy
+
+[URL Rewrite]
+
+^[\\s\\S]*?(?:^(https?://)?(?:t\\.me|telegram\\.(?:me|dog))/(.+))[\\s\\S]*$ tg://resolve?domain=$2 307
+
+[Script]
+
+plugin_1 = type=http-response, pattern=(?i)^https?://(t\.me|telegram\.(me|dog))/(.+), script-path=https://loon.103516.xyz/Script/Telegram/Telegram.redirect.js, requires-body=false, timeout=10, argument="tgapp={{{tgapp}}}"
+
+[MITM]
+
+hostname = %APPEND% t.me, telegram.me, telegram.dog
