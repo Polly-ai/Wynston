@@ -1,5 +1,7 @@
 # NAME: 自用eMBY分流
-# UPDATED: 2026-11-03 09:50:46
+# UPDATED: 2026-11-04 21:39:29
+# POLICY: eMBY
+# COUNT: 70
 
 # 垃圾影音
 DOMAIN-SUFFIX,cf.xmsl.org
