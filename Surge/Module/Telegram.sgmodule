@@ -64,7 +64,7 @@ DOMAIN-SUFFIX,intentchat.app,Proxy
 
 [URL Rewrite]
 
-^[\\s\\S]*?(?:^(https?://)?(?:t\\.me|telegram\\.(?:me|dog))/(.+))[\\s\\S]*$ tg://resolve?domain=$2 307
+^[\s\S]*?(?:^(https?://)?(?:t\.me|telegram\.(?:me|dog))/(.+))[\s\S]*$ tg://resolve?domain=$2 307
 
 [Script]
 
