@@ -1,4 +1,5 @@
 #!name=Telegram
+#!category=Polly-ai
 
 #!desc=Telegram外部链接跳转，可选目标客户端为Telegram、Swiftgram、Nagram、Turrit、iMe、Nicegram、Lingogram，默认选择Telegram跳转至官方客户端。
 
