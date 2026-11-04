@@ -154,3 +154,5 @@ DOMAIN-SUFFIX,ukids.cn,DIRECT
 DOMAIN,app.localhost.qaq.wiki,DIRECT
 # NodeSeek论坛
 DOMAIN-SUFFIX,nodeseek.com,美国
+# 海豚 eMBY
+DOMAIN-SUFFIX,emby.barrybarry.top,eMBY
