@@ -1,0 +1,156 @@
+#!name = eMBY分流
+#!desc = 自用EMBY
+#!category = Emby Rule
+
+[Rule]
+# 垃圾影音
+DOMAIN-SUFFIX,cf.xmsl.org,eMBY
+# 月饼
+DOMAIN-SUFFIX,emby.my,eMBY
+DOMAIN-SUFFIX,876645.xyz,eMBY
+# Paul
+DOMAIN-SUFFIX,cf.imetyou.top,eMBY
+# NyaMedia
+DOMAIN-SUFFIX,emby.bangumi.ca,eMBY
+# Polo&有声
+DOMAIN-SUFFIX,l.poloemby.xyz,eMBY
+DOMAIN-SUFFIX,dabs.poloemby.xyz,eMBY
+# 终点站
+DOMAIN-SUFFIX,c.emby.wtf,eMBY
+# 纸片人emby
+DOMAIN-SUFFIX,embyplus.org,eMBY
+DOMAIN-SUFFIX,v2.embyplus.org,eMBY
+# 二刺猿
+DOMAIN-SUFFIX,media.nijigem.by,eMBY
+# SNTP
+DOMAIN-SUFFIX,lite.cn2gias.uk,eMBY
+# Paolu
+DOMAIN-SUFFIX,cdn.123456.buzz,DIRECT
+DOMAIN-SUFFIX,emby1.69yun69.com,eMBY
+DOMAIN-SUFFIX,emby3.69yun69.com,德国
+DOMAIN-SUFFIX,emby2.69yun69.com,德国
+# KikuEmby
+DOMAIN-SUFFIX,lucky.ucloudhost.top,DIRECT
+# Doubon
+DOMAIN-SUFFIX,onatoshi.114514.quest,eMBY
+# 叶子emby硬盘/网盘
+DOMAIN-SUFFIX,yp.lyezi.cc,eMBY
+DOMAIN-SUFFIX,wp.lyezi.cc,eMBY
+# 惊蛰Pro
+DOMAIN-SUFFIX,emby.jingzhe.pro,eMBY
+# OkEmby
+DOMAIN-SUFFIX,link00.okemby.org,eMBY
+# Peach
+DOMAIN-SUFFIX,embymv.cc,eMBY
+# 飞了个喵
+DOMAIN-SUFFIX,gy.meowfly.de,eMBY
+# 见手青
+DOMAIN-SUFFIX,jsq.vban.xyz,eMBY
+# Youno
+DOMAIN-SUFFIX,emby.younoyes.com,eMBY
+# 105度
+DOMAIN-SUFFIX,ciallo.party,eMBY
+DOMAIN-SUFFIX,yuanshen.help,eMBY
+# Shrek
+DOMAIN-SUFFIX,public.shrekmedia.org,eMBY
+# Lyrebird
+DOMAIN-SUFFIX,emby.host,eMBY
+# HOHAI
+DOMAIN-SUFFIX,emby.hohai.eu.org,eMBY
+# 牢大 結束バンド
+DOMAIN-SUFFIX,genshin.biliblili.uk,eMBY
+# UHD
+DOMAIN-SUFFIX,v1.uhdnow.com,eMBY
+# Ask Ash
+DOMAIN-SUFFIX,ask.ash.yt,eMBY
+# Mirai
+DOMAIN-SUFFIX,mi.miraiemby.com,eMBY
+DOMAIN-SUFFIX,vip1.miraiemby.com,DIRECT
+# 稳健服
+DOMAIN-SUFFIX,m.wenjian.de,eMBY
+# 星云
+DOMAIN-SUFFIX,emby.nebula-media.org,eMBY
+# 我身无拘
+DOMAIN-SUFFIX,faemby.vip,eMBY
+# 墨云阁
+DOMAIN-SUFFIX,er8mm.mobaiemby.site,eMBY
+# WE
+DOMAIN-SUFFIX,a.wedg.top,DIRECT
+# Lily
+DOMAIN-SUFFIX,free.lilyemby.com,eMBY
+DOMAIN-SUFFIX,lilyemby.cc,DIRECT
+# 麦当劳新公益
+DOMAIN-SUFFIX,saodu6.top,DIRECT
+# 404&vvpro
+DOMAIN-SUFFIX,ns1e.notfounda.shop,DIRECT
+DOMAIN-SUFFIX,vvproalcdn.xoxofast.cn,DIRECT
+# 飞跃彩虹
+DOMAIN-SUFFIX,fych.feiyue.lol,eMBY
+# Levilde Luminia
+DOMAIN-SUFFIX,emby.levilde.bond,eMBY
+# 老友记
+DOMAIN-SUFFIX,emby.605305.xyz,eMBY
+# Lunaris vault
+DOMAIN-SUFFIX,lunarisvault.com,eMBY
+# 这只猫emby
+DOMAIN-SUFFIX,media.wovh.eu.org,eMBY
+# 非越emby
+DOMAIN-SUFFIX,cf.sfcj.org,eMBY
+DOMAIN-SUFFIX,media.emby.pro,eMBY
+# 予初&Pro
+DOMAIN-SUFFIX,13.yusen.cyou,eMBY
+DOMAIN-SUFFIX,aaa.yusen6.ccwu.cc,eMBY
+DOMAIN-SUFFIX,emby.yusen.us.ci,eMBY
+DOMAIN-SUFFIX,embya.yusen.cyou,eMBY
+DOMAIN-SUFFIX,emby.yusen.cc.cd,eMBY
+DOMAIN-SUFFIX,yuchu.yusen.cc.cd,eMBY
+# 影迹服
+DOMAIN-SUFFIX,cf.aixj.de,eMBY
+# 周三晚&Chefs Secret Menu
+DOMAIN-SUFFIX,thxnk.cc,eMBY
+# 盒马 emby+宸澄
+DOMAIN-SUFFIX,embycc.wybcs.work,eMBY
+# 宸宇emby
+DOMAIN-SUFFIX,hk2.dylan.xin,DIRECT
+# 影桥emby
+DOMAIN-SUFFIX,qiaoying.riroro.com,DIRECT
+# 流光画廊
+DOMAIN-SUFFIX,dqx99999.shop,eMBY
+# 乐观
+DOMAIN-SUFFIX,emby.dijia.de,eMBY
+# bbEmby
+DOMAIN-SUFFIX,emby.bbqwq.com,eMBY
+# Nayovo服
+DOMAIN-SUFFIX,nay.007.us.kg,eMBY
+# 茶包影视
+DOMAIN-SUFFIX,tbagemby.tbag.dpdns.org,eMBY
+# 乐蛙
+DOMAIN-SUFFIX,emby.taotu.ink,eMBY
+# Lily反代测速地址分流
+DOMAIN-SUFFIX,speedtest.lilyemby.cc,DIRECT
+# Lily自建反代
+DOMAIN-SUFFIX,zero.love-midl.top,DIRECT
+# 稳健115服
+DOMAIN-SUFFIX,115.wenjian.de,DIRECT
+# Nox
+DOMAIN-SUFFIX,test.inemby.us.ci,eMBY
+# ChaPanda
+DOMAIN-SUFFIX,emby.chapanda.site,eMBY
+# 网易yeah
+DOMAIN-SUFFIX,yeah.net,DIRECT
+
+# Rex模块
+# 韩国Panda 直播 1
+DOMAIN-SUFFIX,pandalive.co.kr,美国
+# 韩国Panda 直播 2
+DOMAIN-SUFFIX,515355.xyz,美国
+# 韩国Panda 直播 3
+DOMAIN-SUFFIX,5721004.xyz,美国
+# 小小优趣儿童(Rex模块）
+DOMAIN-SUFFIX,ukids.cn,DIRECT
+
+# 其他
+# AssppPro
+DOMAIN,app.localhost.qaq.wiki,DIRECT
+# NodeSeek论坛
+DOMAIN-SUFFIX,nodeseek.com,美国
