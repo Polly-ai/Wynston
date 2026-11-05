@@ -1,50 +1,36 @@
-#!name = 拼多多净化页面布局
-#!desc = 净化拼多多首页、搜索、个人中心与订单页布局，屏蔽广告与推广入口。
+#!name = 拼多多净化底栏与弹窗
+#!desc = 净化拼多多底栏与弹窗，屏蔽广告与推广入口。（2026-11-04 上游改版后范围）
 #!category = Polly-ai
-#!author = 怎么肥事 walala
+#!author = 怎么肥事
 
 # 转换自 QX 格式，上游：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Pinduoduo.snippet
-# 注意：[Body Rewrite] 的 http-response-jq 需 Surge iOS 5.14.0+ / Mac 5.9.0+，低版本 Surge 上这部分规则不生效；[Rule] 与 [Map Local] 不受此限制。
-# [Map Local] 的 {} 返回即 QX reject-dict 的等价写法；Surge [URL Rewrite] 没有 reject-dict 模式，直接照搬会使规则不生效。
+# 注意：净化逻辑在 Pinduoduo.js 里（上游脚本直链）；[Script] 需 Surge 开 MITM，脚本本身须兼容 Surge 的 $response / $done 写法。
 # MITM 仅 api.pinduoduo.com 一个域名；[Rule] 的域名/IP 屏蔽不依赖 MITM。
 
 [Rule]
-DOMAIN,sdk.1rtb.net,REJECT
 DOMAIN,titan.pinduoduo.com,REJECT
-IP-CIDR,121.5.84.85/32,REJECT,no-resolve
-IP-CIDR,183.194.214.21/32,REJECT,no-resolve
-IP-CIDR,49.235.102.190/32,REJECT,no-resolve
+DOMAIN,titan-mt.pinduoduo.com,REJECT
+IP-CIDR,81.69.105.47/32,REJECT,no-resolve
+IP-CIDR,81.69.104.17/32,REJECT,no-resolve
+IP-CIDR,81.69.104.33/32,REJECT,no-resolve
+IP-CIDR,81.69.204.21/32,REJECT,no-resolve
+IP-CIDR,81.69.105.56/32,REJECT,no-resolve
 IP-CIDR,81.69.116.33/32,REJECT,no-resolve
-IP-CIDR,183.194.214.20/32,REJECT,no-resolve
-IP-CIDR,117.185.244.145/32,REJECT,no-resolve
+IP-CIDR,49.235.102.145/32,REJECT,no-resolve
+IP-CIDR,49.235.102.190/32,REJECT,no-resolve
+IP-CIDR,49.235.102.235/32,REJECT,no-resolve
+IP-CIDR,111.231.130.223/32,REJECT,no-resolve
+IP-CIDR,212.129.232.162/32,REJECT,no-resolve
+IP-CIDR,111.231.95.17/32,REJECT,no-resolve
 IP-CIDR,183.194.214.14/32,REJECT,no-resolve
+IP-CIDR,183.194.214.20/32,REJECT,no-resolve
+IP-CIDR,183.194.214.21/32,REJECT,no-resolve
+IP-CIDR,117.185.244.145/32,REJECT,no-resolve
 
-[Map Local]
-^https:\/\/api\.pinduoduo\.com\/api\/engels\/wait\/receive\/review data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/unrated_order_for_unreceived_tab data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/query_order_list_tabs_element data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/aquarius\/hungary\/global\/homepage\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_express_group data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/search_hotquery data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/zaire_biz\/chat\/resource\/get_list_data data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/new_chat_group data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/alexa\/goods\/back_up data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/personal data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/brand-olay\/goods_detail\/bybt_guide data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/engels\/reviews\/require\/append data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/my_order_group data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/likes data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/phantom\/gbdbpdv\/extra data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/manufacturer\/cross\/shortcut\/list data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/dunkirk\/liveactivity\/push\/create\/url\/report data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/api\.pinduoduo\.com\/api\/growth\/nagato\/app\/index\/gather data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
-[Body Rewrite]
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub 'del(.result.icon_set, .result.search_bar_hot_query, .result.dy_module.irregular_banner_dy,.result.dy_module.recommend_fresh_info) | if .result.bottom_tabs then .result.bottom_tabs |= map(select(.link == "index.html" or .link == "chat_list.html" or .link == "personal.html")) else . end'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/search 'del(.expansion)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub 'del(.monthly_card_entrance, .personal_center_style_v2_vo, .icon_set.icons, .icon_set.top_personal_icons)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/oak\/integration\/render 'del(.bottom_section_list, .ui.bottom_section, .ui.live_section.float_info)'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_detail_group 'del(.data.goods_list)'
+[Script]
+pinduoduo_1 = type=http-response, pattern=^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub(\/refresh)?\?, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Pinduoduo.js
+pinduoduo_2 = type=http-response, pattern=^https:\/\/api\.pinduoduo\.com\/api\/(aquarius|flow)\/hungary\/(window\/)?global\/, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Pinduoduo.js
+pinduoduo_3 = type=http-response, pattern=^https:\/\/api\.pinduoduo\.com\/api\/growth\/nagato\/app\/index\/gather, requires-body=true, script-path=https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Pinduoduo.js
 
 [MITM]
 hostname = %APPEND% api.pinduoduo.com
