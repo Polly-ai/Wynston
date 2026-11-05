@@ -1,0 +1,20 @@
+#!name = 芒果TV会员脚本[Surge完整转换]
+#!desc = 原配置全部规则和原JS完整转换，保留原有URL、请求头及Cookie改写；现有凭据据用户测试已失效。不随上游更新。
+#!category = Polly-ai
+#!author = 怎么肥事 (ZenmoFeiShi)
+# 上游配置：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/mgtv_vip.snippet
+# 上游配置标注更新：2026-05-14
+# 配置快照 SHA256：6a990666658222e9cf80f5c7f47185560e1feeb452b35110e610525d63f2acd8
+# 原始 JavaScript SHA256：7393e4f79938096a5ae000533dd228f88b7d03215031f6b22bbf3edf56bd1bec
+# 转换与维护：Polly-ai/Wynston。原JS按字节保留，仅转换QX模块语法。
+# 已按用户要求保留既有共享凭据作为其报告已失效的学习样例。
+# 未调用平台验证失效状态；不获取、刷新或自动同步任何会员凭据。
+# 注意：脚本会替换URL认证参数/请求头/Cookie，可能导致本人正常登录失效。
+# 仅用于隔离学习环境，勿在正常账号或支付/登录流程中启用。
+# MITM范围按原配置保留；需自行启用MITM并信任证书。
+
+[Script]
+mgtv_vip_1 = type=http-request, pattern=^https?:\/\/mobile-stream\.api\.mgtv\.com\/v1\/video\/source, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/MGTV/mgtv_vip.js, timeout=5
+
+[MITM]
+hostname = %APPEND% mobile-stream.api.mgtv.com
