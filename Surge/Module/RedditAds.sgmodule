@@ -1,0 +1,20 @@
+#!name = Reddit 增强[墨鱼版]
+#!desc = 去除 Reddit 信息流、帖子及社区广告；保留上游 NSFW 展示及本地 Premium 标记增强，每日同步。
+#!category = Polly-ai
+#!author = @ddgksf2013
+# 上游来源：https://raw.githubusercontent.com/ddgksf2013/Rewrite/refs/heads/master/AdBlock/RedditAds.conf
+# 上游配置版本：V1.0.4；原作者更新：2025-05-30
+# 上游配置 SHA256：15a17fb23d210144cc3530af925fb20116d89cbfbaf96abd9f2a140a8d24f595
+# 转换与维护：Polly-ai/Wynston；上游 JavaScript 原样镜像，保留原作者署名。
+# Surge 桥接脚本统一 GraphQL 操作名请求头大小写；异常或非法正文类型安全透传。
+# 注意：Premium/Employee 等仅修改客户端响应标记，不授予真实订阅或服务端权益。
+# 需启用 MITM 并信任证书；请勿同时启用其他匹配该接口的响应体脚本。
+# 可与 Reddit 请求头自动翻译模块配合：两者分别处理请求和响应。
+# 响应体缓存上限 1 MiB；超限时 Surge 跳过脚本并透传响应。
+# 上游 reddit.js SHA256：9fba62bb23f38607739e135376c88c8276d4f26d7e1cac478ad7467cedd0590e
+
+[Script]
+reddit_ads_19a338eee939 = type=http-response, pattern=^https?:\/\/gql-fed\.reddit\.com\/$, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Reddit/reddit-surge.js, script-update-interval=86400, timeout=10
+
+[MITM]
+hostname = %APPEND% gql-fed.reddit.com
