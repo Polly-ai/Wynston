@@ -55,11 +55,25 @@ class CaiYunTests(unittest.TestCase):
     def test_metadata_fixed(self):
         module = sync.render(CONFIG, SOURCE)
         self.assertIn("#!category = Polly-ai", module)
-        self.assertIn("#!author = @ddgksf2013", module)
+        self.assertIn("#!name = 彩云天气 增强\n", module)
+        self.assertNotIn("@ddgksf2013", module)
+        self.assertNotIn("墨鱼版", module)
         self.assertIn("≤7.20.2", module)
         self.assertIn("不代表真实订阅", module)
         self.assertIn("V1.0.test", module)
         self.assertIn("# > client VIP flag", module)
+
+    def test_requested_comment_cleanup_does_not_drop_rules(self):
+        text = CONFIG.replace("# > client VIP flag", "# > client VIP flag @ddgksf2013")
+        text = text.replace("# > activity ad", "# > activity ad@ddgksf2013")
+        cleaned = sync.render(text, SOURCE)
+        self.assertNotIn("@ddgksf2013", cleaned)
+        self.assertNotIn("# > client VIP flag", cleaned)
+        self.assertNotIn("# > activity ad", cleaned)
+        before = [line for line in sync.render(CONFIG, SOURCE).splitlines() if "pattern=" in line]
+        after = [line for line in cleaned.splitlines() if "pattern=" in line]
+        self.assertEqual(before, after)
+        self.assertIn("#!name = 彩云天气 增强\n", cleaned)
 
     def test_surge_response_parameters(self):
         module = sync.render(CONFIG, SOURCE)

@@ -198,10 +198,9 @@ def build_bridge(source: str) -> str:
 def render(text: str, source: str) -> str:
     hosts, rules, vip_rules = parse(text)
     out = [
-        "#!name = 彩云天气净化及会员标记[墨鱼版]",
+        "#!name = 彩云天气 增强",
         "#!desc = 去除推广与广告，保留上游 VIP/SVIP 客户端标记伪装；会员部分需登录且旧版≤7.20.2，不代表真实订阅。",
         "#!category = Polly-ai",
-        "#!author = @ddgksf2013",
         f"# 上游来源：{UPSTREAM_URL}",
         f"# 上游版本：{metadata(text, 'Version')}；原作者更新：{metadata(text, 'UpdateTime')}",
         f"# 配置 SHA256：{sha(text)}",
@@ -215,7 +214,7 @@ def render(text: str, source: str) -> str:
         "", "[Script]",
     ]
     for pattern, mode, comment in rules:
-        if comment:
+        if comment and "@ddgksf2013" not in comment:
             out.append(comment)
         identifier = "caiyun_" + sha(pattern)[:12]
         if mode == "empty":
