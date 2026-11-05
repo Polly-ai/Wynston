@@ -1,4 +1,4 @@
-#!name = 高德地图净化[墨鱼版]
+#!name = 高德地图净化
 #!desc = 高德地图去广告：开屏、首页信息流、搜索热词与推广；每日随上游自动更新。
 #!category = Polly-ai
 #!author = @ddgksf2013
@@ -16,7 +16,7 @@
 DOMAIN-SUFFIX,optimus-ads.amap.com,DIRECT
 
 [URL Rewrite]
-# > 高德地图_通用广告请求@ddgksf2013
+# > 高德地图_通用广告请求
 ^https?:\/\/.*\.amap\.com\/ws\/asa\/ads_attribution _ reject
 
 [Script]
