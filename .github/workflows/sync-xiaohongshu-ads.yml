@@ -1,0 +1,82 @@
+name: Sync XiaoHongShuAds upstream
+
+on:
+  push:
+    branches: [main]
+    # Test the initial submission/tooling edits; generated module/JS sync commits do not loop.
+    paths:
+      - '.github/scripts/sync_xiaohongshu_ads.py'
+      - '.github/scripts/test_sync_xiaohongshu_ads.py'
+      - '.github/scripts/test_xiaohongshu_ads.cjs'
+      - '.github/workflows/sync-xiaohongshu-ads.yml'
+  schedule:
+    # Beijing 07:17 daily (UTC+8); GitHub scheduled execution can be delayed.
+    - cron: '17 23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-xiaohongshu-ads-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'Polly-ai/Wynston' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup Node for native Surge fixtures
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Offline converter and mirrored ORIGINAL behavior tests
+        run: |
+          python -m unittest discover -s .github/scripts -p 'test_sync_xiaohongshu_ads.py' -v
+          node --check Surge/JavaScript/XiaoHongShu/redbook.ads.js
+      - name: Download paired sources, validate all fixtures, then synchronize
+        run: python .github/scripts/sync_xiaohongshu_ads.py
+      - name: Publish this project only (no-op without changes)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          git add -- Surge/Module/XiaoHongShuAds.sgmodule Surge/JavaScript/XiaoHongShu/redbook.ads.js
+          if git diff --cached --quiet; then
+            echo 'XiaoHongShuAds unchanged; no commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: sync XiaoHongShuAds upstream'
+          # Only this final step obtains a token. Header lives in process environment, not repository config.
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0='http.https://github.com/.extraheader'
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${auth}"
+          trap 'unset auth GH_TOKEN GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0' EXIT
+          for attempt in 1 2 3; do
+            if git pull --rebase origin main; then
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+            else
+              git rebase --abort || true
+            fi
+            echo "Concurrent upstream update or transport failure; retry ${attempt}/3."
+          done
+          echo 'Publish failed after 3 attempts; remote main remains unchanged by this job.' >&2
+          exit 1

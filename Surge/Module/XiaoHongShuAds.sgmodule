@@ -1,0 +1,72 @@
+#!name = 小红书净化
+#!desc = 墨鱼版完整净化与功能增强：开屏/信息流等去广告、隐私与青少年请求屏蔽、图片/Live 图片/短视频去水印。需启用重写与 MITM；仅阻断小红书域 UDP/443 QUIC；与 Feed 时间模块互斥。
+#!category = Polly-ai
+#!author = @ddgksf2013 (上游) / Polly-ai (Surge 转换)
+#!system = ios
+
+# 上游配置：https://ddgksf2013.top/rewrite/XiaoHongShuAds.conf
+# 上游脚本：https://ddgksf2013.top/scripts/redbook.ads.js
+# 配置 SHA256：46c96fb5b9b640d2b51a0b6562b91237116c523bdca8ff3b17318c30799ab19e
+# 原始脚本 SHA256：f75ed15254d4bd23454fd0019cf340b581ad60cf8bb2c355e09e0e32a98fc74d
+# 完整转换：16 条活动响应脚本 + 9 条原生 HTTP 200 空体映射；1 条评论脚本保持禁用。
+# JavaScript 原样镜像，Env 原生支持 Surge；不改持久化键或去水印流程。
+# [Map Local] 需 Surge iOS 5.9.1+ / Mac 5.5.1+；启用重写并信任 MITM 证书。
+# QX udp_drop_list=443 -> [Rule] 仅 UDP 且目标端口 443 且 xiaohongshu.com 域；绝不全局阻断 UDP/443。
+# 规则需在其他可命中的放行规则之前；若模块规则顺序未生效，将相同 AND 规则放到主配置 [Rule] 顶部。
+# 与 rednote-feed-time 的 homefeed 响应脚本重叠；启用本模块时禁用旧 Feed 时间模块。
+# 同一请求只运行一个匹配响应脚本；未集成时间脚本，不承诺同时净化并显示时间。
+# 原始 splash 正则也匹配 splash_config；保留该重叠，不擅自收窄或改动作。
+
+# 上游说明（保留原文，Quantumult X 专用注意事项不是本模块的全局设置）：
+# ==UserScript==
+# @ScriptName        小红书净化+功能增强[墨鱼版]
+# @Author            @ddgksf2013
+# @WechatID          墨鱼手记
+# @TgChannel         https://t.me/ddgksf2021
+# @Contribute        https://t.me/ddgksf2013_bot
+# @MainFunction      去除开屏、瀑布流及启动服务广告，屏蔽隐私与青少年请求，去除帖子图片水印、Live 图片水印及短视频水印，功能增强与体验优化
+# @UpdateTime        2026-01-31
+# @Attention         请在QuantumultX配置文件的[general]下添加 udp_drop_list=443
+# @Suitable          自行观看“# > ”注释内容
+# @Attention         如需引用请注明出处，谢谢合作！
+# @ScriptURL         https://ddgksf2013.top/rewrite/XiaoHongShuAds.conf
+# ==/UserScript==
+
+[Rule]
+AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,xiaohongshu.com)),REJECT
+
+[Script]
+xiaohongshu-ads-01 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/tabfeed, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-02 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/video\/save, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-03 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/live_photo\/save, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-04 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/search\/notes\?, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-05 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/widgets, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-06 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/redtube\?, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-07 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/videofeed\?, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-08 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/feed\?, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-09 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/imagefeed, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-10 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/system_service\/splash_config, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-11 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/homefeed\?, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-12 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/system_service\/config\?, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-13 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/search\/hot_list, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-14 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/search\/hint, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-15 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/homefeed\/categories, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+xiaohongshu-ads-16 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/search\/trending, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+# 上游以分号 ; 禁用的 comment/list：保持禁用，未知原因不自动开启。
+# 上游原行：;^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/comment\/list url script-response-body https://ddgksf2013.top/scripts/redbook.ads.js
+# xiaohongshu-ads-17 = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/note\/comment\/list, requires-body=true, max-size=1048576, timeout=10, script-update-interval=86400, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/XiaoHongShu/redbook.ads.js
+
+[Map Local]
+# QX reject-200 -> 原生 HTTP 200、空正文、文本 Content-Type、禁止缓存；不是 404。
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/search\/notes\/recommend_info\? data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/system_service\/splash data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/gslb data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/httpdns data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/(tag\/)?ads data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/v\d+\/stateReport data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/data\/native\/matrix_switches data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/user\/teenager\/status data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/guide\/home_guide data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+
+[MITM]
+hostname = %APPEND% *.xiaohongshu.com

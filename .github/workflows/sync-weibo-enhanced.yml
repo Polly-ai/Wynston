@@ -1,0 +1,75 @@
+name: Sync Weibo Enhanced from upstream
+
+# 每日北京时间 07:07（UTC 23:07）；无变化不提交，下载/验证失败不发布。
+# 配置和原JavaScript同时更新，标题/Polly-ai分类固定，本机自定义设置不清空。
+on:
+  schedule:
+    - cron: "7 23 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/sync_weibo_enhanced.py
+      - .github/scripts/test_sync_weibo_enhanced.py
+      - .github/scripts/test_weibo_runtime.cjs
+      - .github/workflows/sync-weibo-enhanced.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-weibo-enhanced-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test full Weibo converter
+        run: python3 .github/scripts/test_sync_weibo_enhanced.py
+
+      - name: Sync and validate all Weibo settings and response functions
+        run: python3 .github/scripts/sync_weibo_enhanced.py
+
+      - name: Commit and push changed Weibo files only
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $auth"
+          trap 'git config --local --unset-all http.https://github.com/.extraheader || true' EXIT
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- Surge/Module/WeiboEnhanced.sgmodule Surge/JavaScript/Weibo/
+          if git diff --cached --quiet; then
+            echo "No upstream changes"
+            exit 0
+          fi
+          git commit -m "Sync Weibo Enhanced module and original JavaScript"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+          done
+          echo "Push failed after three attempts" >&2
+          exit 1
