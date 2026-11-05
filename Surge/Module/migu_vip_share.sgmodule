@@ -1,5 +1,5 @@
-#!name = 咪咕视频会员脚本[Surge完整转换]
-#!desc = 原配置全部规则和原JS完整转换，保留原有URL、请求头及Cookie改写；现有凭据据用户测试已失效。不随上游更新。
+#!name = 咪咕视频会员脚本
+#!desc = 原配置全部规则和原JS完整转换，保留原有URL、请求头及Cookie改写
 #!category = Polly-ai
 #!author = 怎么肥事 (ZenmoFeiShi)
 # 上游配置：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/migu_vip_share.snippet
