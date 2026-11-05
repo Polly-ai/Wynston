@@ -13,7 +13,7 @@
 AND,((PROTOCOL,UDP),(DST-PORT,443),(DOMAIN-SUFFIX,xiaohongshu.com)),REJECT
 
 [Script]
-rednote-feed-time = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/homefeed\?, script-path=https://raw.githubusercontent.com/meichiny/rednote-feed-time/rewrite-rule/modules/shadowrocket/rednote-feed-time.js, requires-body=true, timeout=60
+rednote-feed-time = type=http-response, pattern=^https?:\/\/[a-z]+\.xiaohongshu\.com\/api\/sns\/v\d+\/homefeed\?, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Rednote/rednote-feed-time.js, requires-body=true, timeout=60
 
 [MITM]
 hostname = %APPEND% *.xiaohongshu.com

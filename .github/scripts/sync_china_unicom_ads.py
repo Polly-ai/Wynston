@@ -16,7 +16,9 @@
   - ^... url script-request/response-body <js> -> [Script] 唯一脚本名，
     response-body 的 requires-body=true，request 脚本为 false
   - hostname = ... -> [MITM] hostname = %APPEND% ...
-  - '# > ...' 注释行原样保留在其后那条规则上方；其余注释行跳过。
+  - '# > ...' 注释行去掉末尾 @ddgksf2013 后保留在其后那条规则上方；其余注释行跳过。
+  - 脚本一律指向自托管地址（SELF_HOSTED_JS_URL），不直接引用上游 js；
+    同步时同时抓上游 js 更新自托管镜像文件。
 
 固定不变的头部（同步时不被上游覆盖）：
   - #!name、#!desc、#!category、#!author
@@ -36,6 +38,7 @@ MODULE_DESC = '去除中国联通 App 开屏与页面广告、推广入口。'
 MODULE_CATEGORY = "Polly-ai"
 MODULE_AUTHOR = "ddgksf2013"
 SCRIPT_PREFIX = "china_unicom_ads"
+SELF_HOSTED_JS_URL = None  # 本模块无脚本；若上游新增 script 规则，parse() 会直接失败，需人工确认自托管地址。
 EXTRA_NOTES = []
 
 HOST_RULES = {"host": "DOMAIN", "host-suffix": "DOMAIN-SUFFIX",
@@ -47,6 +50,11 @@ MAP_LOCAL_SUFFIX = ' data-type=text data="{}" status-code=200 header="Content-Ty
 def fail(msg):
     print(f"sync_{SCRIPT_PREFIX}: error: {msg}", file=sys.stderr)
     sys.exit(2)
+
+
+def clean_comment(line):
+    """去掉 '# > ...' 注释行末尾的 @ddgksf2013，只去后缀，其余原样保留。"""
+    return re.sub(r"@ddgksf2013\s*$", "", line)
 
 
 def fetch_text(url, from_file):
@@ -67,6 +75,7 @@ def fetch_text(url, from_file):
 
 def parse(text):
     rules, rewrites, map_locals, body_rewrites, scripts, mitm = [], [], [], [], [], []
+    upstream_js_urls = []
     pending_comment = None
     script_n = 0
     lines = text.splitlines()
@@ -79,7 +88,7 @@ def parse(text):
             continue
         if line.startswith("#"):
             if line.startswith("# >"):
-                pending_comment = line
+                pending_comment = clean_comment(line)
             continue
         if line.startswith("//"):
             continue
@@ -147,13 +156,19 @@ def parse(text):
                 if pending_comment:
                     scripts.append(pending_comment)
                     pending_comment = None
-                scripts.append(f"{SCRIPT_PREFIX}_{script_n} = type={kind}, pattern={pattern}, requires-body={rb}, script-path={rest}")
+                if SELF_HOSTED_JS_URL is None:
+                    fail(f"上游新增脚本规则，需人工确认自托管地址：{raw!r}")
+                if upstream_js_urls and rest != upstream_js_urls[0]:
+                    fail(f"脚本地址不一致（期望唯一 js）：{rest!r}")
+                upstream_js_urls.append(rest)
+                scripts.append(f"{SCRIPT_PREFIX}_{script_n} = type={kind}, pattern={pattern}, requires-body={rb}, script-path={SELF_HOSTED_JS_URL}")
             else:
                 fail(f"不支持的 url 动作 {action!r}：{raw!r}")
             continue
         fail(f"无法识别的上游行，已中止：{raw!r}")
     return {"rules": rules, "rewrites": rewrites, "map_locals": map_locals,
-            "body_rewrites": body_rewrites, "scripts": scripts, "mitm": mitm}
+            "body_rewrites": body_rewrites, "scripts": scripts, "mitm": mitm,
+            "upstream_js_url": upstream_js_urls[0] if upstream_js_urls else None}
 
 
 def render(parts):
@@ -175,6 +190,7 @@ def render(parts):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--from-file")
+    ap.add_argument("--js-from-file", help="本地测试用：以上游 js 文件代替网络抓取")
     ap.add_argument("--output", default=DEFAULT_OUTPUT)
     args = ap.parse_args()
     text = fetch_text(UPSTREAM_URL, args.from_file)

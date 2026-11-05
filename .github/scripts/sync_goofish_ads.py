@@ -16,7 +16,9 @@
   - ^... url script-request/response-body <js> -> [Script] 唯一脚本名，
     response-body 的 requires-body=true，request 脚本为 false
   - hostname = ... -> [MITM] hostname = %APPEND% ...
-  - '# > ...' 注释行原样保留在其后那条规则上方；其余注释行跳过。
+  - '# > ...' 注释行去掉末尾 @ddgksf2013 后保留在其后那条规则上方；其余注释行跳过。
+  - 脚本一律指向自托管地址（SELF_HOSTED_JS_URL），不直接引用上游 js；
+    同步时同时抓上游 js 更新自托管镜像文件。
 
 固定不变的头部（同步时不被上游覆盖）：
   - #!name、#!desc、#!category、#!author
@@ -36,6 +38,9 @@ MODULE_DESC = '去除闲鱼 App 开屏与页面广告、推广入口。'
 MODULE_CATEGORY = "Polly-ai"
 MODULE_AUTHOR = "ddgksf2013"
 SCRIPT_PREFIX = "goofish_ads"
+SELF_HOSTED_JS_URL = "https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amdc.js"
+ASSET_PATH = "Surge/JavaScript/Amap/amdc.js"
+UPSTREAM_JS_URL = "https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amdc.js"
 EXTRA_NOTES = ['# 注意：amdc.js 对阿里系 UA 返回固定体 "ddgksf2013"（上游原样），用于过 AMDC 检测；非阿里 UA 直接放行。']
 
 HOST_RULES = {"host": "DOMAIN", "host-suffix": "DOMAIN-SUFFIX",
@@ -47,6 +52,11 @@ MAP_LOCAL_SUFFIX = ' data-type=text data="{}" status-code=200 header="Content-Ty
 def fail(msg):
     print(f"sync_{SCRIPT_PREFIX}: error: {msg}", file=sys.stderr)
     sys.exit(2)
+
+
+def clean_comment(line):
+    """去掉 '# > ...' 注释行末尾的 @ddgksf2013，只去后缀，其余原样保留。"""
+    return re.sub(r"@ddgksf2013\s*$", "", line)
 
 
 def fetch_text(url, from_file):
@@ -67,6 +77,7 @@ def fetch_text(url, from_file):
 
 def parse(text):
     rules, rewrites, map_locals, body_rewrites, scripts, mitm = [], [], [], [], [], []
+    upstream_js_urls = []
     pending_comment = None
     script_n = 0
     lines = text.splitlines()
@@ -79,7 +90,7 @@ def parse(text):
             continue
         if line.startswith("#"):
             if line.startswith("# >"):
-                pending_comment = line
+                pending_comment = clean_comment(line)
             continue
         if line.startswith("//"):
             continue
@@ -147,13 +158,19 @@ def parse(text):
                 if pending_comment:
                     scripts.append(pending_comment)
                     pending_comment = None
-                scripts.append(f"{SCRIPT_PREFIX}_{script_n} = type={kind}, pattern={pattern}, requires-body={rb}, script-path={rest}")
+                if SELF_HOSTED_JS_URL is None:
+                    fail(f"上游新增脚本规则，需人工确认自托管地址：{raw!r}")
+                if upstream_js_urls and rest != upstream_js_urls[0]:
+                    fail(f"脚本地址不一致（期望唯一 js）：{rest!r}")
+                upstream_js_urls.append(rest)
+                scripts.append(f"{SCRIPT_PREFIX}_{script_n} = type={kind}, pattern={pattern}, requires-body={rb}, script-path={SELF_HOSTED_JS_URL}")
             else:
                 fail(f"不支持的 url 动作 {action!r}：{raw!r}")
             continue
         fail(f"无法识别的上游行，已中止：{raw!r}")
     return {"rules": rules, "rewrites": rewrites, "map_locals": map_locals,
-            "body_rewrites": body_rewrites, "scripts": scripts, "mitm": mitm}
+            "body_rewrites": body_rewrites, "scripts": scripts, "mitm": mitm,
+            "upstream_js_url": upstream_js_urls[0] if upstream_js_urls else None}
 
 
 def render(parts):
@@ -175,10 +192,28 @@ def render(parts):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--from-file")
+    ap.add_argument("--js-from-file", help="本地测试用：以上游 js 文件代替网络抓取")
     ap.add_argument("--output", default=DEFAULT_OUTPUT)
     args = ap.parse_args()
     text = fetch_text(UPSTREAM_URL, args.from_file)
     parts = parse(text)
+
+    # amdc.js 镜像由 sync_amap.py 维护（同一上游文件）；此处只校验不一致时报错，不写该文件。
+    upstream_js = parts.get("upstream_js_url")
+    if upstream_js:
+        if args.js_from_file:
+            js_text = open(args.js_from_file, encoding="utf-8").read()
+        elif args.from_file:
+            js_text = None  # 本地 --from-file 测试不校验 js
+        else:
+            js_text = fetch_text(upstream_js, None)
+        if js_text is not None:
+            try:
+                old_js = open(ASSET_PATH, encoding="utf-8").read()
+            except FileNotFoundError:
+                old_js = None
+            if old_js != js_text:
+                fail(f"上游 amdc.js 已变，与自托管镜像 {ASSET_PATH} 不一致；该文件由 sync_amap.py 维护，请人工核对后再同步")
     if not parts["mitm"]:
         fail("转换后无 MITM 主机名，上游结构可能已变，已中止")
     if not (parts["rules"] or parts["rewrites"] or parts["map_locals"]

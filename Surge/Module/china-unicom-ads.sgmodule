@@ -9,27 +9,27 @@
 DOMAIN-SUFFIX,ad.10010.com,REJECT
 
 [URL Rewrite]
-# > 广告推送@ddgksf2013
+# > 广告推送
 ^https?:\/\/m\.client\.10010\.com\/mobileserviceimportant\/customer\/querySmartServicekhd.htm _ reject
-# > 新人专享@ddgksf2013
+# > 新人专享
 ^https?:\/\/m\.client\.10010\.com\/clientIndex\/api\/v1\/index\/queryIndexExclusiveOffers _ reject
-# > 首页瀑布流@ddgksf2013
+# > 首页瀑布流
 ^https?:\/\/img\.client\.10010\.com\/homejingxuan12\/js\/(pubuliu|1homeView) _ reject
 
 [Body Rewrite]
-# > 热搜词@ddgksf2013
+# > 热搜词
 http-response-jq ^https?:\/\/m\.client\.10010\.com\/search_service\/search\/searchScrollWord '.["113000004"]=[]'
-# > 首页底部ICON@ddgksf2013
+# > 首页底部ICON
 http-response-jq ^https?:\/\/m\.client\.10010\.com\/clientIndex\/homefusion\/fuInter 'del(.["HomeFusion.backGroundQuery"], .["HomeFusion.bottomLabel"].bottomMallKey)'
-# > 借钱@ddgksf2013
+# > 借钱
 http-response-jq ^https?:\/\/m\.client\.10010\.com\/clientMyPage\/v\d\/api\/myWallet '.data={}'
-# > 积分@ddgksf2013
+# > 积分
 http-response-jq ^https?:\/\/m\.client\.10010\.com\/clientMyPage\/v\d\/api\/myPoints '.data={}'
-# > 彩铃@ddgksf2013
+# > 彩铃
 http-response-jq ^https?:\/\/m\.client\.10010\.com\/clientMyPage\/v\d\/api\/myColorfulRingtone '.data={}'
-# > 横幅@ddgksf2013
+# > 横幅
 http-response-jq ^https?:\/\/m\.client\.10010\.com\/clientMyPage\/v\d\/api\/newUserInfo '.data={}'
-# > 本地图片推广@ddgksf2013
+# > 本地图片推广
 http-response-jq ^https?:\/\/m\.client\.10010\.com\/clientMyPage\/v\d\/api\/getDeviceInfo '.data={}'
 
 [MITM]
