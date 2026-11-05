@@ -1,0 +1,70 @@
+name: Sync AmapAds module from upstream
+
+# 每日北京时间 06:17（UTC 22:17）；GitHub 可能延迟调度。
+# 无变化不提交；抓取失败或遇到未知语法时保留现有模块。
+on:
+  schedule:
+    - cron: "17 22 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/sync_amap.py
+      - .github/scripts/test_sync_amap.py
+      - .github/workflows/sync-amap.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-amap-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Set up Node.js for JavaScript validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test converter safeguards
+        run: python3 .github/scripts/test_sync_amap.py
+
+      - name: Synchronize module and upstream JavaScript
+        run: python3 .github/scripts/sync_amap.py
+
+      - name: Commit and push only changed Amap files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- Surge/Module/AmapAds.sgmodule Surge/JavaScript/Amap/
+          if git diff --cached --quiet; then
+            echo "No upstream changes"
+            exit 0
+          fi
+          git commit -m "Sync AmapAds module and scripts from upstream"
+          # Other daily sync jobs may update main while this job runs.
+          # Rebase preserves their commits; conflicts fail instead of overwriting.
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+          done
+          echo "Push failed after three attempts" >&2
+          exit 1

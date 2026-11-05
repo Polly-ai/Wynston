@@ -1,0 +1,59 @@
+#!name = 高德地图净化[墨鱼版]
+#!desc = 高德地图去广告：开屏、首页信息流、搜索热词与推广；每日随上游自动更新。
+#!category = Polly-ai
+#!author = @ddgksf2013
+# 上游来源：https://raw.githubusercontent.com/ddgksf2013/Rewrite/master/AdBlock/AmapAds.conf
+# 上游版本：V1.0.28
+# 原作者更新：2025-12-06
+# 上游配置 SHA256：d0c1caf909e3e9151ec890eb31bc14dc28b34c49d6c8a1ef42c147cd949564b3
+# 转换与维护：Polly-ai/Wynston；保留原作者署名，JavaScript 按原样同步。
+# reject-200/reject-dict/reject-img 用 Surge 请求脚本保留 HTTP 200 空体/空对象/透明 GIF 语义。
+# 响应脚本最多缓存 1 MiB；超限时 Surge 透传，避免 iOS 内存过载。
+# 原作者提示：使用前请卸载高德地图，挂载脚本然后使用。
+# 使用须启用 MITM 并安装、信任其证书；不要与同类高德净化模块重复启用。
+
+[Rule]
+DOMAIN-SUFFIX,optimus-ads.amap.com,DIRECT
+
+[URL Rewrite]
+# > 高德地图_通用广告请求@ddgksf2013
+^https?:\/\/.*\.amap\.com\/ws\/asa\/ads_attribution _ reject
+
+[Script]
+# > 高德地图_开屏请求@ddgksf2013
+amap_reply_6eebd1f1b41c = type=http-request, pattern=^https?:\/\/.*\.amap\.com\/ws\/aos\/alimama\/splash_screen, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap-reply.js, argument=empty, timeout=5
+# > 高德地图_首页底部信息流@ddgksf2013
+amap_reply_26346e80f9c5 = type=http-request, pattern=^https?:\/\/.*\.amap\.com\/v\d\/ai_rec\/, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap-reply.js, argument=dict, timeout=5
+# > 高德地图_amdc处理@ddgksf2013
+amap_body_05a0fd2cfc4b = type=http-response, pattern=^http:\/\/amdc\.m\.taobao\.com, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amdc.js, timeout=10
+# > 高德地图_底部tab栏角标@ddgksf2013
+amap_body_02e26dbfb397 = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/message\/notice\/list, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_路线规划下方广告@ddgksf2013
+amap_reply_08abcb6a7ab0 = type=http-request, pattern=^https?:\/\/.*\.amap\.com\/ws\/faas\/amap-navigation\/card-service-route-plan\?, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap-reply.js, argument=dict, timeout=5
+# > 高德地图_首页右中广告@ddgksf2013
+amap_body_adb81a81dacb = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/shield\/frogserver\/aocs\/updatable, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_附近页面@ddgksf2013
+amap_body_d973437414f4 = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/shield\/search\/nearbyrec_smart, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_打车页面处理@ddgksf2013
+amap_body_44a4ea6fab7e = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/promotion-web\/resource, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_Tip请求@ddgksf2013
+amap_reply_1bc3d8b08fb7 = type=http-request, pattern=^https?:\/\/.*\.amap\.com\/ws\/boss\/order_web\/\w{8}_information, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap-reply.js, argument=empty, timeout=5
+# > 高德地图_首页底部处理@ddgksf2013
+amap_body_57e8b4d5b34e = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/faas\/amap-navigation\/main-page, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_开屏广告@ddgksf2013
+amap_body_882aea79681f = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/valueadded\/alimama\/splash_screen, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_首页顶部推广@ddgksf2013
+amap_body_e12bcbf64c5e = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/msgbox\/pull, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_我的页面@ddgksf2013
+amap_body_16cc46cd5db2 = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/shield\/dsp\/profile\/index\/nodefaas, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_搜索框热词@ddgksf2013
+amap_body_3b3f667405e9 = type=http-response, pattern=^https?:\/\/.*\.amap\.com\/ws\/shield\/search\/new_hotword, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap.js, timeout=10
+# > 高德地图_搜索框scene@ddgksf2013
+amap_reply_168eebd69718 = type=http-request, pattern=^https?:\/\/.*\.amap\.com\/ws\/shield\/scene\/recommend, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap-reply.js, argument=dict, timeout=5
+# > 高德地图_首页左上角gif@ddgksf2013
+amap_reply_0016e60fff96 = type=http-request, pattern=^https?:\/\/.*\.amap\.com\/uploadimg\/\w+\.gif, requires-body=false, binary-body-mode=true, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap-reply.js, argument=image, timeout=5
+# > 高德地图_左下天气@ddgksf2013
+amap_reply_a91ce7979971 = type=http-request, pattern=^https?:\/\/.*\.amap\.com\/ws\/valueadded\/weather, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Amap/amap-reply.js, argument=dict, timeout=5
+
+[MITM]
+hostname = %APPEND% m5.amap.com, m5-zb.amap.com, center.amap.com, amap-aos-info-nogw.amap.com, ai.amap.com
