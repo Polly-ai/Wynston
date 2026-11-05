@@ -6,7 +6,11 @@
 本地测试：
     python3 .github/scripts/sync_pinduoduo.py --snippet-file /tmp/Pinduoduo.snippet --output-module /tmp/out.sgmodule
 
-转换规则（上游是纯规则文件，没有外部脚本）：
+转换规则（2026-11-04 上游 v8.29.0 改版：删掉全部 reject-dict / jsonjq，
+  改为 3 条 script-response-body，走 Pinduoduo.js 做底栏与弹窗净化）：
+  - ^... url script-response-body <js> -> [Script] 唯一脚本名，
+    type=http-response, requires-body=true, script-path=<js>（沿用
+    sync_txvideo.py / sync_meituan.py 的同款写法）
   - host, X, reject -> [Rule] DOMAIN,X,REJECT
   - ip-cidr, X, reject -> [Rule] IP-CIDR,X,REJECT,no-resolve
     （模块里的 IP 规则一律加 no-resolve，否则域名请求会先触发 DNS 解析）
@@ -24,16 +28,20 @@
 """
 
 import argparse
+import re
 import sys
 import urllib.request
 
 UPSTREAM_SNIPPET_URL = "https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Pinduoduo.snippet"
 DEFAULT_MODULE_OUTPUT = "Surge/Module/pinduoduo.sgmodule"
 
-MODULE_NAME = "拼多多净化页面布局"
-MODULE_DESC = "净化拼多多首页、搜索、个人中心与订单页布局，屏蔽广告与推广入口。"
+MODULE_NAME = "拼多多净化底栏与弹窗"
+MODULE_DESC = "净化拼多多底栏与弹窗，屏蔽广告与推广入口。（2026-11-04 上游改版后范围）"
 MODULE_CATEGORY = "Polly-ai"
-MODULE_AUTHOR = "怎么肥事 walala"
+MODULE_AUTHOR = "怎么肥事"
+
+# 脚本规则可能被换行拆开，因此用 \s+ 横跨空白（含换行）匹配（同 sync_txvideo.py）。
+SCRIPT_RE = re.compile(r"(\^\S+)\s+url\s+script-(request|response)-body\s+(https?://\S+)")
 
 
 def fail(msg):
@@ -73,6 +81,8 @@ def convert_snippet(text):
             continue
         if line.startswith("#"):
             fail(f"无法识别的上游行，已中止：{raw_line}")
+        if SCRIPT_RE.match(line):
+            continue  # 脚本行由后面的 SCRIPT_RE.finditer 统一提取
         if line.startswith("host,"):
             parts = [p.strip() for p in line.split(",")]
             if len(parts) != 3 or parts[2] != "reject" or not parts[1]:
@@ -110,8 +120,19 @@ def convert_snippet(text):
         else:
             fail(f"无法识别的上游行，已中止：{raw_line}")
 
-    if not rules or not map_locals or not body_rewrites or not mitm_hosts:
-        fail("转换后某一段为空（Rule/Map Local/Body Rewrite/MITM 至少一段为空），上游结构可能已变，已中止")
+    scripts = []
+    for i, m in enumerate(SCRIPT_RE.finditer(text), start=1):
+        pattern, kind, js_url = m.group(1), m.group(2), m.group(3)
+        req_type = "http-request" if kind == "request" else "http-response"
+        scripts.append(
+            f"pinduoduo_{i} = type={req_type}, pattern={pattern}, "
+            f"requires-body=true, script-path={js_url}"
+        )
+
+    # 上游 v8.29.0 起 Map Local / Body Rewrite 为空是正常的（规则已并入脚本），
+    # 只要求 Rule、Script、MITM 三段非空；任一段为空仍直接失败、不静默丢规则。
+    if not rules or not scripts or not mitm_hosts:
+        fail("转换后某一段为空（Rule/Script/MITM 至少一段为空），上游结构可能已变，已中止")
 
     out = []
     out.append(f"#!name = {MODULE_NAME}")
@@ -120,23 +141,27 @@ def convert_snippet(text):
     out.append(f"#!author = {MODULE_AUTHOR}")
     out.append("")
     out.append("# 转换自 QX 格式，上游：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Pinduoduo.snippet")
-    out.append("# 注意：[Body Rewrite] 的 http-response-jq 需 Surge iOS 5.14.0+ / Mac 5.9.0+，低版本 Surge 上这部分规则不生效；[Rule] 与 [Map Local] 不受此限制。")
-    out.append("# [Map Local] 的 {} 返回即 QX reject-dict 的等价写法；Surge [URL Rewrite] 没有 reject-dict 模式，直接照搬会使规则不生效。")
+    out.append("# 注意：净化逻辑在 Pinduoduo.js 里（上游脚本直链）；[Script] 需 Surge 开 MITM，脚本本身须兼容 Surge 的 $response / $done 写法。")
     out.append("# MITM 仅 api.pinduoduo.com 一个域名；[Rule] 的域名/IP 屏蔽不依赖 MITM。")
     out.append("")
     out.append("[Rule]")
     out.extend(rules)
     out.append("")
-    out.append("[Map Local]")
-    out.extend(map_locals)
+    out.append("[Script]")
+    out.extend(scripts)
     out.append("")
-    out.append("[Body Rewrite]")
-    out.extend(body_rewrites)
-    out.append("")
+    if map_locals:
+        out.append("[Map Local]")
+        out.extend(map_locals)
+        out.append("")
+    if body_rewrites:
+        out.append("[Body Rewrite]")
+        out.extend(body_rewrites)
+        out.append("")
     out.append("[MITM]")
     out.append("hostname = %APPEND% " + ", ".join(mitm_hosts))
     out.append("")
-    return "\n".join(out), len(rules), len(map_locals), len(body_rewrites), len(mitm_hosts)
+    return "\n".join(out), len(rules), len(scripts), len(map_locals), len(body_rewrites), len(mitm_hosts)
 
 
 def main(argv):
@@ -146,7 +171,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     text = fetch_text(UPSTREAM_SNIPPET_URL, args.snippet_file)
-    module_text, n_rule, n_map, n_body, n_mitm = convert_snippet(text)
+    module_text, n_rule, n_script, n_map, n_body, n_mitm = convert_snippet(text)
 
     try:
         with open(args.output_module, "r", encoding="utf-8") as f:
@@ -158,7 +183,7 @@ def main(argv):
         return 0
     with open(args.output_module, "w", encoding="utf-8") as f:
         f.write(module_text)
-    print(f"sync_pinduoduo: 已写入 {args.output_module}（Rule {n_rule}、Map Local {n_map}、Body Rewrite {n_body}、MITM {n_mitm}）")
+    print(f"sync_pinduoduo: 已写入 {args.output_module}（Rule {n_rule}、Script {n_script}、Map Local {n_map}、Body Rewrite {n_body}、MITM {n_mitm}）")
     return 0
 
 
