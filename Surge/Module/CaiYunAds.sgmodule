@@ -1,0 +1,43 @@
+#!name = 彩云天气净化及会员标记[墨鱼版]
+#!desc = 去除推广与广告，保留上游 VIP/SVIP 客户端标记伪装；会员部分需登录且旧版≤7.20.2，不代表真实订阅。
+#!category = Polly-ai
+#!author = @ddgksf2013
+# 上游来源：https://raw.githubusercontent.com/ddgksf2013/Rewrite/master/AdBlock/CaiYunAds.conf
+# 上游版本：V1.0.8；原作者更新：2024-09-27
+# 配置 SHA256：8ba68f9affa24bf759d157d1ab88c9920e1ea25b2cfc36720d0966ceb9220842
+# 上游 caiyun_json.js SHA256：1a165112aac24bf3830fa47b77d223d85beffdeaf91ee96eef05ab9429b36844
+# 转换与维护：Polly-ai/Wynston。上游 JS 原样镜像，Surge 桥接处理异常与重复完成。
+# 已按用户要求保留两条会员标记规则，并显式追加 biz.cyapi.cn 的 MITM。
+# 仅本机修改响应标记；不提供共享账号、真实订阅或服务器端付费权限。
+# 需启用 MITM 并信任证书；不要与其他匹配这些接口的响应脚本重复启用。
+# 每日同步配置和 JS；无变化不提交，下载或验证失败不发布。
+# max-size=1048576：响应超过 1 MiB 时 Surge 跳过脚本并透传。
+
+[Script]
+# > 伪装VIP解锁48小时降水[需登录][新验证接口][需旧版≤ 7.20.2]@ddgksf2013
+caiyun_916a39e3323a = type=http-response, pattern=^https?:\/\/biz\.cyapi\.cn\/api\/v\d\/user_detail, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 伪装VIP解锁48小时降水[需登录][需旧版≤ 7.20.2]@ddgksf2013
+caiyun_f715ca986dcc = type=http-response, pattern=^https?:\/\/biz\.cyapi\.cn\/v\d\/user, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 图层推广@ddgksf2013
+caiyun_b822c314b8fc = type=http-response, pattern=^https?:\/\/wrapper\.cyapi\.cn\/v\d\/activity, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 活动推广@ddgksf2013
+caiyun_88ef309af698 = type=http-response, pattern=^https?:\/\/api\.caiyunapp\.com\/v\d\/activity, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 首页顶部推广@ddgksf2013
+caiyun_a04ebf8b1333 = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/operation/homefeatures, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > SVIP提醒推广@ddgksf2013
+caiyun_0e8f56939590 = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/notification/message_center, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 雨季特惠提醒@ddgksf2013
+caiyun_85a375e41c89 = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/config/cypage, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 发现页信息流推荐@ddgksf2013
+caiyun_810d60bd7a1c = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/operation/feeds, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 发现页banners@ddgksf2013
+caiyun_967341ddebc8 = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/operation/banners, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 发现页中间部分@ddgksf2013
+caiyun_a74735defc0d = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/operation/features, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 发现页活动@ddgksf2013
+caiyun_79eb757b7c4c = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/campaigns, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 通用广告请求@ddgksf2013
+caiyun_2106d718cf48 = type=http-request, pattern=^https?:\/\/ad\.cyapi\.cn\/v\d, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-reply.js, script-update-interval=86400, timeout=5
+
+[MITM]
+hostname = %APPEND% wrapper.cyapi.cn, api.caiyunapp.com, starplucker.cyapi.cn, ad.cyapi.cn, biz.cyapi.cn

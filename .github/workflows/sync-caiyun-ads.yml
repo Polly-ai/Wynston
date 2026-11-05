@@ -1,0 +1,75 @@
+name: Sync CaiYunAds module from upstream
+
+# 每日北京时间 06:57（UTC 22:57）；GitHub 调度可能延迟。
+# 保留用户要求的上游会员标记与去广告规则，无共享账号/令牌。
+# 配置、原JS、Surge桥接一起更新；无变化不提交，下载/验证失败不发布。
+on:
+  schedule:
+    - cron: "57 22 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/sync_caiyun_ads.py
+      - .github/scripts/test_sync_caiyun_ads.py
+      - .github/workflows/sync-caiyun-ads.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-caiyun-ads-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test CaiYun conversion safeguards
+        run: python3 .github/scripts/test_sync_caiyun_ads.py
+
+      - name: Synchronize and validate CaiYun upstream
+        run: python3 .github/scripts/sync_caiyun_ads.py
+
+      - name: Commit and push changed CaiYun files only
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $auth"
+          trap 'git config --local --unset-all http.https://github.com/.extraheader || true' EXIT
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- Surge/Module/CaiYunAds.sgmodule Surge/JavaScript/CaiYun/
+          if git diff --cached --quiet; then
+            echo "No upstream changes"
+            exit 0
+          fi
+          git commit -m "Sync CaiYunAds module and scripts from upstream"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+          done
+          echo "Push failed after three attempts" >&2
+          exit 1
