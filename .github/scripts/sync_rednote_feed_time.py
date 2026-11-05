@@ -4,6 +4,8 @@
 上游本身就是 Surge/Shadowrocket 模块格式：同步时只替换头部元数据
 （#!name/#!desc/#!category/#!author/#!system），[Script] 的 script-path 一律改写为
 自托管地址（SELF_HOSTED_JS_URL），同时抓上游 js 更新自托管镜像文件。
+命名规则：单个脚本不加数字后缀（上游单脚本名 rednote-feed-time 原样保留；
+若上游单脚本名带 _1 后缀，去掉它；多个脚本再加 _1、_2 编号）。
 （#!name/#!desc/#!category/#!author/#!system），[Rule]/[Script]/[MITM]
 三段原样保留；结构或条数变化时直接失败、绝不静默丢规则。
 上游没变时不写文件、不产生提交。
@@ -54,6 +56,8 @@ def convert(text):
         fail("上游 Script 行缺少 script-path，已中止")
     upstream_js_url = mjs.group(1)
     script_lines[0] = script_lines[0].replace(upstream_js_url, SELF_HOSTED_JS_URL)
+    # 命名规则：单个脚本不加数字后缀；若上游单脚本名带 _1 后缀，去掉它。
+    script_lines[0] = re.sub(r"^(\S+?)_1 =", r"\1 =", script_lines[0], count=1)
     if "$prefs" in text or "$notify" in text:
         fail("上游脚本出现 QX 专属接口，需人工适配，已中止")
     out = ["#!name = 小红书 Feed 时间",

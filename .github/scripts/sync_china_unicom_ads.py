@@ -13,7 +13,8 @@
   - ^... url reject-dict / reject-200 -> [Map Local] 返回 {}（Surge [URL Rewrite]
     没有 reject-dict/reject-200，直接照搬会使规则不生效）
   - ^... url jsonjq-response-body 'jq' -> [Body Rewrite] http-response-jq
-  - ^... url script-request/response-body <js> -> [Script] 唯一脚本名，
+  - ^... url script-request/response-body <js> -> [Script] 脚本名按规则生成：
+    单个脚本不加数字后缀，多个脚本再加 _1、_2 编号；
     response-body 的 requires-body=true，request 脚本为 false
   - hostname = ... -> [MITM] hostname = %APPEND% ...
   - '# > ...' 注释行去掉末尾 @ddgksf2013 后保留在其后那条规则上方；其余注释行跳过。
@@ -166,6 +167,13 @@ def parse(text):
                 fail(f"不支持的 url 动作 {action!r}：{raw!r}")
             continue
         fail(f"无法识别的上游行，已中止：{raw!r}")
+    # 命名规则：单个脚本不加数字后缀，多个脚本再加 _1、_2 编号。
+    # parse() 里先按 _1、_2 生成，解析完再按总数决定，单个脚本去掉 _1。
+    _script_entries = [j for j, e in enumerate(scripts)
+                       if re.match(rf"{re.escape(SCRIPT_PREFIX)}_\d+ =", e)]
+    if len(_script_entries) == 1:
+        _j = _script_entries[0]
+        scripts[_j] = re.sub(rf"^{re.escape(SCRIPT_PREFIX)}_\d+ =", f"{SCRIPT_PREFIX} =", scripts[_j], count=1)
     return {"rules": rules, "rewrites": rewrites, "map_locals": map_locals,
             "body_rewrites": body_rewrites, "scripts": scripts, "mitm": mitm,
             "upstream_js_url": upstream_js_urls[0] if upstream_js_urls else None}

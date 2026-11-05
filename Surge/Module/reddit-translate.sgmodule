@@ -7,7 +7,7 @@
 # 注意：本模块不是去广告模块，是功能开启（注入翻译请求头）；脚本只改请求头，不改响应体。
 
 [Script]
-reddit_translate_1 = type=http-request, pattern=^https?:\/\/gql(-fed)?\.reddit\.com, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Reddit/reddit-translate.js
+reddit_translate = type=http-request, pattern=^https?:\/\/gql(-fed)?\.reddit\.com, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Reddit/reddit-translate.js
 
 [MITM]
 hostname = %APPEND% gql.reddit.com, gql-fed.reddit.com
