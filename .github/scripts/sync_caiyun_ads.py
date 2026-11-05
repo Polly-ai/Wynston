@@ -211,20 +211,26 @@ def render(text: str, source: str) -> str:
         "# 需启用 MITM 并信任证书；不要与其他匹配这些接口的响应脚本重复启用。",
         "# 每日同步配置和 JS；无变化不提交，下载或验证失败不发布。",
         "# max-size=1048576：响应超过 1 MiB 时 Surge 跳过脚本并透传。",
+        "# [Map Local] 原生返回 HTTP 200 空体；需启用重写（iOS 5.9.1+ / Mac 5.5.1+）。",
         "", "[Script]",
     ]
     for pattern, mode, comment in rules:
-        if comment and "@ddgksf2013" not in comment:
-            out.append(comment)
-        identifier = "caiyun_" + sha(pattern)[:12]
         if mode == "empty":
-            out.append(f"{identifier} = type=http-request, pattern={pattern}, requires-body=false, "
-                       f"script-path={RAW_ROOT}/{ASSET_PATH.as_posix()}/caiyun-reply.js, "
-                       "script-update-interval=86400, timeout=5")
-        else:
-            out.append(f"{identifier} = type=http-response, pattern={pattern}, requires-body=true, "
-                       f"max-size=1048576, script-path={RAW_ROOT}/{ASSET_PATH.as_posix()}/caiyun-surge.js, "
-                       "script-update-interval=86400, timeout=10")
+            continue
+        if comment:
+            out.append(comment.replace("@ddgksf2013", "").rstrip())
+        identifier = "caiyun_" + sha(pattern)[:12]
+        out.append(f"{identifier} = type=http-response, pattern={pattern}, requires-body=true, "
+                   f"max-size=1048576, script-path={RAW_ROOT}/{ASSET_PATH.as_posix()}/caiyun-surge.js, "
+                   "script-update-interval=86400, timeout=10")
+    mappings = [(pattern, comment) for pattern, mode, comment in rules if mode == "empty"]
+    if mappings:
+        out.extend(["", "[Map Local]"])
+        for pattern, comment in mappings:
+            if comment:
+                out.append(comment.replace("@ddgksf2013", "").rstrip())
+            out.append(f'{pattern} data-type=text data="" status-code=200 '
+                       'header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"')
     out.extend(["", "[MITM]", "hostname = %APPEND% " + ", ".join(hosts), ""])
     return "\n".join(out)
 

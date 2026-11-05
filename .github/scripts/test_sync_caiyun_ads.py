@@ -2,6 +2,7 @@
 """Offline tests for CaiYun Surge conversion, including requested VIP flags."""
 import importlib.util
 import re
+import shlex
 import tempfile
 import unittest
 from pathlib import Path
@@ -63,15 +64,19 @@ class CaiYunTests(unittest.TestCase):
         self.assertIn("V1.0.test", module)
         self.assertIn("# > client VIP flag", module)
 
-    def test_requested_comment_cleanup_does_not_drop_rules(self):
+    def test_requested_comment_cleanup_preserves_explanations_and_rules(self):
         text = CONFIG.replace("# > client VIP flag", "# > client VIP flag @ddgksf2013")
         text = text.replace("# > activity ad", "# > activity ad@ddgksf2013")
+        text = text.replace(AD + " url reject-200", "# > general ad request@ddgksf2013\n" + AD + " url reject-200")
         cleaned = sync.render(text, SOURCE)
         self.assertNotIn("@ddgksf2013", cleaned)
-        self.assertNotIn("# > client VIP flag", cleaned)
-        self.assertNotIn("# > activity ad", cleaned)
-        before = [line for line in sync.render(CONFIG, SOURCE).splitlines() if "pattern=" in line]
-        after = [line for line in cleaned.splitlines() if "pattern=" in line]
+        self.assertIn("# > client VIP flag\n", cleaned)
+        self.assertIn("# > activity ad\n", cleaned)
+        self.assertIn("# > general ad request\n", cleaned)
+        before = [line for line in sync.render(CONFIG, SOURCE).splitlines()
+                  if "pattern=" in line or line.startswith("^")]
+        after = [line for line in cleaned.splitlines()
+                 if "pattern=" in line or line.startswith("^")]
         self.assertEqual(before, after)
         self.assertIn("#!name = 彩云天气 增强\n", cleaned)
 
@@ -85,20 +90,25 @@ class CaiYunTests(unittest.TestCase):
             self.assertIn("script-update-interval=86400, timeout=10", line)
         self.assertNotIn("binary-body-mode", module)
 
-    def test_reject200_is_successful_empty_response(self):
+    def test_reject200_uses_native_map_local(self):
         module = sync.render(CONFIG, SOURCE)
-        line = next(line for line in module.splitlines() if "type=http-request" in line)
-        self.assertIn("requires-body=false", line)
-        self.assertIn("caiyun-reply.js", line)
-        self.assertIn("status:200", sync.EMPTY_JS)
-        self.assertIn('body:""', sync.EMPTY_JS)
+        section = module.split("\n[Map Local]\n", 1)[1].split("\n[MITM]\n", 1)[0]
+        line = next(line for line in section.splitlines() if line.startswith("^"))
+        pattern, parameters_text = line.split(maxsplit=1)
+        self.assertEqual(pattern, AD)
+        parameters = dict(part.split("=", 1) for part in shlex.split(parameters_text))
+        self.assertEqual(parameters["data-type"], "text")
+        self.assertEqual(parameters["data"], "")
+        self.assertEqual(parameters["status-code"], "200")
+        self.assertIn("Content-Type:text/plain; charset=utf-8", parameters["header"])
+        self.assertNotIn("type=http-request", module)
+        self.assertNotIn("caiyun-reply.js", module)
         self.assertNotIn(" _ reject", module)
-        sync.validate_scripts({"caiyun-reply.js": sync.EMPTY_JS})
 
     def test_all_original_patterns_preserved(self):
         before = [line.split()[0] for line in CONFIG.splitlines() if line.startswith("^")]
-        after = [line.split("pattern=",1)[1].split(", ",1)[0]
-                 for line in sync.render(CONFIG,SOURCE).splitlines() if "pattern=" in line]
+        after = [line.split("pattern=",1)[1].split(", ",1)[0] if "pattern=" in line else line.split()[0]
+                 for line in sync.render(CONFIG,SOURCE).splitlines() if "pattern=" in line or line.startswith("^")]
         self.assertEqual(before,after)
 
     def test_source_preserved_and_output_stable(self):

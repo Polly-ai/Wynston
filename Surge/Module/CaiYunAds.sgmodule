@@ -11,20 +11,35 @@
 # 需启用 MITM 并信任证书；不要与其他匹配这些接口的响应脚本重复启用。
 # 每日同步配置和 JS；无变化不提交，下载或验证失败不发布。
 # max-size=1048576：响应超过 1 MiB 时 Surge 跳过脚本并透传。
+# [Map Local] 原生返回 HTTP 200 空体；需启用重写（iOS 5.9.1+ / Mac 5.5.1+）。
 
 [Script]
+# > 伪装VIP解锁48小时降水[需登录][新验证接口][需旧版≤ 7.20.2]
 caiyun_916a39e3323a = type=http-response, pattern=^https?:\/\/biz\.cyapi\.cn\/api\/v\d\/user_detail, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 伪装VIP解锁48小时降水[需登录][需旧版≤ 7.20.2]
 caiyun_f715ca986dcc = type=http-response, pattern=^https?:\/\/biz\.cyapi\.cn\/v\d\/user, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 图层推广
 caiyun_b822c314b8fc = type=http-response, pattern=^https?:\/\/wrapper\.cyapi\.cn\/v\d\/activity, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 活动推广
 caiyun_88ef309af698 = type=http-response, pattern=^https?:\/\/api\.caiyunapp\.com\/v\d\/activity, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 首页顶部推广
 caiyun_a04ebf8b1333 = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/operation/homefeatures, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > SVIP提醒推广
 caiyun_0e8f56939590 = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/notification/message_center, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 雨季特惠提醒
 caiyun_85a375e41c89 = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/config/cypage, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 发现页信息流推荐
 caiyun_810d60bd7a1c = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/operation/feeds, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 发现页banners
 caiyun_967341ddebc8 = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/operation/banners, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 发现页中间部分
 caiyun_a74735defc0d = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/operation/features, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
+# > 发现页活动
 caiyun_79eb757b7c4c = type=http-response, pattern=^https?:\/\/starplucker\.cyapi\.cn\/v\d/campaigns, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-surge.js, script-update-interval=86400, timeout=10
-caiyun_2106d718cf48 = type=http-request, pattern=^https?:\/\/ad\.cyapi\.cn\/v\d, requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/CaiYun/caiyun-reply.js, script-update-interval=86400, timeout=5
+
+[Map Local]
+# > 通用广告请求
+^https?:\/\/ad\.cyapi\.cn\/v\d data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
 
 [MITM]
 hostname = %APPEND% wrapper.cyapi.cn, api.caiyunapp.com, starplucker.cyapi.cn, ad.cyapi.cn, biz.cyapi.cn
