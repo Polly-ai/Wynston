@@ -1,4 +1,4 @@
-#!name = Reddit 增强[墨鱼版]
+#!name = Reddit 增强
 #!desc = 去除 Reddit 信息流、帖子及社区广告；保留上游 NSFW 展示及本地 Premium 标记增强，每日同步。
 #!category = Polly-ai
 #!author = @ddgksf2013
@@ -14,7 +14,7 @@
 # 上游 reddit.js SHA256：9fba62bb23f38607739e135376c88c8276d4f26d7e1cac478ad7467cedd0590e
 
 [Script]
-reddit_ads_19a338eee939 = type=http-response, pattern=^https?:\/\/gql-fed\.reddit\.com\/$, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Reddit/reddit-surge.js, script-update-interval=86400, timeout=10
+reddit_ads = type=http-response, pattern=^https?:\/\/gql-fed\.reddit\.com\/$, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Reddit/reddit-surge.js, script-update-interval=86400, timeout=10
 
 [MITM]
 hostname = %APPEND% gql-fed.reddit.com
