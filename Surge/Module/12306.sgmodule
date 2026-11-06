@@ -1,0 +1,13 @@
+#!name = 12306 净化
+#!desc = 全面去广告
+#!category = Polly-ai
+#!author = ddgksf2013
+
+# 转换自 QX 格式，上游：https://raw.githubusercontent.com/ddgksf2013/Scripts/master/12306.js
+# 注意：作者说明请在本地添加分流 host, ad.12306.cn, direct（原文注释，非模块规则，未转为 [Rule]）。
+
+[Script]
+12306 = type=http-request, pattern=^https?:\/\/ad\.12306\.cn\/ad\/ser\/getAdList, requires-body=true, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/12306/12306.js
+
+[MITM]
+hostname = %APPEND% ad.12306.cn
