@@ -1,7 +1,7 @@
-#!name = Reddit 增强[墨鱼版]
+#!name = Reddit 增强
 #!desc = 去除 Reddit 信息流、帖子及社区广告；保留上游 NSFW 展示及本地 Premium 标记增强，每日同步。
 #!category = Polly-ai
-#!author = @ddgksf2013
+#!author = 
 # 上游来源：https://raw.githubusercontent.com/ddgksf2013/Rewrite/refs/heads/master/AdBlock/RedditAds.conf
 # 上游配置版本：V1.0.4；原作者更新：2025-05-30
 # 上游配置 SHA256：15a17fb23d210144cc3530af925fb20116d89cbfbaf96abd9f2a140a8d24f595

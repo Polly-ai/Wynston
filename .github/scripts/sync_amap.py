@@ -110,6 +110,11 @@ def metadata(text: str, key: str, default: str = "") -> str:
     return match.group(1) if match else default
 
 
+def module_comment(comment: str) -> str:
+    """Remove only the requested attribution token from rendered module comments."""
+    return comment.replace("@ddgksf2013", "")
+
+
 def convert(text: str) -> tuple[str, dict[str, str]]:
     """Return module text and {upstream script URL: local basename}."""
     rules, rewrites, scripts, hosts = [], [], [], []
@@ -134,7 +139,7 @@ def convert(text: str) -> tuple[str, dict[str, str]]:
             if surge_type in ("IP-CIDR", "IP-CIDR6"):
                 result += ",no-resolve"
             if comment:
-                rules.append(comment)
+                rules.append(module_comment(comment))
             rules.append(result)
             continue
         match = re.fullmatch(r"(\^\S+)\s+url\s+(\S+)(?:\s+(https://\S+))?", line)
@@ -153,7 +158,7 @@ def convert(text: str) -> tuple[str, dict[str, str]]:
         suffix = hashlib.sha256(pattern.encode()).hexdigest()[:12]
         target = rewrites if action == "reject" else scripts
         if comment:
-            target.append(comment)
+            target.append(module_comment(comment))
         if action == "reject" and source is None:
             rewrites.append(f"{pattern} _ reject")
         elif action in REPLY_ACTIONS and source is None:
@@ -184,10 +189,10 @@ def convert(text: str) -> tuple[str, dict[str, str]]:
     if not hosts or not assets or not seen:
         raise SyncError("Upstream must contain MITM hosts, script sources and URL rules")
     out = [
-        "#!name = 高德地图净化[墨鱼版]",
+        "#!name = 高德地图净化",
         "#!desc = 高德地图去广告：开屏、首页信息流、搜索热词与推广；每日随上游自动更新。",
         f"#!category = {CATEGORY}",
-        "#!author = @ddgksf2013",
+        "#!author = ",
         f"# 上游来源：{UPSTREAM_URL}",
         f"# 上游版本：{metadata(text, 'Version', '未标注')}",
         f"# 原作者更新：{metadata(text, 'UpdateTime', '未标注')}",

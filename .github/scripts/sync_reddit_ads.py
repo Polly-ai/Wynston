@@ -178,16 +178,21 @@ def build_adapter(source: str, filename: str) -> str:
     return prefix + "// BEGIN upstream " + filename + " SHA256 " + digest(source) + "\n" + source + suffix
 
 
+def module_comment(comment: str) -> str:
+    """Remove only the requested attribution token from rendered module comments."""
+    return comment.replace("@ddgksf2013", "")
+
+
 def render(text: str, sources: dict[str, str]) -> str:
     hosts, entries = parse(text)
     expected = {Path(urlparse(source).path).name for _, source, _ in entries}
     if expected != set(sources):
         raise SyncError("JavaScript snapshot does not match parsed upstream references")
     out = [
-        "#!name = Reddit 增强[墨鱼版]",
+        "#!name = Reddit 增强",
         "#!desc = 去除 Reddit 信息流、帖子及社区广告；保留上游 NSFW 展示及本地 Premium 标记增强，每日同步。",
         f"#!category = {CATEGORY}",
-        "#!author = @ddgksf2013",
+        "#!author = ",
         f"# 上游来源：{UPSTREAM_URL}",
         f"# 上游配置版本：{metadata(text, 'Version')}；原作者更新：{metadata(text, 'UpdateTime')}",
         f"# 上游配置 SHA256：{digest(text)}",
@@ -204,7 +209,7 @@ def render(text: str, sources: dict[str, str]) -> str:
     for pattern, source, comment in entries:
         filename = Path(urlparse(source).path).name
         if comment:
-            out.append(comment)
+            out.append(module_comment(comment))
         name = "reddit_ads_" + digest(pattern)[:12]
         out.append(f"{name} = type=http-response, pattern={pattern}, "
                    f"requires-body=true, max-size=1048576, "

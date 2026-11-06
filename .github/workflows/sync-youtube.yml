@@ -1,0 +1,77 @@
+name: Sync YouTube cleanup upstream
+
+# 每日北京时间 07:47（UTC 23:47）；GitHub 调度可能略有延迟。
+# 原描述和原JS完整保留，固定模块名/分类；已知有误302按用户选择保持停用。
+# 下载/二进制回归失败不发布，无变化不提交。
+on:
+  schedule:
+    - cron: "47 23 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/sync_youtube.py
+      - .github/scripts/test_sync_youtube.py
+      - .github/scripts/test_youtube_behavior.cjs
+      - .github/scripts/youtube_test_runtime.cjs
+      - .github/workflows/sync-youtube.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-youtube-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test exact description and complete conversion
+        run: python3 .github/scripts/test_sync_youtube.py
+      - name: Download and verify complete protobuf cleanup
+        run: python3 .github/scripts/sync_youtube.py
+      - name: Publish YouTube module and original script only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          git add -- Surge/Module/YouTube.sgmodule Surge/JavaScript/YouTube/youtube.response.js
+          if git diff --cached --quiet; then
+            echo "No upstream changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync YouTube cleanup module and original script"
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0='http.https://github.com/.extraheader'
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth"
+          trap 'unset auth GH_TOKEN GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0' EXIT
+          for attempt in 1 2 3; do
+            if git pull --rebase origin main; then
+              if git push origin HEAD:main; then exit 0; fi
+            else
+              git rebase --abort || true
+            fi
+          done
+          echo "Publish failed after three attempts" >&2
+          exit 1

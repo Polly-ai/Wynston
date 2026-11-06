@@ -29,10 +29,20 @@ host-suffix, optimus-ads.amap.com, direct
 
 
 class ConverterTests(unittest.TestCase):
-    def test_metadata_and_policy(self):
-        module, assets = sync.convert(SAMPLE)
+    def test_metadata_name_and_comment_token_cleanup(self):
+        tagged = SAMPLE.replace("# > empty response",
+                                "# > empty response@ddgksf2013；保留正文")
+        module, assets = sync.convert(tagged)
+        self.assertEqual(module.splitlines()[0], "#!name = 高德地图净化")
         self.assertIn("#!category = Polly-ai", module)
-        self.assertIn("#!author = @ddgksf2013", module)
+        self.assertIn("#!author = \n", module)
+        self.assertIn("# > empty response；保留正文", module)
+        self.assertNotIn("[墨鱼版]", module)
+        self.assertNotIn("@ddgksf2013", module)
+        original_comments = [line for line in tagged.splitlines() if line.startswith("# >")]
+        rendered_comments = [line for line in module.splitlines() if line.startswith("# >")]
+        self.assertCountEqual(rendered_comments,
+                              [line.replace("@ddgksf2013", "") for line in original_comments])
         self.assertIn("DOMAIN-SUFFIX,optimus-ads.amap.com,DIRECT", module)
         self.assertIn("hostname = %APPEND% m5.amap.com, ai.amap.com", module)
         self.assertIn("# 上游版本：V1.0.test", module)

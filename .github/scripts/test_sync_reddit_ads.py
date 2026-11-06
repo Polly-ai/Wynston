@@ -30,13 +30,22 @@ class RedditTests(unittest.TestCase):
         self.assertIn("hostname = %APPEND% gql-fed.reddit.com", module)
         self.assertNotIn("%APPEND% *", module)
 
-    def test_category_and_attribution(self):
-        module = sync.render(CONFIG, {"reddit.js": JS})
+    def test_category_name_and_comment_token_cleanup(self):
+        tagged = CONFIG.replace("# > Reddit GraphQL response",
+                                "# > Reddit GraphQL response@ddgksf2013；保留正文")
+        module = sync.render(tagged, {"reddit.js": JS})
+        self.assertEqual(module.splitlines()[0], "#!name = Reddit 增强")
         self.assertIn("#!category = Polly-ai", module)
-        self.assertIn("#!author = @ddgksf2013", module)
+        self.assertIn("#!author = \n", module)
+        self.assertIn("# > Reddit GraphQL response；保留正文", module)
+        self.assertNotIn("[墨鱼版]", module)
+        self.assertNotIn("@ddgksf2013", module)
+        original_comments = [line for line in tagged.splitlines() if line.startswith("# >")]
+        rendered_comments = [line for line in module.splitlines() if line.startswith("# >")]
+        self.assertEqual(rendered_comments,
+                         [line.replace("@ddgksf2013", "") for line in original_comments])
         self.assertIn("V1.0.test", module)
         self.assertIn(sync.UPSTREAM_URL, module)
-        self.assertIn("# > Reddit GraphQL response", module)
 
     def test_surge_response_parameters(self):
         module = sync.render(CONFIG, {"reddit.js": JS})

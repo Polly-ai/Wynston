@@ -1,0 +1,33 @@
+#!name = YouTube 净化
+#!desc=基于稳定版，额外去除首页Shorts，去除首页shorts区块，去除视频播内嵌购推荐卡
+#!category = Polly-ai
+#!author=DivineEngine + app2smile + Maasea + ddgksf2013 + Aioneas + Oneasai + ZenmoFeiShi
+# 上游配置：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/Youtube.snippet
+# 上游脚本：https://raw.githubusercontent.com/ZenmoFeiShi/Qx/refs/heads/main/youtube.response.js
+# 原配置 SHA256：94c4cb66fefae74abb8156838155ef8f35321c29eb03c12edc78c30557626a35
+# 原 JavaScript SHA256：715d0d3fc27b8af35fdabefd6698fc984ec9f54612799921b3cf8f71575849c3
+# 名称固定，描述逐字保留上游原文；配置与原JS每日同时同步。
+# 原JS原生支持Surge：binary-body-mode=true传入/返回Uint8Array，不转成文本或ArrayBuffer。
+# 保留上游全部广告、Shorts和购物卡清理逻辑；本机脚本缓存设置和默认开关不改。
+# 需启用重写、MITM并信任证书；Map Local需Surge iOS5.9.1+/Mac5.5.1+。
+# Protobuf响应缓存上限4MiB；超限跳过脚本透传。不得与其他同接口的YouTube响应脚本重叠。
+# 客户端播放能力标记不代表真实订阅或服务器端授权；未在用户设备进行端到端测试。
+# 按用户选择暂时停用上游302规则：源仅有2个捕获组却引用$3，且含,ctier,字面量。
+# 不静默修复或重新开启302；未来如需启用，应先审查修正规则。
+
+[URL Rewrite]
+# 上游原行（保留但不启用）：^https?:\/\/[\w-]+\.googlevideo\.com\/(?!dclk_video_ads).+?&ctier=L(&.+?),ctier,(.+) url 302 https://$1$2$3
+# ^https?:\/\/[\w-]+\.googlevideo\.com\/(?!dclk_video_ads).+?&ctier=L(&.+?),ctier,(.+) https://$1$2$3 302
+
+[Map Local]
+# QX reject-200：原生HTTP 200空体，保留原URL匹配范围。
+^https?:\/\/[\w-]+\.googlevideo\.com\/(?!(dclk_video_ads|videoplayback\?)).+&oad data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/(www|s)\.youtube\.com\/api\/stats\/ads data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/(www|s)\.youtube\.com\/(pagead|ptracking) data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+^https?:\/\/s\.youtube\.com\/api\/stats\/qoe\?adcontext data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+
+[Script]
+youtube-cleanup = type=http-response, pattern=^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch), requires-body=true, binary-body-mode=true, max-size=4194304, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/YouTube/youtube.response.js, script-update-interval=86400, timeout=15
+
+[MITM]
+hostname = %APPEND% *.googlevideo.com, redirector*.googlevideo.com, www.youtube.com, s.youtube.com, youtubei.googleapis.com
