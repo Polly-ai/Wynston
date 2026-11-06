@@ -1,0 +1,50 @@
+#!name = 百度网盘净化
+#!desc = 完整保留上游开屏、推广、首页信息流及任务页净化；原生Map Local空体/空对象与jq等价处理，每日更新。
+#!category = Polly-ai
+#!author = ddgksf2013
+# 上游：https://ddgksf2013.top/scripts/bdpan.ads.js
+# 上游脚本版本：V1.0.5
+# 原始文件 SHA256：2fdc54b1c7acd53df4ac5379485df8c50834859eed20a8b590de2da0df217ac6
+# 由原JS头部内嵌QX配置完整转换；原JS按字节镜像，兼容脚本仅处理异常和返回类型。
+# 需启用重写、MITM并信任证书；Map Local需Surge iOS5.9.1+/Mac5.5.1+。
+# 两模块的membership/user游戏中心接口有重叠；同用时请让“功能增强”的响应规则优先。
+# 净化原脚本对正常gamecenter接口无操作，按原逻辑保留，不擅自启用其中潜藏会员分支。
+# 上游部分正则也覆盖其他baidu.com/zhangyuyidong.cn主机；MITM仅原列出的两主机，不擅自扩大。
+# 请求/响应规则保持上游范围；1MiB以上响应跳过脚本透传；无变化不提交，验证失败保留旧版。
+
+[Script]
+# > 百度网盘_广告推广@ddgksf2013
+bdpan_ads_717564d164cb = type=http-response, pattern=^https?:\/\/afd\.baidu\.com\/afd\/entry, requires-body=true, max-size=1048576, engine=webview, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/BaiduPan/bdpan.ads.surge.js, script-update-interval=86400, timeout=15
+# > 百度网盘_游戏广告@ddgksf2013
+bdpan_ads_5cd4b0af14f9 = type=http-response, pattern=^https:\/\/pan\.baidu\.com\/rest\/.*\/membership\/user\?method=gamecenter, requires-body=true, max-size=1048576, engine=webview, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/BaiduPan/bdpan.ads.surge.js, script-update-interval=86400, timeout=15
+# > 百度网盘_首页信息流@ddgksf2013
+bdpan_ads_426af22ad919 = type=http-response, pattern=^https:\/\/pan\.baidu\.com\/feed\/cardinfos, requires-body=true, max-size=1048576, engine=webview, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/BaiduPan/bdpan.ads.surge.js, script-update-interval=86400, timeout=15
+# > 百度网盘_我的页面@ddgksf2013
+bdpan_ads_64580af1a80d = type=http-response, pattern=^https:\/\/pan\.baidu\.com\/api\/taskscore\/tasklist, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/BaiduPan/bdpan.taskscore.js, script-update-interval=86400, timeout=15
+
+[Map Local]
+# > 百度网盘_推广@ddgksf2013
+^https?:\/\/pan\.baidu\.com\/api\/getconfig data-type=text data="{}" status-code=200 header="Content-Type:application/json; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_启动弹窗@ddgksf2013
+^https?:\/\/.*baidu\.com\/rest\/.*\/membership\/(proxy\/)?guide data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_设置信息流@ddgksf2013
+^https?:\/\/pan\.baidu\.com\/act\/v\d\/(bchannel|welfare)\/list data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_通用广告@ddgksf2013
+^https?:\/\/pan\.baidu\.com\/rest\/.*\/pcs\/ad data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_活动推广@ddgksf2013
+^https?:\/\/pan\.baidu\.com\/act\/api\/activityentry data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_热搜list@ddgksf2013
+^https:\/\/pan\.baidu\.com\/feed\/hotlist data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_活动推广@ddgksf2013
+^https?:\/\/.*zhangyuyidong\.cn\/api\/zysdk data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_开屏广告@ddgksf2013
+^https?:\/\/pan\.baidu\.com\/api\/getsyscfg data-type=text data="{}" status-code=200 header="Content-Type:application/json; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_搜索填词@ddgksf2013
+^https:\/\/pan\.baidu\.com\/queryintent\/queryhint data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_金币乐园@ddgksf2013
+^https:\/\/pan\.baidu\.com\/coins\/center\/notice data-type=text data="" status-code=200 header="Content-Type:text/plain; charset=utf-8|Cache-Control:no-store"
+# > 百度网盘_短剧@ddgksf2013
+^https:\/\/pan\.baidu\.com\/recommend\/shortseries\/list data-type=text data="{}" status-code=200 header="Content-Type:application/json; charset=utf-8|Cache-Control:no-store"
+
+[MITM]
+hostname = %APPEND% pan.baidu.com, afd.baidu.com
