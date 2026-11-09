@@ -1,17 +1,17 @@
 #!name = GitHub CDN 加速
-#!desc = 通过自建 Cloudflare Worker (github-cdn.mimingzhe.workers.dev) 加速 GitHub 访问：raw.githubusercontent.com、gist.githubusercontent.com 的文件请求 302 重定向到 Worker 直连，github.com 的 release / archive 也走 Worker。
+#!desc = 通过自建 Cloudflare Worker (love-midl.kdns.fr) 加速 GitHub 访问：raw.githubusercontent.com、gist.githubusercontent.com 的文件请求 302 重定向到 Worker 直连，github.com 的 release / archive 也走 Worker。
 #!category = Polly-ai
 #!author = Polly-ai
 
-# 配套 Worker 源码: Surge/Worker/GitHubCDN/worker.js, 已部署在 github-cdn.mimingzhe.workers.dev
+# 配套 Worker 源码: Surge/Worker/GitHubCDN/worker.js, 已部署在 love-midl.kdns.fr
 # 注意: 本模块自身也托管在 raw.githubusercontent.com 上, 启用后模块更新也会走 Worker;
 # 如果 Worker 挂了, 先在 Surge 里关闭本模块再更新模块
 
 [URL Rewrite]
-^https://raw\.githubusercontent\.com/(.*) https://github-cdn.mimingzhe.workers.dev/https://raw.githubusercontent.com/$1 302
-^https://gist\.githubusercontent\.com/(.*) https://github-cdn.mimingzhe.workers.dev/https://gist.githubusercontent.com/$1 302
-^https://github\.com/([^/]+/[^/]+/(?:releases/download|archive)/.*) https://github-cdn.mimingzhe.workers.dev/https://github.com/$1 302
-^https://codeload\.github\.com/(.*) https://github-cdn.mimingzhe.workers.dev/https://codeload.github.com/$1 302
+^https://raw\.githubusercontent\.com/(.*) https://love-midl.kdns.fr/https://raw.githubusercontent.com/$1 302
+^https://gist\.githubusercontent\.com/(.*) https://love-midl.kdns.fr/https://gist.githubusercontent.com/$1 302
+^https://github\.com/([^/]+/[^/]+/(?:releases/download|archive)/.*) https://love-midl.kdns.fr/https://github.com/$1 302
+^https://codeload\.github\.com/(.*) https://love-midl.kdns.fr/https://codeload.github.com/$1 302
 
 [MITM]
 hostname = %APPEND% raw.githubusercontent.com, gist.githubusercontent.com, github.com, codeload.github.com
