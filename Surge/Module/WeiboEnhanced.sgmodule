@@ -3,9 +3,9 @@
 #!category = Polly-ai
 #!author = ddgksf2013 / zmqcherish
 # 上游配置：https://ddgksf2013.top/rewrite/WeiboEnhanced.conf
-# 配置版本：V0.1.21；原作者更新：2026-10-19
-# 配置 SHA256：52a403d234ff516a4ba0d8f87ce237246f59c5dc019543e2c4b71022f1701d63
-# 原始 weibo_json.js SHA256：0bb38335cb0cda1ba0003ef44d4e0a4aa98925f11d5a6aa4ec4a765d08c5df41
+# 配置版本：V0.1.53；原作者更新：2026-10-19
+# 配置 SHA256：904a1e60e07225f875853bed2005bbd781c443916dca05ce834374ee9def7eab
+# 原始 weibo_json.js SHA256：f40387dfd8bd70dc4477b8347823254a5eccf8cf9792c65fc35cef9140f00ca3
 # 转换与维护：Polly-ai/Wynston。保留上游JS原文，不依赖 script.hub 本地转换。
 # 自定义入口：https://api.weibo.cn/__qx_weibo_settings__/
 # 安装并启用后，用Safari打开上面的设置页面；选项保存在Surge本机，跟随上游更新不清空。
@@ -18,7 +18,7 @@
 [Script]
 weibo_560856e5a733 = type=http-request, pattern=^https://api\.weibo\.cn/__qx_weibo_settings__/(?:api/config)?(?=[?#]|$), requires-body=false, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Weibo/weibo_json.js, script-update-interval=86400, timeout=15
 weibo_17ca1ccfa488 = type=http-request, pattern=^https://api\.weibo\.cn/__qx_weibo_settings__/api/(?:save|reset)(?=[?#]|$), requires-body=true, max-size=262144, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Weibo/weibo_json.js, script-update-interval=86400, timeout=15
-weibo_57f7b9fffb28 = type=http-response, pattern=^https?://api\.weibo\.cn(?:/2/statuses/container_timeline_hot|/2/guest/container_timeline_hot|/2/statuses/container_timeline_unread|/2/statuses/container_timeline|/2/live/media_homelist|/2/remind/hometab_dot|/2/remind/unread_count|/2/statuses/container_detail|/2/statuses/container_detail_comment|/2/comments/build_comments|/2/search/finder|/2/search/container_timeline|/2/search/container_discover|/2/!/was/finder/searchbarchange|/2/cardlist|/2/searchall|/2/profile/me|/2/profile/container_timeline|/2/video/flow_stream|/2/video/flow_stream_cache|/2/push/daily|/2/push/active|/2/guest/push_active|/2/groups/allgroups/v2|/2/client/abserver_list|/2/checkin/show|/2/video/remind_info|/2/video/home_channels)(?=[?#]|$), requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Weibo/weibo_json.js, script-update-interval=86400, timeout=15
+weibo_f3264081fe7f = type=http-response, pattern=^https?://api\.weibo\.cn(?:/2/statuses/container_timeline_hot|/2/statuses/container_positive|/2/guest/container_timeline_hot|/2/statuses/container_timeline_unread|/2/statuses/container_timeline|/2/live/media_homelist|/2/remind/hometab_dot|/2/remind/unread_count|/2/statuses/container_detail|/2/statuses/container_detail_comment|/2/comments/build_comments|/2/search/finder|/2/search/container_timeline|/2/search/container_discover|/2/!/was/finder/searchbarchange|/2/cardlist|/2/flowpage|/2/searchall|/2/profile/me|/2/profile/container_timeline|/2/video/flow_stream|/2/video/flow_stream_cache|/2/push/daily|/2/push/active|/2/guest/push_active|/2/groups/allgroups/v2|/2/client/abserver_list|/2/checkin/show|/2/video/remind_info|/2/video/home_channels)(?=[?#]|$), requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Weibo/weibo_json.js, script-update-interval=86400, timeout=15
 weibo_d9f04a41fcb1 = type=http-response, pattern=^https?://bootpreload\.uve\.weibo\.com(?:/v2/ad/preload)(?=[?#]|$), requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Weibo/weibo_json.js, script-update-interval=86400, timeout=15
 weibo_84571a9f6e6e = type=http-response, pattern=^https?://bootrealtime\.uve\.weibo\.com(?:/v3/ad/realtime)(?=[?#]|$), requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Weibo/weibo_json.js, script-update-interval=86400, timeout=15
 weibo_16769563a016 = type=http-response, pattern=^https?://wbapp\.uve\.weibo\.com(?:/wbapplua/wbpullad\.lua)(?=[?#]|$), requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/Weibo/weibo_json.js, script-update-interval=86400, timeout=15
