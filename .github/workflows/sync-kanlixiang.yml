@@ -1,0 +1,75 @@
+name: Sync Kanlixiang upstream
+
+# 每日北京时间 07:57（UTC 23:57），GitHub 调度可能延迟。
+# 原模块与精确引用的脚本同步；指定commit/query不擅自换成main。
+# 无变化不提交，下载/验证失败保留旧版。
+on:
+  schedule:
+    - cron: "57 23 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/sync_kanlixiang.py
+      - .github/scripts/test_sync_kanlixiang.py
+      - .github/workflows/sync-kanlixiang.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-kanlixiang-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up Node.js for syntax checking
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test exact mirroring and failure protection
+        run: python3 .github/scripts/test_sync_kanlixiang.py
+      - name: Download module and exact script references
+        run: python3 .github/scripts/sync_kanlixiang.py
+      - name: Publish only Kanlixiang files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          git add -- Surge/Module/kanlixiang.app.sgmodule Surge/JavaScript/Kanlixiang/
+          if git diff --cached --quiet; then
+            echo "No upstream changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync Kanlixiang module and referenced scripts"
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0='http.https://github.com/.extraheader'
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth"
+          trap 'unset auth GH_TOKEN GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0' EXIT
+          for attempt in 1 2 3; do
+            if git pull --rebase origin main; then
+              if git push origin HEAD:main; then exit 0; fi
+            else
+              git rebase --abort || true
+            fi
+          done
+          echo "Publish failed after three attempts" >&2
+          exit 1
