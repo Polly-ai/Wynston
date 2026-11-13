@@ -25,7 +25,7 @@ DOMAIN-SUFFIX,pangolin-sdk-toutiao-b.com,REJECT
 DOMAIN-SUFFIX,pglstatp-toutiao.com,REJECT
 DOMAIN-SUFFIX,ctobsnssdk.com,REJECT
 DOMAIN,lf-cdn-tos.bytescm.com,REJECT
-DOMAIN,webcast-open.douyin.com,REJECT
+# webcast-open.douyin.com 已移除：抖音直播 API，非车来了广告，避免误伤抖音 App
 # 巨量 / 火山引擎广告 SDK 与监控
 DOMAIN,mssdk.volces.com,REJECT
 DOMAIN,apmplus.volces.com,REJECT
@@ -80,13 +80,17 @@ DOMAIN,gd-stats.jpush.cn,REJECT
 # 代价：image3 整域拦掉，定位 / 站点一类业务小图标也会加载失败。
 # DOMAIN-SUFFIX,image3.chelaile.net.cn,REJECT
 
+# 首页 banner 走裸 IP 直连（SNI 为空，域名/URL 规则拦不到），只能按 IP 拦
+# 8.134.241.67 = 杭州阿里巴巴广告(AS37963)，首页横幅广告投放源
+IP-CIDR,8.134.241.67/32,REJECT,no-resolve
+
 [URL Rewrite]
 # 车来了广告配置、广告任务、开屏资源
 # 域名形式
-^https?:\/\/(api|cdn\.api)\.chelaile\.net\.cn\/goocity\/flowPos\/home\?.* _ reject
-^https?:\/\/(api|cdn\.api)\.chelaile\.net\.cn\/goocity\/flowPos\/listByPos\?.* _ reject
-^https?:\/\/(api|cdn\.api)\.chelaileapp\.cn\/goocity\/flowPos\/home\?.* _ reject
-^https?:\/\/(api|cdn\.api)\.chelaileapp\.cn\/goocity\/flowPos\/listByPos\?.* _ reject
+^https?:\/\/(api|cdn\.api)\.chelaile\.net\.cn\/goocity\/flowPos\/home(_old)?\/? _ reject
+^https?:\/\/(api|cdn\.api)\.chelaile\.net\.cn\/goocity\/flowPos\/listByPos\/? _ reject
+^https?:\/\/(api|cdn\.api)\.chelaileapp\.cn\/goocity\/flowPos\/home(_old)?\/? _ reject
+^https?:\/\/(api|cdn\.api)\.chelaileapp\.cn\/goocity\/flowPos\/listByPos\/? _ reject
 ^https?:\/\/(api|cdn\.api)\.chelaile\.net\.cn\/adpub\/sdk\/adConfig\?.* _ reject
 ^https?:\/\/(api|cdn\.api)\.chelaileapp\.cn\/adpub\/sdk\/adConfig\?.* _ reject
 ^https?:\/\/(api|cdn\.api)\.chelaileapp\.cn\/encourage\/activity\/control\?.* _ reject
@@ -94,7 +98,7 @@ DOMAIN,gd-stats.jpush.cn,REJECT
 ^https?:\/\/(api|cdn\.api)\.chelaile\.net\.cn\/adpub\/.* _ reject
 ^https?:\/\/(api|cdn\.api)\.chelaileapp\.cn\/adpub\/.* _ reject
 # IP 直连形式（App 用 IP 直连请求，不走域名，上述域名 pattern 拦不到）
-^https?:\/\/[0-9]{1,3}(\.[0-9]{1,3}){3}\/goocity\/flowPos\/(home|listByPos)\?.* _ reject
+^https?:\/\/[0-9]{1,3}(\.[0-9]{1,3}){3}\/goocity\/flowPos\/(home(_old)?|listByPos)\/? _ reject
 ^https?:\/\/[0-9]{1,3}(\.[0-9]{1,3}){3}\/adpub\/(sdk\/adConfig|.*)\?.* _ reject
 ^https?:\/\/[0-9]{1,3}(\.[0-9]{1,3}){3}\/encourage\/activity\/control\?.* _ reject
 # 车来了埋点：UDID 过滤 / 数据分析（chelaile.net.cn 与 chelaileapp.cn 两个域名）
