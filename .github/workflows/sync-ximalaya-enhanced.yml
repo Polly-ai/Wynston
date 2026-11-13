@@ -1,0 +1,47 @@
+name: Sync Ximalaya enhanced module
+
+# 每日北京时间 08:27（UTC 00:27）；GitHub 调度可能延迟。
+on:
+  schedule:
+    - cron: "27 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-ximalaya-enhanced-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Synchronize and syntax-check upstream script
+        run: python3 .github/scripts/sync_ximalaya_enhanced.py
+      - name: Publish enhanced files only
+        run: |
+          set -euo pipefail
+          git add -- Surge/JavaScript/Ximalaya/ximalaya.js Surge/Module/ximalaya_enhanced.sgmodule
+          if git diff --cached --quiet; then
+            echo "No upstream changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync Ximalaya enhanced upstream script"
+          git push origin HEAD:main
