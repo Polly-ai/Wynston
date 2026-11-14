@@ -2,8 +2,10 @@
 """把上游 Surge 模块 https://raw.githubusercontent.com/CaoXiaoMann/XiaoMan/main/Surge/Scripts/Pinduoduo/Pinduoduo.sgmodule 同步到本仓库，并每日跟随上游更新。
 
 上游本身已是 Surge 模块格式：头部 #! 注释、[Rule]、[Map Local]、[Body Rewrite]、
-[Script]、[MITM]，以及段落内的说明注释。同步时只改写头部三项和脚本地址，
+[MITM]，以及段落内的说明注释。同步时只改写头部三项和脚本地址，
 其余内容原样保留。
+（上游 v16 自 2026-11-14 起删掉了 [Script] 段，改为零 JS 机制；
+ [Script] 现为可选段落：上游有则同步镜像，无则跳过。）
 
 用法（仓库工作流里不带参数跑，默认抓上游、写到仓库路径）：
     python3 .github/scripts/sync_pinduoduo_cxm.py
@@ -16,9 +18,9 @@
   - #!category 固定为 Polly-ai（用户指定）。
   - #!system、#!raw-url 随上游原文，不改写。
   - [Rule]、[Map Local]、[Body Rewrite]、[MITM] 及段落内注释全文原样保留。
-  - 上游有两个 [Script] 段落，合并为一个（内容不变）。
-  - [Script] 的脚本一律指向自托管地址（SELF_HOSTED 列表），不直接引用第三方 js；
-    同步时同时抓上游 js 更新自托管镜像文件。
+  - 若上游有 [Script]：两个 [Script] 段落合并为一个（内容不变），脚本一律指向
+    自托管地址（SELF_HOSTED 列表），不直接引用第三方 js；同步时同时抓上游 js
+    更新自托管镜像文件。上游无 [Script] 时跳过镜像（v16 起即如此）。
   - 例外：PDD-HOME-DEBUG 脚本 pdd_top_capture.js 在上游仓库里不存在（404），
     无法镜像；该条 script-path 保持上游原地址不变，等上游补上文件后，
     下次同步会自动改为自托管镜像。
@@ -40,7 +42,8 @@ DEFAULT_OUTPUT = "Surge/Module/pdd.sgmodule"
 MODULE_NAME = "拼多多净化"
 MODULE_CATEGORY = "Polly-ai"
 KNOWN_SECTIONS = ("[Rule]", "[Map Local]", "[Body Rewrite]", "[Script]", "[MITM]")
-REQUIRED_SECTIONS = ("[Rule]", "[Map Local]", "[Body Rewrite]", "[Script]", "[MITM]")
+REQUIRED_SECTIONS = ("[Rule]", "[Map Local]", "[Body Rewrite]", "[MITM]")
+# [Script] 自上游 v16（2026-11-14）起不再是必要段落：上游删掉了 [Script]，
 # 同步时原样保留的上游头部（按此顺序输出）
 PRESERVED_HEADERS = ("system", "raw-url")
 # 脚本镜像：(模块内脚本名, 上游 js 地址, 自托管路径)
@@ -199,7 +202,13 @@ def main():
     # 等上游补上文件后下次同步自动改为镜像。
     mirrored = {}
     js_changed = False
-    for name, js_url, asset_path in SCRIPTS:
+    # v16（2026-11-14）起上游无 [Script] 段：无脚本可镜像时跳过抓取；
+    # 上游若恢复 [Script]，仍按旧逻辑镜像。
+    has_script = any(s["name"] == "[Script]" for s in parts["segments"])
+    scripts_to_mirror = SCRIPTS if has_script else []
+    if not has_script:
+        print("sync_pinduoduo_cxm: 上游无 [Script] 段，跳过脚本镜像")
+    for name, js_url, asset_path in scripts_to_mirror:
         js_text = fetch_optional(js_url)
         if js_text is None:
             print(f"sync_pinduoduo_cxm: 注意：脚本 {name} 上游不存在（{js_url}），保持原地址")
