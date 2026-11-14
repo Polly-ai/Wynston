@@ -21,6 +21,9 @@ system、raw-url，以及上游今后新增的任何 #! 项）全部跟随上游
   - 其余 #! 头部注释全部随上游原文带上（author、homepage、version、openUrl、
     system、raw-url，以及上游今后新增的任何 #! 项），按上游原有顺序输出。
   - [Rule]、[Map Local]、[Body Rewrite]、[MITM] 及段落内注释全文原样保留。
+  - 同步时按 COMMENTS 表给 [Rule]、[Body Rewrite]、[Map Local]、[MITM] 的
+    每组规则上方插入 # > 注释（用户写法）；上游新增条目时需在 COMMENTS 里
+    补注释，缺失时只在日志里警告，不中断同步。
   - 若上游有 [Script]：两个 [Script] 段落合并为一个（内容不变），脚本一律指向
     自托管地址（SELF_HOSTED 列表），不直接引用第三方 js；同步时同时抓上游 js
     更新自托管镜像文件。上游无 [Script] 时跳过镜像（v16 起即如此）。
@@ -70,6 +73,59 @@ SCRIPTS = [
     ),
 ]
 SELF_HOSTED_BASE = "https://raw.githubusercontent.com/Polly-ai/Wynston/main/"
+
+# 段落注释：(匹配子串, 注释)。同步时把注释插到第一条匹配行的上方，
+# 格式与用户写法一致：# > 说明。匹配子串取自上游原文中能唯一确定
+# 该行（或该组首行）的片段；同一注释只插一次，组内其余行不再重复。
+# 上游 v16 的四个段落本身没有任何注释行，这些注释是按规则实际作用
+# 新写的（从规则原文直接推断，不编造）；目的不确定的域名只按组写
+# 通用注释。上游新增条目时需在这里补注释；map 里的 key 在上游找
+# 不到时只打印警告，不中断同步。
+COMMENTS = [
+    # [Rule]
+    ("((25[0-5]", "拦截直连 IP 的上报请求"),
+    ("PROTOCOL,QUIC", "禁用 api.pinduoduo.com 的 QUIC"),
+    ("titan.pinduoduo.com,REJECT-NO-DROP", "拦截埋点、上报与广告相关域名"),
+    # [Body Rewrite]
+    ("irregular_banner_dy", "首页 hub：删底部视频/不规则 banner"),
+    ('delpaths([["result","icon_set"]])', "首页 hub：删图标集"),
+    ("search_bar_hot_query", "首页 hub：删搜索框热词"),
+    ("timeline_visible", "关闭首页信息流 timeline、删 timeline 模"),
+    ("最快明天达|政府补贴", "顶部入口删「最快明天达/政府补贴」"),
+    ('delpaths([["expansion"]])', "搜索：删搜索扩展"),
+    ("monthly_card_entrance", "个人中心：删月卡入口"),
+    ("personal_center_style_v2_vo", "个人中心：删个人中心样式"),
+    ('["icon_set","icons"]', "个人中心：删图标与描述文字"),
+    ("entrance_text", "个人中心：清空钱包入口文字"),
+    ("bottom_section_list", "订单渲染：删底部区域"),
+    ("float_info", "订单渲染：删直播浮层信息"),
+    ("goods_list", "订单详情：删商品推荐列表"),
+    ("marketing_banner_vo", "订单页：删营销横幅"),
+    ("banner_above_recommend", "订单页：删物流上方推荐"),
+    ("order_growth_tip", "订单列表：删订单成长提示"),
+    # [Map Local]
+    ("unrated_order_for_unreceived_tab", "未收货订单评价入口，返回置空"),
+    ("query_order_list_tabs_element", "订单列表 tabs 元素，返回置空"),
+    ("aquarius\\/hungary\\/global\\/homepage", "全球首页接口，返回置空"),
+    ("query\\/order_express_group", "订单快递信息接口，返回置空"),
+    ("search_hotquery", "搜索热词接口，返回置空"),
+    ("get_list_data", "聊天资源列表接口，返回置空"),
+    ("new_chat_group", "新聊天组接口，返回置空"),
+    ("goods\\/back_up", "商品备用接口，返回置空"),
+    ("query\\/personal", "个人信息查询接口，返回置空"),
+    ("bybt_guide", "商品详情引导接口，返回置空"),
+    ("require\\/append", "追加评价接口，返回置空"),
+    ("my_order_group", "我的订单组接口，返回置空"),
+    ("query\\/likes", "喜欢列表接口，返回置空"),
+    ("gbdbpdv\\/extra", "附加数据接口，返回置空"),
+    ("shortcut\\/list", "跨店快捷入口列表，返回置空"),
+    ("liveactivity\\/push\\/create\\/url\\/report", "直播活动推送上报接口，返回置空"),
+    ("index\\/gather", "成长聚合接口，返回置空"),
+    ("wait\\/receive\\/review", "待收货评价接口，返回置空"),
+    ("nasus\\/recommend", "推荐接口，返回置空"),
+    # [MITM]
+    ("hostname = %APPEND% api.pinduoduo.com", "解密 api.pinduoduo.com（改写与映射生效的前提）"),
+]
 
 
 def fail(msg):
@@ -184,14 +240,28 @@ def render(parts, mirrored):
             continue
         out.append(f"#!{key} = {value}")
     out += ["", f"# 同步自上游：{UPSTREAM_URL}", ""]
+    used_comments = set()
     for seg in parts["segments"]:
         if seg["name"]:
             out.append(seg["name"])
         for line in seg["lines"]:
             if seg["name"] == "[Script]" and line.strip():
                 out.append(rewrite_script_line(line, mirrored))
-            else:
-                out.append(line)
+                continue
+            if line.strip():
+                for idx, (key, comment) in enumerate(COMMENTS):
+                    if idx not in used_comments and key in line:
+                        out.append(f"# > {comment}")
+                        used_comments.add(idx)
+                        break
+            out.append(line)
+    for idx, (key, comment) in enumerate(COMMENTS):
+        if idx not in used_comments:
+            print(
+                f"sync_pinduoduo_cxm: 警告：注释未匹配到上游行（上游可能删改了这条规则），"
+                f"请检查 COMMENTS：{key!r} -> {comment}",
+                file=sys.stderr,
+            )
     return "\n".join(out).rstrip("\n") + "\n"
 
 
