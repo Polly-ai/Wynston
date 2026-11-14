@@ -1,0 +1,93 @@
+name: Sync Porntube mirror
+
+on:
+  schedule:
+    - cron: '37 0 * * *' # UTC 00:37 / Beijing 08:37
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/sync_porntube.py'
+      - '.github/scripts/test_sync_porntube.py'
+      - '.github/workflows/sync-porntube.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: porntube-mirror-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'Polly-ai/Wynston' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test sync safety and preservation
+        run: python -m unittest discover -s .github/scripts -p 'test_sync_porntube.py' -v
+      - name: Fetch, validate and synchronize
+        run: python .github/scripts/sync_porntube.py
+      - name: Commit only mirror assets and push with rebase retry
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          paths=(
+            Surge/Module/porntube.sgmodule
+            Surge/JavaScript/Porntube/porntube-request.js
+            Surge/JavaScript/Porntube/porntube.js
+            Surge/JavaScript/Porntube/porntube-page-request.js
+            Surge/JavaScript/Porntube/porntube-frontend.js
+          )
+          git add -- "${paths[@]}"
+          if git diff --cached --quiet; then
+            echo 'Mirror already current.'
+            exit 0
+          fi
+          # Reject accidental staged files outside the five owned assets.
+          while IFS= read -r -d '' path; do
+            allowed=false
+            for own in "${paths[@]}"; do
+              if [[ "$path" == "$own" ]]; then allowed=true; break; fi
+            done
+            if [[ "$allowed" != true ]]; then
+              echo 'Unexpected staged path; refusing to publish.' >&2
+              exit 1
+            fi
+          done < <(git diff --cached --name-only -z)
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: sync Porntube Surge mirror'
+          # Authentication exists only in this final step, not in repository config.
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0=http.https://github.com/.extraheader
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          export GIT_TERMINAL_PROMPT=0
+          trap 'unset GH_TOKEN GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0' EXIT
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if ! git rebase origin/main; then
+              git rebase --abort
+              echo 'Rebase conflict; refusing to overwrite remote edits.' >&2
+              exit 1
+            fi
+            if git push origin HEAD:main; then exit 0; fi
+            echo "Push attempt $attempt failed; retrying after fetching main."
+          done
+          echo 'Push failed after three attempts.' >&2
+          exit 1
