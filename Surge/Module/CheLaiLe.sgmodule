@@ -82,6 +82,7 @@ DOMAIN,gd-stats.jpush.cn,REJECT
 
 # 首页 banner 走裸 IP 直连（SNI 为空，域名/URL 规则拦不到），只能按 IP 拦
 # 8.134.241.67 = 杭州阿里巴巴广告(AS37963)，首页横幅广告投放源
+# 注意：不能用 8.134.241.0/24 整段拦，会误伤京东支付等阿里云段内其他业务 IP
 IP-CIDR,8.134.241.67/32,REJECT,no-resolve
 
 [URL Rewrite]
