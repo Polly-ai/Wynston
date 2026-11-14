@@ -1,4 +1,4 @@
-#!name=哔哩哔哩 增强
+#!name=哔哩哔哩增强
 #!desc=哔哩哔哩去广告与界面净化，支持空降助手与 P2P 屏蔽
 #!category=Polly-ai
 #!arguments=动态最常访问:auto,创作中心:0,过滤置顶评论广告:1,优化评论区加载:bilibili.protobuf.request,空降助手:bilibili.airborne,空降助手策略:DIRECT,屏蔽P2P:DEST-PORT,日志等级:4
