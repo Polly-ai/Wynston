@@ -3,7 +3,9 @@
 
 上游本身已是 Surge 模块格式：头部 #! 注释、[Rule]、[Map Local]、[Body Rewrite]、
 [MITM]，以及段落内的说明注释。同步时只改写头部三项和脚本地址，
-其余内容原样保留。
+其余内容原样保留：上游的 #! 头部注释（author、homepage、version、openUrl、
+system、raw-url，以及上游今后新增的任何 #! 项）全部跟随上游带上，
+只有 name、category 按用户指定固定不变。
 （上游 v16 自 2026-11-14 起删掉了 [Script] 段，改为零 JS 机制；
  [Script] 现为可选段落：上游有则同步镜像，无则跳过。）
 
@@ -16,7 +18,8 @@
   - #!name 固定为“拼多多净化”（用户指定，不跟上游的“拼多多去广告”）。
   - #!desc 随上游原文，不改写（用户指定“模块备注不变”）。
   - #!category 固定为 Polly-ai（用户指定）。
-  - #!system、#!raw-url 随上游原文，不改写。
+  - 其余 #! 头部注释全部随上游原文带上（author、homepage、version、openUrl、
+    system、raw-url，以及上游今后新增的任何 #! 项），按上游原有顺序输出。
   - [Rule]、[Map Local]、[Body Rewrite]、[MITM] 及段落内注释全文原样保留。
   - 若上游有 [Script]：两个 [Script] 段落合并为一个（内容不变），脚本一律指向
     自托管地址（SELF_HOSTED 列表），不直接引用第三方 js；同步时同时抓上游 js
@@ -44,8 +47,9 @@ MODULE_CATEGORY = "Polly-ai"
 KNOWN_SECTIONS = ("[Rule]", "[Map Local]", "[Body Rewrite]", "[Script]", "[MITM]")
 REQUIRED_SECTIONS = ("[Rule]", "[Map Local]", "[Body Rewrite]", "[MITM]")
 # [Script] 自上游 v16（2026-11-14）起不再是必要段落：上游删掉了 [Script]，
-# 同步时原样保留的上游头部（按此顺序输出）
-PRESERVED_HEADERS = ("system", "raw-url")
+# 同步时跳过镜像（见 main）。
+# 头部注释：除 name/desc/category 外，上游的全部 #! 项都原样带上（按上游顺序输出），
+# 不再用固定白名单（2026-11-15 用户要求：上游每行的注释都带上）。
 # 脚本镜像：(模块内脚本名, 上游 js 地址, 自托管路径)
 # 自托管地址统一为 https://raw.githubusercontent.com/Polly-ai/Wynston/main/<自托管路径>
 SCRIPTS = [
@@ -175,9 +179,10 @@ def render(parts, mirrored):
         f"#!desc = {meta['desc']}",
         f"#!category = {MODULE_CATEGORY}",
     ]
-    for key in PRESERVED_HEADERS:
-        if key in meta:
-            out.append(f"#!{key} = {meta[key]}")
+    for key, value in meta.items():
+        if key in ("name", "desc", "category"):
+            continue
+        out.append(f"#!{key} = {value}")
     out += ["", f"# 同步自上游：{UPSTREAM_URL}", ""]
     for seg in parts["segments"]:
         if seg["name"]:
