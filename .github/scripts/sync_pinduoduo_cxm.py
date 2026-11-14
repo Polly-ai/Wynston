@@ -22,8 +22,8 @@ system、raw-url，以及上游今后新增的任何 #! 项）全部跟随上游
     system、raw-url，以及上游今后新增的任何 #! 项），按上游原有顺序输出。
   - [Rule]、[Map Local]、[Body Rewrite]、[MITM] 及段落内注释全文原样保留。
   - 同步时按 COMMENTS 表给 [Rule]、[Body Rewrite]、[Map Local]、[MITM] 的
-    每组规则上方插入 # > 注释（用户写法）；上游新增条目时需在 COMMENTS 里
-    补注释，缺失时只在日志里警告，不中断同步。
+    每条规则行上方插入 # > 注释（用户写法），缺失的行都补上；上游新增条目
+    时需在 COMMENTS 里补注释，缺失时只在日志里警告，不中断同步。
   - 若上游有 [Script]：两个 [Script] 段落合并为一个（内容不变），脚本一律指向
     自托管地址（SELF_HOSTED 列表），不直接引用第三方 js；同步时同时抓上游 js
     更新自托管镜像文件。上游无 [Script] 时跳过镜像（v16 起即如此）。
@@ -74,30 +74,48 @@ SCRIPTS = [
 ]
 SELF_HOSTED_BASE = "https://raw.githubusercontent.com/Polly-ai/Wynston/main/"
 
-# 段落注释：(匹配子串, 注释)。同步时把注释插到第一条匹配行的上方，
+# 段落注释：(匹配子串, 注释)。同步时把注释插到每条匹配行的上方，
 # 格式与用户写法一致：# > 说明。匹配子串取自上游原文中能唯一确定
-# 该行（或该组首行）的片段；同一注释只插一次，组内其余行不再重复。
-# 上游 v16 的四个段落本身没有任何注释行，这些注释是按规则实际作用
-# 新写的（从规则原文直接推断，不编造）；目的不确定的域名只按组写
-# 通用注释。上游新增条目时需在这里补注释；map 里的 key 在上游找
+# 该行的片段；同一注释可重复插在多条相同规则上方（如上游重复的
+# irregular_banner_dy 行）。目标是四个段落里每条规则行上方都有
+# 注释。目的不确定的域名只按组写通用注释，不编造具体用途。
+# 上游新增条目时需在这里补注释；map 里的 key 在上游找
 # 不到时只打印警告，不中断同步。
 COMMENTS = [
     # [Rule]
     ("((25[0-5]", "拦截直连 IP 的上报请求"),
+    ("\\[[0-9a-fA-F:]+\\]", "拦截直连 IPv6 的上报请求"),
     ("PROTOCOL,QUIC", "禁用 api.pinduoduo.com 的 QUIC"),
     ("titan.pinduoduo.com,REJECT-NO-DROP", "拦截埋点、上报与广告相关域名"),
+    ("DOMAIN,xg.pinduoduo.com", "拦截 xg.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,cdl-1.pddpic.com", "拦截广告图片 CDN"),
+    ("titan.pinduoduo.com,REJECT,extended-matching", "拦截 Titan 埋点上报"),
+    ("DOMAIN,cdl-p2.pddpic.com", "拦截广告图片 CDN"),
+    ("DOMAIN,cd-1.pddpic.com", "拦截广告图片 CDN"),
+    ("DOMAIN,apm.pinduoduo.com", "拦截 APM 性能监控上报"),
+    ("DOMAIN,th-b.pinduoduo.com", "拦截 th-b.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,ta.pinduoduo.com", "拦截 ta.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,th.pinduoduo.com", "拦截 th.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,th-a.pinduoduo.com", "拦截 th-a.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,ta-a.pinduoduo.com", "拦截 ta-a.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,meta.pinduoduo.com", "拦截 meta.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,apm-a.pinduoduo.com", "拦截 APM 性能监控上报"),
     # [Body Rewrite]
     ("irregular_banner_dy", "首页 hub：删底部视频/不规则 banner"),
     ('delpaths([["result","icon_set"]])', "首页 hub：删图标集"),
     ("search_bar_hot_query", "首页 hub：删搜索框热词"),
+    ("bottom_tabs", "首页 hub：底栏只留首页/聊天/个人（删多多视频等）"),
     ("timeline_visible", "关闭首页信息流 timeline、删 timeline 模"),
     ("最快明天达|政府补贴", "顶部入口删「最快明天达/政府补贴」"),
     ('delpaths([["expansion"]])', "搜索：删搜索扩展"),
     ("monthly_card_entrance", "个人中心：删月卡入口"),
     ("personal_center_style_v2_vo", "个人中心：删个人中心样式"),
     ('["icon_set","icons"]', "个人中心：删图标与描述文字"),
+    ("top_personal_icons", "个人中心：删顶部个人图标"),
+    ("other_icon_set", "个人中心：删其他图标描述文字"),
     ("entrance_text", "个人中心：清空钱包入口文字"),
     ("bottom_section_list", "订单渲染：删底部区域"),
+    ('"ui","bottom_section"', "订单渲染：删底部区域"),
     ("float_info", "订单渲染：删直播浮层信息"),
     ("goods_list", "订单详情：删商品推荐列表"),
     ("marketing_banner_vo", "订单页：删营销横幅"),
@@ -250,7 +268,7 @@ def render(parts, mirrored):
                 continue
             if line.strip():
                 for idx, (key, comment) in enumerate(COMMENTS):
-                    if idx not in used_comments and key in line:
+                    if key in line:
                         out.append(f"# > {comment}")
                         used_comments.add(idx)
                         break
