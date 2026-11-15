@@ -44,3 +44,4 @@ bilibili.protobuf.response = type=http-response,pattern=^https:\/\/(?:grpc\.bili
 
 [MITM]
 hostname = %APPEND% grpc.biliapi.net, app.bilibili.com, api.bilibili.com, api.live.bilibili.com, www.bilibili.com, line3-h5-mobile-api.biligame.com
+
