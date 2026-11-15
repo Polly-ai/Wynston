@@ -84,6 +84,7 @@ def parse(data: bytes, kind: str):
             continue
         if line.startswith(('#','//')):
             description = '# ' + line[2:].strip() if line.startswith('//') else line
+            description = description.replace('@ddgksf2013', '').rstrip()
             notes.append(description)
             continue
         if re.fullmatch(r'https?://\S+',line):
