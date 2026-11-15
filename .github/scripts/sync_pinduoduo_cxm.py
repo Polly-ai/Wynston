@@ -2,10 +2,12 @@
 """把上游 Surge 模块 https://raw.githubusercontent.com/CaoXiaoMann/XiaoMan/main/Surge/Scripts/PDD/PDD.sgmodule 同步到本仓库，并每日跟随上游更新。
 
 上游本身已是 Surge 模块格式：头部 #! 注释、[Rule]、[Map Local]、[Body Rewrite]、
-[MITM]，以及段落内的说明注释。同步时只改写头部三项和脚本地址，
-其余内容原样保留：上游的 #! 头部注释（author、homepage、version、openUrl、
-system、raw-url，以及上游今后新增的任何 #! 项）全部跟随上游带上，
-只有 name、category 按用户指定固定不变。
+[MITM]，以及段落内的说明注释。同步时模块与上游逐字节一致，只改 name、
+category 两项（用户指定），其余内容——包括头部格式（#!key=value 不带空格）、
+段落、规则行、空行——全部原样保留。
+（2026-11-15 实测：往模块里注入 # > 注释、把头部改成 "#!key = value" 带空格
+写法，都会让 Surge 不生效；去掉后与上游逐字节一致的版本立即生效。
+因此注释只留在本脚本的 COMMENTS 表里作对照，不再写入模块。）
 （上游 v16 自 2026-11-14 起删掉了 [Script] 段，改为零 JS 机制；
  [Script] 现为可选段落：上游有则同步镜像，无则跳过。）
 
@@ -16,16 +18,13 @@ system、raw-url，以及上游今后新增的任何 #! 项）全部跟随上游
 
 改写规则：
   - #!name 固定为“拼多多净化”（用户指定，不跟上游的“拼多多去广告”）。
-  - #!desc 随上游原文，不改写（用户指定“模块备注不变”）。
   - #!category 固定为 Polly-ai（用户指定）。
-  - 其余 #! 头部注释全部随上游原文带上（author、homepage、version、openUrl、
-    system、raw-url，以及上游今后新增的任何 #! 项），按上游原有顺序输出。
-  - [Rule]、[Map Local]、[Body Rewrite]、[MITM] 及段落内注释全文原样保留。
-  - 同步时按 COMMENTS 表给 [Rule]、[Body Rewrite]、[Map Local]、[MITM] 的
-    每条规则行上方插入 # > 注释（用户写法），缺失的行都补上。上游自带的
-    # 注释行全文原样保留，其后规则不再另加 # >；若某规则行既无上游注释、
-    COMMENTS 表里又没有对应条目，同步直接失败（需补注释后再跑），绝不
-    让没注释的规则悄悄入库。
+  - 除 name、category 外，模块与上游逐字节一致：头部按上游顺序、以上游原格式
+    （#!key=value，不带空格）输出；[Rule]、[Map Local]、[Body Rewrite]、[MITM]
+    及段落内注释、空行全文原样保留。
+  - 不再往模块里注入 # > 注释（2026-11-15 实测会让 Surge 不生效）。COMMENTS
+    表只作为本脚本内的对照文档（每条规则是干什么的），上游新增规则时仍需
+    在表里补一条说明，但不再要求覆盖率、也不再因此失败。
   - 若上游有 [Script]：两个 [Script] 段落合并为一个（内容不变），脚本一律指向
     自托管地址（SELF_HOSTED 列表），不直接引用第三方 js；同步时同时抓上游 js
     更新自托管镜像文件。上游无 [Script] 时跳过镜像（v16 起即如此）。
@@ -76,15 +75,10 @@ SCRIPTS = [
 ]
 SELF_HOSTED_BASE = "https://raw.githubusercontent.com/Polly-ai/Wynston/main/"
 
-# 段落注释：(匹配子串, 注释)。同步时把注释插到每条匹配行的上方，
-# 格式与用户写法一致：# > 说明。匹配子串取自上游原文中能唯一确定
-# 该行的片段；同一注释可重复插在多条相同规则上方（如上游重复的
-# irregular_banner_dy 行）。目标是四个段落里每条规则行上方都有
-# 注释。目的不确定的域名只按组写通用注释，不编造具体用途。
-# 注释政策（2026-11-15 用户定）：上游自带的 # 注释行全文原样保留，
-# 其后规则不再另加 # >；没有注释的规则行按本表加 # >；若某规则行
-# 既无上游注释、本表又没有对应条目，同步直接失败，等补了注释再跑。
-# map 里的 key 在上游找不到时只打印警告，不中断同步。
+# 段落注释：(匹配子串, 注释)。只作为本脚本内的对照文档，说明每条规则
+# 是干什么的，不再写入模块（2026-11-15 实测：把注释注入模块会导致 Surge
+# 不生效）。匹配子串取自上游原文中能唯一确定该行的片段；目的不确定的
+# 域名只按组写通用注释，不编造具体用途。上游新增规则时，在此补一条说明。
 COMMENTS = [
     # [Rule]
     ("((25[0-5]", "拦截直连 IP 的上报请求"),
@@ -254,19 +248,19 @@ def rewrite_script_line(line, mirrored):
 
 
 def render(parts, mirrored):
+    # 模块与上游逐字节一致，只改 name、category。
+    # 2026-11-15 实测：往模块里注入 # > 注释、把头部改成 "#!key = value"
+    # 带空格写法，都会让 Surge 不生效（规则与上游逐字节一致仍无效；去掉
+    # 后立即生效）。因此这里不注入任何注释、不改写任何格式，只替换两项。
     meta = parts["meta"]
-    out = [
-        f"#!name = {MODULE_NAME}",
-        f"#!desc = {meta['desc']}",
-        f"#!category = {MODULE_CATEGORY}",
-    ]
+    out = []
     for key, value in meta.items():
-        if key in ("name", "desc", "category"):
-            continue
-        out.append(f"#!{key} = {value}")
-    out += ["", f"# 同步自上游：{UPSTREAM_URL}", ""]
-    used_comments = set()
-    uncovered = []
+        if key == "name":
+            value = MODULE_NAME
+        elif key == "category":
+            value = MODULE_CATEGORY
+        out.append(f"#!{key}={value}")
+    out.append("")
     for seg in parts["segments"]:
         if seg["name"]:
             out.append(seg["name"])
@@ -274,44 +268,8 @@ def render(parts, mirrored):
             if seg["name"] == "[Script]" and line.strip():
                 out.append(rewrite_script_line(line, mirrored))
                 continue
-            if not line.strip():
-                out.append(line)
-                continue
-            # 上游自带的 # 注释行原样保留，它本身就是注释，不再另加 # >
-            if line.lstrip().startswith("#"):
-                out.append(line)
-                continue
-            # 规则行：上一行已是注释（上游自带）时不再加 # >；
-            # 否则按 COMMENTS 表加；两者都没有则记下来，同步直接失败。
-            preceded_by_comment = bool(out) and out[-1].lstrip().startswith("#")
-            matched = None
-            for idx, (key, comment) in enumerate(COMMENTS):
-                if key in line:
-                    matched = (idx, comment)
-                    break
-            if matched is not None:
-                used_comments.add(matched[0])
-            if preceded_by_comment:
-                out.append(line)
-                continue
-            if matched is not None:
-                out.append(f"# > {matched[1]}")
-            else:
-                uncovered.append(line)
             out.append(line)
-    if uncovered:
-        fail(
-            "以下规则行没有注释（上游未带注释，COMMENTS 表里也没有对应条目），"
-            "请补注释后再同步：\n" + "\n".join(f"  {l}" for l in uncovered)
-        )
-    for idx, (key, comment) in enumerate(COMMENTS):
-        if idx not in used_comments:
-            print(
-                f"sync_pinduoduo_cxm: 警告：注释未匹配到上游行（上游可能删改了这条规则），"
-                f"请检查 COMMENTS：{key!r} -> {comment}",
-                file=sys.stderr,
-            )
-    return "\n".join(out).rstrip("\n") + "\n"
+    return "\n".join(out) + "\n"
 
 
 def main():
