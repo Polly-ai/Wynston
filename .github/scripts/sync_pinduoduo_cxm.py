@@ -1,1 +1,373 @@
-IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwoiIiLmiorkuIrmuLggU3VyZ2Ug5qih5Z2XIGh0dHBzOi8vcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS9DYW9YaWFvTWFubi9YaWFvTWFuL21haW4vU3VyZ2UvU2NyaXB0cy9QREQvUERELnNnbW9kdWxlIOWQjOatpeWIsOacrOS7k+W6k++8jOW5tuavj+aXpei3n+maj+S4iua4uOabtOaWsOOAggoK5LiK5ri45pys6Lqr5bey5pivIFN1cmdlIOaooeWdl+agvOW8j++8muWktOmDqCAjISDms6jph4rjgIFbUnVsZV3jgIFbTWFwIExvY2FsXeOAgVtCb2R5IFJld3JpdGVd44CBCltNSVRNXe+8jOS7peWPiuauteiQveWGheeahOivtOaYjuazqOmHiuOAguWQjOatpeaXtuWPquaUueWGmeWktOmDqOS4iemhueWSjOiEmuacrOWcsOWdgO+8jArlhbbkvZnlhoXlrrnljp/moLfkv53nlZnvvJrkuIrmuLjnmoQgIyEg5aS06YOo5rOo6YeK77yIYXV0aG9y44CBaG9tZXBhZ2XjgIF2ZXJzaW9u44CBb3BlblVybOOAgQpzeXN0ZW3jgIFyYXctdXJs77yM5Lul5Y+K5LiK5ri45LuK5ZCO5paw5aKe55qE5Lu75L2VICMhIOmhue+8ieWFqOmDqOi3n+maj+S4iua4uOW4puS4iu+8jArlj6rmnIkgbmFtZeOAgWNhdGVnb3J5IOaMieeUqOaIt+aMh+WumuWbuuWumuS4jeWPmOOAggrvvIjkuIrmuLggdjE2IOiHqiAyMDI2LTExLTE0IOi1t+WIoOaOieS6hiBbU2NyaXB0XSDmrrXvvIzmlLnkuLrpm7YgSlMg5py65Yi277ybCiBbU2NyaXB0XSDnjrDkuLrlj6/pgInmrrXokL3vvJrkuIrmuLjmnInliJnlkIzmraXplZzlg4/vvIzml6DliJnot7Pov4fjgILvvIkKCueUqOazle+8iOS7k+W6k+W3peS9nOa1gemHjOS4jeW4puWPguaVsOi3ke+8jOm7mOiupOaKk+S4iua4uOOAgeWGmeWIsOS7k+W6k+i3r+W+hO+8ie+8mgogICAgcHl0aG9uMyAuZ2l0aHViL3NjcmlwdHMvc3luY19waW5kdW9kdW9fY3htLnB5CuacrOWcsOa1i+ivle+8mgogICAgcHl0aG9uMyAuZ2l0aHViL3NjcmlwdHMvc3luY19waW5kdW9kdW9fY3htLnB5IC0tZnJvbS1maWxlIC90bXAvUGluZHVvZHVvLnNnbW9kdWxlIC0tb3V0cHV0IC90bXAvb3V0LnNnbW9kdWxlCgrmlLnlhpnop4TliJnvvJoKICAtICMhbmFtZSDlm7rlrprkuLrigJzmi7zlpJrlpJrlh4DljJbigJ3vvIjnlKjmiLfmjIflrprvvIzkuI3ot5/kuIrmuLjnmoTigJzmi7zlpJrlpJrljrvlub/lkYrigJ3vvInjgIIKICAtICMhZGVzYyDpmo/kuIrmuLjljp/mlofvvIzkuI3mlLnlhpnvvIjnlKjmiLfmjIflrprigJzmqKHlnZflpIfms6jkuI3lj5jigJ3vvInjgIIKICAtICMhY2F0ZWdvcnkg5Zu65a6a5Li6IFBvbGx5LWFp77yI55So5oi35oyH5a6a77yJ44CCCiAgLSDlhbbkvZkgIyEg5aS06YOo5rOo6YeK5YWo6YOo6ZqP5LiK5ri45Y6f5paH5bim5LiK77yIYXV0aG9y44CBaG9tZXBhZ2XjgIF2ZXJzaW9u44CBb3BlblVybOOAgQogICAgc3lzdGVt44CBcmF3LXVybO+8jOS7peWPiuS4iua4uOS7iuWQjuaWsOWinueahOS7u+S9lSAjISDpobnvvInvvIzmjInkuIrmuLjljp/mnInpobrluo/ovpPlh7rjgIIKICAtIFtSdWxlXeOAgVtNYXAgTG9jYWxd44CBW0JvZHkgUmV3cml0ZV3jgIFbTUlUTV0g5Y+K5q616JC95YaF5rOo6YeK5YWo5paH5Y6f5qC35L+d55WZ44CCCiAgLSDlkIzmraXml7bmjIkgQ09NTUVOVFMg6KGo57uZIFtSdWxlXeOAgVtCb2R5IFJld3JpdGVd44CBW01hcCBMb2NhbF3jgIFbTUlUTV0g55qECiAgICDmr4/mnaHop4TliJnooYzkuIrmlrnmj5LlhaUgIyA+IOazqOmHiu+8iOeUqOaIt+WGmeazle+8ie+8jOe8uuWkseeahOihjOmDveihpeS4iuOAguS4iua4uOiHquW4pueahAogICAgIyDms6jph4rooYzlhajmlofljp/moLfkv53nlZnvvIzlhbblkI7op4TliJnkuI3lho3lj6bliqAgIyA+77yb6Iul5p+Q6KeE5YiZ6KGM5pei5peg5LiK5ri45rOo6YeK44CBCiAgICBDT01NRU5UUyDooajph4zlj4jmsqHmnInlr7nlupTmnaHnm67vvIzlkIzmraXnm7TmjqXlpLHotKXvvIjpnIDooaXms6jph4rlkI7lho3ot5HvvInvvIznu53kuI0KICAgIOiuqeayoeazqOmHiueahOinhOWImeaChOaChOWFpeW6k+OAggogIC0g6Iul5LiK5ri45pyJIFtTY3JpcHRd77ya5Lik5LiqIFtTY3JpcHRdIOauteiQveWQiOW5tuS4uuS4gOS4qu+8iOWGheWuueS4jeWPmO+8ie+8jOiEmuacrOS4gOW+i+aMh+WQkQogICAg6Ieq5omY566h5Zyw5Z2A77yIU0VMRl9IT1NURUQg5YiX6KGo77yJ77yM5LiN55u05o6l5byV55So56ys5LiJ5pa5IGpz77yb5ZCM5q2l5pe25ZCM5pe25oqT5LiK5ri4IGpzCiAgICDmm7TmlrDoh6rmiZjnrqHplZzlg4/mlofku7bjgILkuIrmuLjml6AgW1NjcmlwdF0g5pe26Lez6L+H6ZWc5YOP77yIdjE2IOi1t+WNs+WmguatpO+8ieOAggogIC0g5L6L5aSW77yaUERELUhPTUUtREVCVUcg6ISa5pysIHBkZF90b3BfY2FwdHVyZS5qcyDlnKjkuIrmuLjku5PlupPph4zkuI3lrZjlnKjvvIg0MDTvvInvvIwKICAgIOaXoOazlemVnOWDj++8m+ivpeadoSBzY3JpcHQtcGF0aCDkv53mjIHkuIrmuLjljp/lnLDlnYDkuI3lj5jvvIznrYnkuIrmuLjooaXkuIrmlofku7blkI7vvIwKICAgIOS4i+asoeWQjOatpeS8muiHquWKqOaUueS4uuiHquaJmOeuoemVnOWDj+OAggoK5Zu65a6a5LiN5Y+Y55qE5aS06YOo77yI5ZCM5q2l5pe25LiN6KKr5LiK5ri46KaG55uW77yJ77yaCiAgLSAjIW5hbWXjgIEjIWNhdGVnb3J5CgrkuIrmuLjlh7rnjrDml6Dms5Xor4bliKvnmoTmrrXokL3miJbnvLrlsJHlv4XopoHmrrXokL3ml7bnm7TmjqXlpLHotKXjgIHnu53kuI3pnZnpu5jkuKLop4TliJnvvJvkuIrmuLjmsqHlj5jml7bkuI3lhpnmlofku7bjgIHkuI3kuqfnlJ/mj5DkuqTjgIIKIiIiCgppbXBvcnQgYXJncGFyc2UKaW1wb3J0IG9zCmltcG9ydCByZQppbXBvcnQgc3lzCmltcG9ydCB1cmxsaWIucmVxdWVzdAoKVVBTVFJFQU1fVVJMID0gImh0dHBzOi8vcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS9DYW9YaWFvTWFubi9YaWFvTWFuL21haW4vU3VyZ2UvU2NyaXB0cy9QREQvUERELnNnbW9kdWxlIgpERUZBVUxUX09VVFBVVCA9ICJTdXJnZS9Nb2R1bGUvcGRkLnNnbW9kdWxlIgpNT0RVTEVfTkFNRSA9ICLmi7zlpJrlpJrlh4DljJYiCk1PRFVMRV9DQVRFR09SWSA9ICJQb2xseS1haSIKS05PV05fU0VDVElPTlMgPSAoIltSdWxlXSIsICJbTWFwIExvY2FsXSIsICJbQm9keSBSZXdyaXRlXSIsICJbU2NyaXB0XSIsICJbTUlUTV0iKQpSRVFVSVJFRF9TRUNUSU9OUyA9ICgiW1J1bGVdIiwgIltNYXAgTG9jYWxdIiwgIltCb2R5IFJld3JpdGVdIiwgIltNSVRNXSIpCiMgW1NjcmlwdF0g6Ieq5LiK5ri4IHYxNu+8iDIwMjYtMTEtMTTvvInotbfkuI3lho3mmK/lv4XopoHmrrXokL3vvJrkuIrmuLjliKDmjonkuoYgW1NjcmlwdF3vvIwKIyDlkIzmraXml7bot7Pov4fplZzlg4/vvIjop4EgbWFpbu+8ieOAggojIOWktOmDqOazqOmHiu+8mumZpCBuYW1lL2Rlc2MvY2F0ZWdvcnkg5aSW77yM5LiK5ri455qE5YWo6YOoICMhIOmhuemDveWOn+agt+W4puS4iu+8iOaMieS4iua4uOmhuuW6j+i+k+WHuu+8ie+8jAojIOS4jeWGjeeUqOWbuuWumueZveWQjeWNle+8iDIwMjYtMTEtMTUg55So5oi36KaB5rGC77ya5LiK5ri45q+P6KGM55qE5rOo6YeK6YO95bim5LiK77yJ44CCCiMg6ISa5pys6ZWc5YOP77yaKOaooeWdl+WGheiEmuacrOWQjSwg5LiK5ri4IGpzIOWcsOWdgCwg6Ieq5omY566h6Lev5b6EKQojIOiHquaJmOeuoeWcsOWdgOe7n+S4gOS4uiBodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vUG9sbHktYWkvV3luc3Rvbi9tYWluLzzoh6rmiZjnrqHot6/lvoQ+ClNDUklQVFMgPSBbCiAgICAoCiAgICAgICAgIuenu+mZpOaJq+eggeWPluS7tumhtemdouWVhuWTgeaOqOiNkOWPiuW8ueeqlyIsCiAgICAgICAgImh0dHBzOi8vcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS9ma2luZ2lrZWxlZS9ma2lrZWxlZS9tYWluL1Jlc291cmNlL2tlbGVlL0phdmFTY3JpcHQvUGluRHVvRHVvL1BpbkR1b0R1b19yZW1vdmVfYWRzLmpzIiwKICAgICAgICAiU3VyZ2UvSmF2YVNjcmlwdC9QaW5EdW9EdW8vUGluRHVvRHVvX3JlbW92ZV9hZHMuanMiLAogICAgKSwKICAgICgKICAgICAgICAi57K+566A6K+E5Lu36aG1IiwKICAgICAgICAiaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1lpLXI4L1N1cmdlL3JlZnMvaGVhZHMvbWFpbi9Kcy9waW5kdW9kdW8uanMiLAogICAgICAgICJTdXJnZS9KYXZhU2NyaXB0L1BpbkR1b0R1by9waW5kdW9kdW8uanMiLAogICAgKSwKICAgICgKICAgICAgICAiUERELUhPTUUtREVCVUciLAogICAgICAgICJodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vQ2FvWGlhb01hbm4vWGlhb01hbi9tYWluL1N1cmdlL1NjcmlwdHMvUEREL3BkZF90b3BfY2FwdHVyZS5qcyIsCiAgICAgICAgIlN1cmdlL0phdmFTY3JpcHQvUGluRHVvRHVvL3BkZF90b3BfY2FwdHVyZS5qcyIsCiAgICApLApdClNFTEZfSE9TVEVEX0JBU0UgPSAiaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1BvbGx5LWFpL1d5bnN0b24vbWFpbi8iCgojIOauteiQveazqOmHiu+8mijljLnphY3lrZDkuLIsIOazqOmHiinjgILlkIzmraXml7bmiorms6jph4rmj5LliLDmr4/mnaHljLnphY3ooYznmoTkuIrmlrnvvIwKIyDmoLzlvI/kuI7nlKjmiLflhpnms5XkuIDoh7TvvJojID4g6K+05piO44CC5Yy56YWN5a2Q5Liy5Y+W6Ieq5LiK5ri45Y6f5paH5Lit6IO95ZSv5LiA56Gu5a6aCiMg6K+l6KGM55qE54mH5q6177yb5ZCM5LiA5rOo6YeK5Y+v6YeN5aSN5o+S5Zyo5aSa5p2h55u45ZCM6KeE5YiZ5LiK5pa577yI5aaC5LiK5ri46YeN5aSN55qECiMgaXJyZWd1bGFyX2Jhbm5lcl9keSDooYzvvInjgILnm67moIfmmK/lm5vkuKrmrrXokL3ph4zmr4/mnaHop4TliJnooYzkuIrmlrnpg73mnIkKIyDms6jph4rjgILnm67nmoTkuI3noa7lrprnmoTln5/lkI3lj6rmjInnu4TlhpnpgJrnlKjms6jph4rvvIzkuI3nvJbpgKDlhbfkvZPnlKjpgJTjgIIKIyDms6jph4rmlL/nrZbvvIgyMDI2LTExLTE1IOeUqOaIt+Wumu+8ie+8muS4iua4uOiHquW4pueahCAjIOazqOmHiuihjOWFqOaWh+WOn+agt+S/neeVme+8jAojIOWFtuWQjuinhOWImeS4jeWGjeWPpuWKoCAjID7vvJvmsqHmnInms6jph4rnmoTop4TliJnooYzmjInmnKzooajliqAgIyA+77yb6Iul5p+Q6KeE5YiZ6KGMCiMg5pei5peg5LiK5ri45rOo6YeK44CB5pys6KGo5Y+I5rKh5pyJ5a+55bqU5p2h55uu77yM5ZCM5q2l55u05o6l5aSx6LSl77yM562J6KGl5LqG5rOo6YeK5YaN6LeR44CCCiMgbWFwIOmHjOeahCBrZXkg5Zyo5LiK5ri45om+5LiN5Yiw5pe25Y+q5omT5Y2w6K2m5ZGK77yM5LiN5Lit5pat5ZCM5q2l44CCCkNPTU1FTlRTID0gWwogICAgIyBbUnVsZV0KICAgICgiKCgyNVswLTVdIiwgIuaLpuaIquebtOi/niBJUCDnmoTkuIrmiqXor7fmsYIiKSwKICAgICgiXFxbWzAtOWEtZkEtRjpdK1xcXSIsICLmi6bmiKrnm7Tov54gSVB2NiDnmoTkuIrmiqXor7fmsYIiKSwKICAgICgiUFJPVE9DT0wsUVVJQyIsICLnpoHnlKggYXBpLnBpbmR1b2R1by5jb20g55qEIFFVSUMiKSwKICAgICgidGl0YW4ucGluZHVvZHVvLmNvbSxSRUpFQ1QtTk8tRFJPUCIsICLmi6bmiKrln4vngrnjgIHkuIrmiqXkuI7lub/lkYrnm7jlhbPln5/lkI0iKSwKICAgICgiRE9NQUlOLHhnLnBpbmR1b2R1by5jb20iLCAi5oum5oiqIHhnLnBpbmR1b2R1by5jb23vvIjln4vngrkv5LiK5oql77yJIiksCiAgICAoIkRPTUFJTixjZGwtMS5wZGRwaWMuY29tIiwgIuaLpuaIquW5v+WRiuWbvueJhyBDRE4iKSwKICAgICgidGl0YW4ucGluZHVvZHVvLmNvbSxSRUpFQ1QsZXh0ZW5kZWQtbWF0Y2hpbmciLCAi5oum5oiqIFRpdGFuIOWfi+eCueS4iuaKpSIpLAogICAgKCJET01BSU4sY2RsLXAyLnBkZHBpYy5jb20iLCAi5oum5oiq5bm/5ZGK5Zu+54mHIENETiIpLAogICAgKCJET01BSU4sY2QtMS5wZGRwaWMuY29tIiwgIuaLpuaIquW5v+WRiuWbvueJhyBDRE4iKSwKICAgICgiRE9NQUlOLGFwbS5waW5kdW9kdW8uY29tIiwgIuaLpuaIqiBBUE0g5oCn6IO955uR5o6n5LiK5oqlIiksCiAgICAoIkRPTUFJTix0aC1iLnBpbmR1b2R1by5jb20iLCAi5oum5oiqIHRoLWIucGluZHVvZHVvLmNvbe+8iOWfi+eCuS/kuIrmiqXvvIkiKSwKICAgICgiRE9NQUlOLHRhLnBpbmR1b2R1by5jb20iLCAi5oum5oiqIHRhLnBpbmR1b2R1by5jb23vvIjln4vngrkv5LiK5oql77yJIiksCiAgICAoIkRPTUFJTix0aC5waW5kdW9kdW8uY29tIiwgIuaLpuaIqiB0aC5waW5kdW9kdW8uY29t77yI5Z+L54K5L+S4iuaKpe+8iSIpLAogICAgKCJET01BSU4sdGgtYS5waW5kdW9kdW8uY29tIiwgIuaLpuaIqiB0aC1hLnBpbmR1b2R1by5jb23vvIjln4vngrkv5LiK5oql77yJIiksCiAgICAoIkRPTUFJTix0YS1hLnBpbmR1b2R1by5jb20iLCAi5oum5oiqIHRhLWEucGluZHVvZHVvLmNvbe+8iOWfi+eCuS/kuIrmiqXvvIkiKSwKICAgICgiRE9NQUlOLG1ldGEucGluZHVvZHVvLmNvbSIsICLmi6bmiKogbWV0YS5waW5kdW9kdW8uY29t77yI5Z+L54K5L+S4iuaKpe+8iSIpLAogICAgKCJET01BSU4sYXBtLWEucGluZHVvZHVvLmNvbSIsICLmi6bmiKogQVBNIOaAp+iDveebkeaOp+S4iuaKpSIpLAogICAgIyBbQm9keSBSZXdyaXRlXQogICAgKCJpcnJlZ3VsYXJfYmFubmVyX2R5IiwgIummlumhtSBodWLvvJrliKDlupXpg6jop4bpopEv5LiN6KeE5YiZIGJhbm5lciIpLAogICAgKCdkZWxwYXRocyhbWyJyZXN1bHQiLCJpY29uX3NldCJdXSknLCAi6aaW6aG1IGh1Yu+8muWIoOWbvuagh+mbhiIpLAogICAgKCJzZWFyY2hfYmFyX2hvdF9xdWVyeSIsICLpppbpobUgaHVi77ya5Yig5pCc57Si5qGG54Ot6K+NIiksCiAgICAoImJvdHRvbV90YWJzIiwgIummlumhtSBodWLvvJrlupXmoI/lj6rnlZnpppbpobUv6IGK5aSpL+S4quS6uu+8iOWIoOWkmuWkmuinhumikeetie+8iSIpLAogICAgKCJ0aW1lbGluZV92aXNpYmxlIiwgIuWFs+mXremmlumhteS/oeaBr+a1gSB0aW1lbGluZeOAgeWIoCB0aW1lbGluZSDmqKEiKSwKICAgICgi5pyA5b+r5piO5aSp6L6+fOaUv+W6nOihpei0tCIsICLpobbpg6jlhaXlj6PliKDjgIzmnIDlv6vmmI7lpKnovr4v5pS/5bqc6KGl6LS044CNIiksCiAgICAoJ2RlbHBhdGhzKFtbImV4cGFuc2lvbiJdXSknLCAi5pCc57Si77ya5Yig5pCc57Si5omp5bGVIiksCiAgICAoIm1vbnRobHlfY2FyZF9lbnRyYW5jZSIsICLkuKrkurrkuK3lv4PvvJrliKDmnIjljaHlhaXlj6MiKSwKICAgICgicGVyc29uYWxfY2VudGVyX3N0eWxlX3YyX3ZvIiwgIuS4quS6uuS4reW/g++8muWIoOS4quS6uuS4reW/g+agt+W8jyIpLAogICAgKCdbImljb25fc2V0IiwiaWNvbnMiXScsICLkuKrkurrkuK3lv4PvvJrliKDlm77moIfkuI7mj4/ov7DmloflrZciKSwKICAgICgidG9wX3BlcnNvbmFsX2ljb25zIiwgIuS4quS6uuS4reW/g++8muWIoOmhtumDqOS4quS6uuWbvuaghyIpLAogICAgKCJvdGhlcl9pY29uX3NldCIsICLkuKrkurrkuK3lv4PvvJrliKDlhbbku5blm77moIfmj4/ov7DmloflrZciKSwKICAgICgiZW50cmFuY2VfdGV4dCIsICLkuKrkurrkuK3lv4PvvJrmuIXnqbrpkrHljIXlhaXlj6PmloflrZciKSwKICAgICgiYm90dG9tX3NlY3Rpb25fbGlzdCIsICLorqLljZXmuLLmn5PvvJrliKDlupXpg6jljLrln58iKSwKICAgICgnInVpIiwiYm90dG9tX3NlY3Rpb24iJywgIuiuouWNlea4suafk++8muWIoOW6lemDqOWMuuWfnyIpLAogICAgKCJmbG9hdF9pbmZvIiwgIuiuouWNlea4suafk++8muWIoOebtOaSrea1ruWxguS/oeaBryIpLAogICAgKCJnb29kc19saXN0IiwgIuiuouWNleivpuaDhe+8muWIoOWVhuWTgeaOqOiNkOWIl+ihqCIpLAogICAgKCJtYXJrZXRpbmdfYmFubmVyX3ZvIiwgIuiuouWNlemhte+8muWIoOiQpemUgOaoquW5hSIpLAogICAgKCJiYW5uZXJfYWJvdmVfcmVjb21tZW5kIiwgIuiuouWNlemhte+8muWIoOeJqea1geS4iuaWueaOqOiNkCIpLAogICAgKCJvcmRlcl9ncm93dGhfdGlwIiwgIuiuouWNleWIl+ihqO+8muWIoOiuouWNleaIkOmVv+aPkOekuiIpLAogICAgKCJyZWNvbW1lbmRfZnJlc2hfaW5mbyIsICLpppbpobUgaHVi77ya5Yig5aSa5aSa5Lmw6I+c5qCP5LiO55m+5Lq/6KGl6LS05YWl5Y+jIiksCiAgICAoInBlcnNvbmFsX2Jhbm5lciIsICLkuKrkurrkuK3lv4PvvJrliKDooaXotLTmqKrluYUiKSwKICAgICgidGl0bGVfYmFyX2l0ZW1zIiwgIuS4quS6uuS4reW/g++8muWIoOagh+mimOagjyIpLAogICAgIyBbTWFwIExvY2FsXQogICAgKCJ1bnJhdGVkX29yZGVyX2Zvcl91bnJlY2VpdmVkX3RhYiIsICLmnKrmlLbotKforqLljZXor4Tku7flhaXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgicXVlcnlfb3JkZXJfbGlzdF90YWJzX2VsZW1lbnQiLCAi6K6i5Y2V5YiX6KGoIHRhYnMg5YWD57Sg77yM6L+U5Zue572u56m6IiksCiAgICAoImFxdWFyaXVzXFwvaHVuZ2FyeVxcL2dsb2JhbFxcL2hvbWVwYWdlIiwgIuWFqOeQg+mmlumhteaOpeWPo++8jOi/lOWbnue9ruepuiIpLAogICAgKCJxdWVyeVxcL29yZGVyX2V4cHJlc3NfZ3JvdXAiLCAi6K6i5Y2V5b+r6YCS5L+h5oGv5o6l5Y+j77yM6L+U5Zue572u56m6IiksCiAgICAoInNlYXJjaF9ob3RxdWVyeSIsICLmkJzntKLng63or43mjqXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgiZ2V0X2xpc3RfZGF0YSIsICLogYrlpKnotYTmupDliJfooajmjqXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgibmV3X2NoYXRfZ3JvdXAiLCAi5paw6IGK5aSp57uE5o6l5Y+j77yM6L+U5Zue572u56m6IiksCiAgICAoImdvb2RzXFwvYmFja191cCIsICLllYblk4HlpIfnlKjmjqXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgicXVlcnlcXC9wZXJzb25hbCIsICLkuKrkurrkv6Hmga/mn6Xor6LmjqXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgiYnlidF9ndWlkZSIsICLllYblk4Hor6bmg4XlvJXlr7zmjqXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgicmVxdWlyZVxcL2FwcGVuZCIsICLov73liqDor4Tku7fmjqXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgibXlfb3JkZXJfZ3JvdXAiLCAi5oiR55qE6K6i5Y2V57uE5o6l5Y+j77yM6L+U5Zue572u56m6IiksCiAgICAoInF1ZXJ5XFwvbGlrZXMiLCAi5Zac5qyi5YiX6KGo5o6l5Y+j77yM6L+U5Zue572u56m6IiksCiAgICAoImdiZGJwZHZcXC9leHRyYSIsICLpmYTliqDmlbDmja7mjqXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgic2hvcnRjdXRcXC9saXN0IiwgIui3qOW6l+W/q+aNt+WFpeWPo+WIl+ihqO+8jOi/lOWbnue9ruepuiIpLAogICAgKCJsaXZlYWN0aXZpdHlcXC9wdXNoXFwvY3JlYXRlXFwvdXJsXFwvcmVwb3J0IiwgIuebtOaSrea0u+WKqOaOqOmAgeS4iuaKpeaOpeWPo++8jOi/lOWbnue9ruepuiIpLAogICAgKCJpbmRleFxcL2dhdGhlciIsICLmiJDplb/ogZrlkIjmjqXlj6PvvIzov5Tlm57nva7nqboiKSwKICAgICgid2FpdFxcL3JlY2VpdmVcXC9yZXZpZXciLCAi5b6F5pS26LSn6K+E5Lu35o6l5Y+j77yM6L+U5Zue572u56m6IiksCiAgICAoIm5hc3VzXFwvcmVjb21tZW5kIiwgIuaOqOiNkOaOpeWPo++8jOi/lOWbnue9ruepuiIpLAogICAgIyBbTUlUTV0KICAgICgiaG9zdG5hbWUgPSAlQVBQRU5EJSBhcGkucGluZHVvZHVvLmNvbSIsICLop6Plr4YgYXBpLnBpbmR1b2R1by5jb23vvIjmlLnlhpnkuI7mmKDlsITnlJ/mlYjnmoTliY3mj5DvvIkiKSwKXQoKCmRlZiBmYWlsKG1zZyk6CiAgICBwcmludChmInN5bmNfcGluZHVvZHVvX2N4bTogZXJyb3I6IHttc2d9IiwgZmlsZT1zeXMuc3RkZXJyKQogICAgc3lzLmV4aXQoMikKCgpkZWYgZmV0Y2hfdGV4dCh1cmwsIGZyb21fZmlsZT1Ob25lKToKICAgIGlmIGZyb21fZmlsZToKICAgICAgICB3aXRoIG9wZW4oZnJvbV9maWxlLCAiciIsIGVuY29kaW5nPSJ1dGYtOCIpIGFzIGY6CiAgICAgICAgICAgIHJldHVybiBmLnJlYWQoKQogICAgcmVxID0gdXJsbGliLnJlcXVlc3QuUmVxdWVzdCh1cmwsIGhlYWRlcnM9eyJVc2VyLUFnZW50IjogInN1cmdlLXN5bmMvMS4wIn0pCiAgICB0cnk6CiAgICAgICAgd2l0aCB1cmxsaWIucmVxdWVzdC51cmxvcGVuKHJlcSwgdGltZW91dD02MCkgYXMgcmVzcDoKICAgICAgICAgICAgaWYgcmVzcC5zdGF0dXMgIT0gMjAwOgogICAgICAgICAgICAgICAgZmFpbChmIuS4iua4uOi/lOWbniBIVFRQIHtyZXNwLnN0YXR1c33vvJp7dXJsfSIpCiAgICAgICAgICAgIHJldHVybiByZXNwLnJlYWQoKS5kZWNvZGUoInV0Zi04IikKICAgIGV4Y2VwdCBTeXN0ZW1FeGl0OgogICAgICAgIHJhaXNlCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgZmFpbChmIuaKk+WPluS4iua4uOWksei0pe+8mntlfSIpCgoKZGVmIGZldGNoX29wdGlvbmFsKHVybCk6CiAgICAiIiLmipPohJrmnKznlKjvvJo0MDQg5pe26L+U5ZueIE5vbmXvvIjkuI3oh7Tlkb3vvInvvIzlhbbku5blpLHotKXnm7TmjqXkuK3mraLjgIIiIiIKICAgIHJlcSA9IHVybGxpYi5yZXF1ZXN0LlJlcXVlc3QodXJsLCBoZWFkZXJzPXsiVXNlci1BZ2VudCI6ICJzdXJnZS1zeW5jLzEuMCJ9KQogICAgdHJ5OgogICAgICAgIHdpdGggdXJsbGliLnJlcXVlc3QudXJsb3BlbihyZXEsIHRpbWVvdXQ9NjApIGFzIHJlc3A6CiAgICAgICAgICAgIGlmIHJlc3Auc3RhdHVzICE9IDIwMDoKICAgICAgICAgICAgICAgIHJldHVybiBOb25lCiAgICAgICAgICAgIHJldHVybiByZXNwLnJlYWQoKS5kZWNvZGUoInV0Zi04IikKICAgIGV4Y2VwdCB1cmxsaWIuZXJyb3IuSFRUUEVycm9yIGFzIGU6CiAgICAgICAgaWYgZS5jb2RlID09IDQwNDoKICAgICAgICAgICAgcmV0dXJuIE5vbmUKICAgICAgICBmYWlsKGYi5oqT5Y+W6ISa5pys5aSx6LSlIEhUVFAge2UuY29kZX3vvJp7dXJsfSIpCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgZmFpbChmIuaKk+WPluiEmuacrOWksei0pe+8mntlfSIpCgoKZGVmIHBhcnNlKHRleHQpOgogICAgIiIi6Kej5p6Q5LiK5ri4IC5zZ21vZHVsZe+8muWktOmDqCAjISDms6jph4rvvJvmraPmlofmjInmrrXokL3mlLbpm4bvvIzph43lpI3nmoQgW1NjcmlwdF0g5ZCI5bm244CCIiIiCiAgICBtZXRhID0ge30KICAgIHNlZ21lbnRzID0gW10gICMgW3tuYW1lLCBsaW5lc31d77yMbmFtZSDkuLogTm9uZSDooajnpLrmrrXokL3liY3nmoTor7TmmI7mloflrZcKICAgIGN1cnJlbnQgPSBOb25lCiAgICBzZWVuX3NlY3Rpb25zID0gc2V0KCkKICAgIGluX2hlYWRlciA9IFRydWUKICAgIGZvciByYXcgaW4gdGV4dC5zcGxpdGxpbmVzKCk6CiAgICAgICAgbGluZSA9IHJhdy5yc3RyaXAoIlxuIikKICAgICAgICBzdHJpcHBlZCA9IGxpbmUuc3RyaXAoKQogICAgICAgIGlmIGluX2hlYWRlcjoKICAgICAgICAgICAgaWYgbm90IHN0cmlwcGVkOgogICAgICAgICAgICAgICAgY29udGludWUKICAgICAgICAgICAgaWYgc3RyaXBwZWQuc3RhcnRzd2l0aCgiIyEiKToKICAgICAgICAgICAgICAgIG0gPSByZS5mdWxsbWF0Y2gociIjIShcUys/KVxzKj1ccyooLispIiwgc3RyaXBwZWQpCiAgICAgICAgICAgICAgICBpZiBub3QgbToKICAgICAgICAgICAgICAgICAgICBmYWlsKGYi5peg5rOV6K+G5Yir55qE5aS06YOo6KGM77yae3JhdyFyfSIpCiAgICAgICAgICAgICAgICBtZXRhW20uZ3JvdXAoMSldID0gbS5ncm91cCgyKS5zdHJpcCgpCiAgICAgICAgICAgICAgICBjb250aW51ZQogICAgICAgICAgICBpbl9oZWFkZXIgPSBGYWxzZQogICAgICAgIGlmIHN0cmlwcGVkLnN0YXJ0c3dpdGgoIlsiKSBhbmQgc3RyaXBwZWQuZW5kc3dpdGgoIl0iKToKICAgICAgICAgICAgaWYgc3RyaXBwZWQgbm90IGluIEtOT1dOX1NFQ1RJT05TOgogICAgICAgICAgICAgICAgZmFpbChmIuaXoOazleivhuWIq+eahOauteiQve+8mntyYXchcn0iKQogICAgICAgICAgICBzZWVuX3NlY3Rpb25zLmFkZChzdHJpcHBlZCkKICAgICAgICAgICAgaWYgc3RyaXBwZWQgPT0gIltTY3JpcHRdIiBhbmQgYW55KHNbIm5hbWUiXSA9PSAiW1NjcmlwdF0iIGZvciBzIGluIHNlZ21lbnRzKToKICAgICAgICAgICAgICAgIGN1cnJlbnQgPSBuZXh0KHMgZm9yIHMgaW4gc2VnbWVudHMgaWYgc1sibmFtZSJdID09ICJbU2NyaXB0XSIpCiAgICAgICAgICAgICAgICBjb250aW51ZQogICAgICAgICAgICBjdXJyZW50ID0geyJuYW1lIjogc3RyaXBwZWQsICJsaW5lcyI6IFtdfQogICAgICAgICAgICBzZWdtZW50cy5hcHBlbmQoY3VycmVudCkKICAgICAgICAgICAgY29udGludWUKICAgICAgICBpZiBjdXJyZW50IGlzIE5vbmU6CiAgICAgICAgICAgIGN1cnJlbnQgPSB7Im5hbWUiOiBOb25lLCAibGluZXMiOiBbXX0KICAgICAgICAgICAgc2VnbWVudHMuYXBwZW5kKGN1cnJlbnQpCiAgICAgICAgY3VycmVudFsibGluZXMiXS5hcHBlbmQobGluZSkKICAgIGZvciBzZWN0aW9uIGluIFJFUVVJUkVEX1NFQ1RJT05TOgogICAgICAgIGlmIHNlY3Rpb24gbm90IGluIHNlZW5fc2VjdGlvbnM6CiAgICAgICAgICAgIGZhaWwoZiLkuIrmuLjnvLrlsJHlv4XopoHmrrXokL0ge3NlY3Rpb25977yM57uT5p6E5Y+v6IO95bey5Y+Y77yM5bey5Lit5q2iIikKICAgIGlmICJkZXNjIiBub3QgaW4gbWV0YToKICAgICAgICBmYWlsKCLkuIrmuLjnvLrlsJEgIyFkZXNj77yM57uT5p6E5Y+v6IO95bey5Y+Y77yM5bey5Lit5q2iIikKICAgIHJldHVybiB7Im1ldGEiOiBtZXRhLCAic2VnbWVudHMiOiBzZWdtZW50c30KCgpkZWYgcmV3cml0ZV9zY3JpcHRfbGluZShsaW5lLCBtaXJyb3JlZCk6CiAgICAiIiLmioogW1NjcmlwdF0g6KGM55qEIHNjcmlwdC1wYXRoIOaUueS4uuiHquaJmOeuoeWcsOWdgO+8iOacqumVnOWDj+eahOS/neaMgeWOn+WcsOWdgO+8ieOAgiIiIgogICAgbSA9IHJlLmZ1bGxtYXRjaCgKICAgICAgICByIiguKz8pXHMqPVxzKnR5cGU9KGh0dHAtcmVzcG9uc2V8aHR0cC1yZXF1ZXN0KVxzKixccypwYXR0ZXJuPSguKz8pXHMqLFxzKiIKICAgICAgICByInNjcmlwdC1wYXRoPShcUys/KVxzKixccypyZXF1aXJlcy1ib2R5PSh0cnVlfGZhbHNlKVxzKixccyptYXgtc2l6ZT0oXGQrKVxzKiIsCiAgICAgICAgbGluZSwKICAgICkKICAgIGlmIG5vdCBtOgogICAgICAgIGZhaWwoZiLml6Dms5Xor4bliKvnmoQgU2NyaXB0IOihjO+8mntsaW5lIXJ9IikKICAgIG5hbWUsIHJlcV90eXBlLCBwYXR0ZXJuLCBqc191cmwsIHJlcXVpcmVzX2JvZHksIG1heF9zaXplID0gbS5ncm91cHMoKQogICAgaWYgcmVxX3R5cGUgIT0gImh0dHAtcmVzcG9uc2UiOgogICAgICAgIGZhaWwoZiLkuI3mlK/mjIHnmoTohJrmnKznsbvlnosge3JlcV90eXBlIXJ977yI5pyf5pybIGh0dHAtcmVzcG9uc2XvvInvvJp7bGluZSFyfSIpCiAgICBpZiByZXF1aXJlc19ib2R5ICE9ICJ0cnVlIjoKICAgICAgICBmYWlsKGYi6ISa5pysIHJlcXVpcmVzLWJvZHkg5LiN5pivIHRydWXvvJp7bGluZSFyfSIpCiAgICBuZXdfdXJsID0gbWlycm9yZWQuZ2V0KG5hbWUuc3RyaXAoKSwganNfdXJsKQogICAgcmV0dXJuICgKICAgICAgICBmIntuYW1lLnN0cmlwKCl9ID0gdHlwZT1odHRwLXJlc3BvbnNlLHBhdHRlcm49e3BhdHRlcm59LCIKICAgICAgICBmInNjcmlwdC1wYXRoPXtuZXdfdXJsfSxyZXF1aXJlcy1ib2R5PXRydWUsbWF4LXNpemU9e21heF9zaXplfSIKICAgICkKCgpkZWYgcmVuZGVyKHBhcnRzLCBtaXJyb3JlZCk6CiAgICBtZXRhID0gcGFydHNbIm1ldGEiXQogICAgb3V0ID0gWwogICAgICAgIGYiIyFuYW1lID0ge01PRFVMRV9OQU1FfSIsCiAgICAgICAgZiIjIWRlc2MgPSB7bWV0YVsnZGVzYyddfSIsCiAgICAgICAgZiIjIWNhdGVnb3J5ID0ge01PRFVMRV9DQVRFR09SWX0iLAogICAgXQogICAgZm9yIGtleSwgdmFsdWUgaW4gbWV0YS5pdGVtcygpOgogICAgICAgIGlmIGtleSBpbiAoIm5hbWUiLCAiZGVzYyIsICJjYXRlZ29yeSIpOgogICAgICAgICAgICBjb250aW51ZQogICAgICAgIG91dC5hcHBlbmQoZiIjIXtrZXl9ID0ge3ZhbHVlfSIpCiAgICBvdXQgKz0gWyIiLCBmIiMg5ZCM5q2l6Ieq5LiK5ri477yae1VQU1RSRUFNX1VSTH0iLCAiIl0KICAgIHVzZWRfY29tbWVudHMgPSBzZXQoKQogICAgdW5jb3ZlcmVkID0gW10KICAgIGZvciBzZWcgaW4gcGFydHNbInNlZ21lbnRzIl06CiAgICAgICAgaWYgc2VnWyJuYW1lIl06CiAgICAgICAgICAgIG91dC5hcHBlbmQoc2VnWyJuYW1lIl0pCiAgICAgICAgZm9yIGxpbmUgaW4gc2VnWyJsaW5lcyJdOgogICAgICAgICAgICBpZiBzZWdbIm5hbWUiXSA9PSAiW1NjcmlwdF0iIGFuZCBsaW5lLnN0cmlwKCk6CiAgICAgICAgICAgICAgICBvdXQuYXBwZW5kKHJld3JpdGVfc2NyaXB0X2xpbmUobGluZSwgbWlycm9yZWQpKQogICAgICAgICAgICAgICAgY29udGludWUKICAgICAgICAgICAgaWYgbm90IGxpbmUuc3RyaXAoKToKICAgICAgICAgICAgICAgIG91dC5hcHBlbmQobGluZSkKICAgICAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgICAgICMg5LiK5ri46Ieq5bim55qEICMg5rOo6YeK6KGM5Y6f5qC35L+d55WZ77yM5a6D5pys6Lqr5bCx5piv5rOo6YeK77yM5LiN5YaN5Y+m5YqgICMgPgogICAgICAgICAgICBpZiBsaW5lLmxzdHJpcCgpLnN0YXJ0c3dpdGgoIiMiKToKICAgICAgICAgICAgICAgIG91dC5hcHBlbmQobGluZSkKICAgICAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgICAgICMg6KeE5YiZ6KGM77ya5LiK5LiA6KGM5bey5piv5rOo6YeK77yI5LiK5ri46Ieq5bim77yJ5pe25LiN5YaN5YqgICMgPu+8mwogICAgICAgICAgICAjIOWQpuWImeaMiSBDT01NRU5UUyDooajliqDvvJvkuKTogIXpg73msqHmnInliJnorrDkuIvmnaXvvIzlkIzmraXnm7TmjqXlpLHotKXjgIIKICAgICAgICAgICAgcHJlY2VkZWRfYnlfY29tbWVudCA9IGJvb2wob3V0KSBhbmQgb3V0Wy0xXS5sc3RyaXAoKS5zdGFydHN3aXRoKCIjIikKICAgICAgICAgICAgbWF0Y2hlZCA9IE5vbmUKICAgICAgICAgICAgZm9yIGlkeCwgKGtleSwgY29tbWVudCkgaW4gZW51bWVyYXRlKENPTU1FTlRTKToKICAgICAgICAgICAgICAgIGlmIGtleSBpbiBsaW5lOgogICAgICAgICAgICAgICAgICAgIG1hdGNoZWQgPSAoaWR4LCBjb21tZW50KQogICAgICAgICAgICAgICAgICAgIGJyZWFrCiAgICAgICAgICAgIGlmIG1hdGNoZWQgaXMgbm90IE5vbmU6CiAgICAgICAgICAgICAgICB1c2VkX2NvbW1lbnRzLmFkZChtYXRjaGVkWzBdKQogICAgICAgICAgICBpZiBwcmVjZWRlZF9ieV9jb21tZW50OgogICAgICAgICAgICAgICAgb3V0LmFwcGVuZChsaW5lKQogICAgICAgICAgICAgICAgY29udGludWUKICAgICAgICAgICAgaWYgbWF0Y2hlZCBpcyBub3QgTm9uZToKICAgICAgICAgICAgICAgIG91dC5hcHBlbmQoZiIjID4ge21hdGNoZWRbMV19IikKICAgICAgICAgICAgZWxzZToKICAgICAgICAgICAgICAgIHVuY292ZXJlZC5hcHBlbmQobGluZSkKICAgICAgICAgICAgb3V0LmFwcGVuZChsaW5lKQogICAgaWYgdW5jb3ZlcmVkOgogICAgICAgIGZhaWwoCiAgICAgICAgICAgICLku6XkuIvop4TliJnooYzmsqHmnInms6jph4rvvIjkuIrmuLjmnKrluKbms6jph4rvvIxDT01NRU5UUyDooajph4zkuZ/msqHmnInlr7nlupTmnaHnm67vvInvvIwiCiAgICAgICAgICAgICLor7fooaXms6jph4rlkI7lho3lkIzmraXvvJpcbiIgKyAiXG4iLmpvaW4oZiIgIHtsfSIgZm9yIGwgaW4gdW5jb3ZlcmVkKQogICAgICAgICkKICAgIGZvciBpZHgsIChrZXksIGNvbW1lbnQpIGluIGVudW1lcmF0ZShDT01NRU5UUyk6CiAgICAgICAgaWYgaWR4IG5vdCBpbiB1c2VkX2NvbW1lbnRzOgogICAgICAgICAgICBwcmludCgKICAgICAgICAgICAgICAgIGYic3luY19waW5kdW9kdW9fY3htOiDorablkYrvvJrms6jph4rmnKrljLnphY3liLDkuIrmuLjooYzvvIjkuIrmuLjlj6/og73liKDmlLnkuobov5nmnaHop4TliJnvvInvvIwiCiAgICAgICAgICAgICAgICBmIuivt+ajgOafpSBDT01NRU5UU++8mntrZXkhcn0gLT4ge2NvbW1lbnR9IiwKICAgICAgICAgICAgICAgIGZpbGU9c3lzLnN0ZGVyciwKICAgICAgICAgICAgKQogICAgcmV0dXJuICJcbiIuam9pbihvdXQpLnJzdHJpcCgiXG4iKSArICJcbiIKCgpkZWYgbWFpbigpOgogICAgYXAgPSBhcmdwYXJzZS5Bcmd1bWVudFBhcnNlcigpCiAgICBhcC5hZGRfYXJndW1lbnQoIi0tZnJvbS1maWxlIikKICAgIGFwLmFkZF9hcmd1bWVudCgiLS1vdXRwdXQiLCBkZWZhdWx0PURFRkFVTFRfT1VUUFVUKQogICAgYXJncyA9IGFwLnBhcnNlX2FyZ3MoKQogICAgdGV4dCA9IGZldGNoX3RleHQoVVBTVFJFQU1fVVJMLCBhcmdzLmZyb21fZmlsZSkKICAgIHBhcnRzID0gcGFyc2UodGV4dCkKCiAgICAjIOiHquaJmOeuoemVnOWDj+WQjOatpe+8muS4iua4uCBqcyDlhajmlofljp/moLfplZzlg4/vvJvmipPkuI3liLDvvIg0MDTvvInnmoTohJrmnKzkv53mjIHljp/lnLDlnYDvvIwKICAgICMg562J5LiK5ri46KGl5LiK5paH5Lu25ZCO5LiL5qyh5ZCM5q2l6Ieq5Yqo5pS55Li66ZWc5YOP44CCCiAgICBtaXJyb3JlZCA9IHt9CiAgICBqc19jaGFuZ2VkID0gRmFsc2UKICAgICMgdjE277yIMjAyNi0xMS0xNO+8iei1t+S4iua4uOaXoCBbU2NyaXB0XSDmrrXvvJrml6DohJrmnKzlj6/plZzlg4/ml7bot7Pov4fmipPlj5bvvJsKICAgICMg5LiK5ri46Iul5oGi5aSNIFtTY3JpcHRd77yM5LuN5oyJ5pen6YC76L6R6ZWc5YOP44CCCiAgICBoYXNfc2NyaXB0ID0gYW55KHNbIm5hbWUiXSA9PSAiW1NjcmlwdF0iIGZvciBzIGluIHBhcnRzWyJzZWdtZW50cyJdKQogICAgc2NyaXB0c190b19taXJyb3IgPSBTQ1JJUFRTIGlmIGhhc19zY3JpcHQgZWxzZSBbXQogICAgaWYgbm90IGhhc19zY3JpcHQ6CiAgICAgICAgcHJpbnQoInN5bmNfcGluZHVvZHVvX2N4bTog5LiK5ri45pegIFtTY3JpcHRdIOaute+8jOi3s+i/h+iEmuacrOmVnOWDjyIpCiAgICBmb3IgbmFtZSwganNfdXJsLCBhc3NldF9wYXRoIGluIHNjcmlwdHNfdG9fbWlycm9yOgogICAgICAgIGpzX3RleHQgPSBmZXRjaF9vcHRpb25hbChqc191cmwpCiAgICAgICAgaWYganNfdGV4dCBpcyBOb25lOgogICAgICAgICAgICBwcmludChmInN5bmNfcGluZHVvZHVvX2N4bTog5rOo5oSP77ya6ISa5pysIHtuYW1lfSDkuIrmuLjkuI3lrZjlnKjvvIh7anNfdXJsfe+8ie+8jOS/neaMgeWOn+WcsOWdgCIpCiAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgdHJ5OgogICAgICAgICAgICBvbGRfanMgPSBvcGVuKGFzc2V0X3BhdGgsIGVuY29kaW5nPSJ1dGYtOCIpLnJlYWQoKQogICAgICAgIGV4Y2VwdCBGaWxlTm90Rm91bmRFcnJvcjoKICAgICAgICAgICAgb2xkX2pzID0gTm9uZQogICAgICAgIGlmIG9sZF9qcyAhPSBqc190ZXh0OgogICAgICAgICAgICBvcy5tYWtlZGlycyhvcy5wYXRoLmRpcm5hbWUoYXNzZXRfcGF0aCksIGV4aXN0X29rPVRydWUpCiAgICAgICAgICAgIHdpdGggb3Blbihhc3NldF9wYXRoLCAidyIsIGVuY29kaW5nPSJ1dGYtOCIpIGFzIGY6CiAgICAgICAgICAgICAgICBmLndyaXRlKGpzX3RleHQpCiAgICAgICAgICAgIGpzX2NoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgIHByaW50KGYic3luY19waW5kdW9kdW9fY3htOiDlt7Lmm7TmlrDplZzlg48ge2Fzc2V0X3BhdGh9IikKICAgICAgICBtaXJyb3JlZFtuYW1lXSA9IFNFTEZfSE9TVEVEX0JBU0UgKyBhc3NldF9wYXRoCgogICAgbmV3X3RleHQgPSByZW5kZXIocGFydHMsIG1pcnJvcmVkKQogICAgdHJ5OgogICAgICAgIG9sZF90ZXh0ID0gb3BlbihhcmdzLm91dHB1dCwgZW5jb2Rpbmc9InV0Zi04IikucmVhZCgpCiAgICBleGNlcHQgRmlsZU5vdEZvdW5kRXJyb3I6CiAgICAgICAgb2xkX3RleHQgPSBOb25lCiAgICBpZiBvbGRfdGV4dCA9PSBuZXdfdGV4dCBhbmQgbm90IGpzX2NoYW5nZWQ6CiAgICAgICAgcHJpbnQoInN5bmNfcGluZHVvZHVvX2N4bTog6KeE5YiZ5peg5Y+Y5YyW77yM6Lez6L+H5YaZ5YWl77yI6YG/5YWN5peg5oSP5LmJ5o+Q5Lqk77yJIikKICAgICAgICByZXR1cm4gMAogICAgaWYgb2xkX3RleHQgPT0gbmV3X3RleHQgYW5kIGpzX2NoYW5nZWQ6CiAgICAgICAgcHJpbnQoInN5bmNfcGluZHVvZHVvX2N4bTog5qih5Z2X5peg5Y+Y5YyW77yM6ZWc5YOP5bey5pu05pawIikKICAgICAgICByZXR1cm4gMAogICAgb3V0X2RpciA9IG9zLnBhdGguZGlybmFtZShhcmdzLm91dHB1dCkKICAgIGlmIG91dF9kaXI6CiAgICAgICAgb3MubWFrZWRpcnMob3V0X2RpciwgZXhpc3Rfb2s9VHJ1ZSkKICAgIHdpdGggb3BlbihhcmdzLm91dHB1dCwgInciLCBlbmNvZGluZz0idXRmLTgiKSBhcyBmOgogICAgICAgIGYud3JpdGUobmV3X3RleHQpCiAgICBwcmludChmInN5bmNfcGluZHVvZHVvX2N4bTog5bey5YaZ5YWlIHthcmdzLm91dHB1dH0iKQogICAgcmV0dXJuIDAKCgppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgogICAgc3lzLmV4aXQobWFpbigpKQo=
+#!/usr/bin/env python3
+"""把上游 Surge 模块 https://raw.githubusercontent.com/CaoXiaoMann/XiaoMan/main/Surge/Scripts/PDD/PDD.sgmodule 同步到本仓库，并每日跟随上游更新。
+
+上游本身已是 Surge 模块格式：头部 #! 注释、[Rule]、[Map Local]、[Body Rewrite]、
+[MITM]，以及段落内的说明注释。同步时只改写头部三项和脚本地址，
+其余内容原样保留：上游的 #! 头部注释（author、homepage、version、openUrl、
+system、raw-url，以及上游今后新增的任何 #! 项）全部跟随上游带上，
+只有 name、category 按用户指定固定不变。
+（上游 v16 自 2026-11-14 起删掉了 [Script] 段，改为零 JS 机制；
+ [Script] 现为可选段落：上游有则同步镜像，无则跳过。）
+
+用法（仓库工作流里不带参数跑，默认抓上游、写到仓库路径）：
+    python3 .github/scripts/sync_pinduoduo_cxm.py
+本地测试：
+    python3 .github/scripts/sync_pinduoduo_cxm.py --from-file /tmp/Pinduoduo.sgmodule --output /tmp/out.sgmodule
+
+改写规则：
+  - #!name 固定为“拼多多净化”（用户指定，不跟上游的“拼多多去广告”）。
+  - #!desc 随上游原文，不改写（用户指定“模块备注不变”）。
+  - #!category 固定为 Polly-ai（用户指定）。
+  - 其余 #! 头部注释全部随上游原文带上（author、homepage、version、openUrl、
+    system、raw-url，以及上游今后新增的任何 #! 项），按上游原有顺序输出。
+  - [Rule]、[Map Local]、[Body Rewrite]、[MITM] 及段落内注释全文原样保留。
+  - 同步时按 COMMENTS 表给 [Rule]、[Body Rewrite]、[Map Local]、[MITM] 的
+    每条规则行上方插入 # > 注释（用户写法），缺失的行都补上。上游自带的
+    # 注释行全文原样保留，其后规则不再另加 # >；若某规则行既无上游注释、
+    COMMENTS 表里又没有对应条目，同步直接失败（需补注释后再跑），绝不
+    让没注释的规则悄悄入库。
+  - 若上游有 [Script]：两个 [Script] 段落合并为一个（内容不变），脚本一律指向
+    自托管地址（SELF_HOSTED 列表），不直接引用第三方 js；同步时同时抓上游 js
+    更新自托管镜像文件。上游无 [Script] 时跳过镜像（v16 起即如此）。
+  - 例外：PDD-HOME-DEBUG 脚本 pdd_top_capture.js 在上游仓库里不存在（404），
+    无法镜像；该条 script-path 保持上游原地址不变，等上游补上文件后，
+    下次同步会自动改为自托管镜像。
+
+固定不变的头部（同步时不被上游覆盖）：
+  - #!name、#!category
+
+上游出现无法识别的段落或缺少必要段落时直接失败、绝不静默丢规则；上游没变时不写文件、不产生提交。
+"""
+
+import argparse
+import os
+import re
+import sys
+import urllib.request
+
+UPSTREAM_URL = "https://raw.githubusercontent.com/CaoXiaoMann/XiaoMan/main/Surge/Scripts/PDD/PDD.sgmodule"
+DEFAULT_OUTPUT = "Surge/Module/pdd.sgmodule"
+MODULE_NAME = "拼多多净化"
+MODULE_CATEGORY = "Polly-ai"
+KNOWN_SECTIONS = ("[Rule]", "[Map Local]", "[Body Rewrite]", "[Script]", "[MITM]")
+REQUIRED_SECTIONS = ("[Rule]", "[Map Local]", "[Body Rewrite]", "[MITM]")
+# [Script] 自上游 v16（2026-11-14）起不再是必要段落：上游删掉了 [Script]，
+# 同步时跳过镜像（见 main）。
+# 头部注释：除 name/desc/category 外，上游的全部 #! 项都原样带上（按上游顺序输出），
+# 不再用固定白名单（2026-11-15 用户要求：上游每行的注释都带上）。
+# 脚本镜像：(模块内脚本名, 上游 js 地址, 自托管路径)
+# 自托管地址统一为 https://raw.githubusercontent.com/Polly-ai/Wynston/main/<自托管路径>
+SCRIPTS = [
+    (
+        "移除扫码取件页面商品推荐及弹窗",
+        "https://raw.githubusercontent.com/fkingikelee/fkikelee/main/Resource/kelee/JavaScript/PinDuoDuo/PinDuoDuo_remove_ads.js",
+        "Surge/JavaScript/PinDuoDuo/PinDuoDuo_remove_ads.js",
+    ),
+    (
+        "精简评价页",
+        "https://raw.githubusercontent.com/Yi-r8/Surge/refs/heads/main/Js/pinduoduo.js",
+        "Surge/JavaScript/PinDuoDuo/pinduoduo.js",
+    ),
+    (
+        "PDD-HOME-DEBUG",
+        "https://raw.githubusercontent.com/CaoXiaoMann/XiaoMan/main/Surge/Scripts/PDD/pdd_top_capture.js",
+        "Surge/JavaScript/PinDuoDuo/pdd_top_capture.js",
+    ),
+]
+SELF_HOSTED_BASE = "https://raw.githubusercontent.com/Polly-ai/Wynston/main/"
+
+# 段落注释：(匹配子串, 注释)。同步时把注释插到每条匹配行的上方，
+# 格式与用户写法一致：# > 说明。匹配子串取自上游原文中能唯一确定
+# 该行的片段；同一注释可重复插在多条相同规则上方（如上游重复的
+# irregular_banner_dy 行）。目标是四个段落里每条规则行上方都有
+# 注释。目的不确定的域名只按组写通用注释，不编造具体用途。
+# 注释政策（2026-11-15 用户定）：上游自带的 # 注释行全文原样保留，
+# 其后规则不再另加 # >；没有注释的规则行按本表加 # >；若某规则行
+# 既无上游注释、本表又没有对应条目，同步直接失败，等补了注释再跑。
+# map 里的 key 在上游找不到时只打印警告，不中断同步。
+COMMENTS = [
+    # [Rule]
+    ("((25[0-5]", "拦截直连 IP 的上报请求"),
+    ("\\[[0-9a-fA-F:]+\\]", "拦截直连 IPv6 的上报请求"),
+    ("PROTOCOL,QUIC", "禁用 api.pinduoduo.com 的 QUIC"),
+    ("titan.pinduoduo.com,REJECT-NO-DROP", "拦截埋点、上报与广告相关域名"),
+    ("DOMAIN,xg.pinduoduo.com", "拦截 xg.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,cdl-1.pddpic.com", "拦截广告图片 CDN"),
+    ("titan.pinduoduo.com,REJECT,extended-matching", "拦截 Titan 埋点上报"),
+    ("DOMAIN,cdl-p2.pddpic.com", "拦截广告图片 CDN"),
+    ("DOMAIN,cd-1.pddpic.com", "拦截广告图片 CDN"),
+    ("DOMAIN,apm.pinduoduo.com", "拦截 APM 性能监控上报"),
+    ("DOMAIN,th-b.pinduoduo.com", "拦截 th-b.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,ta.pinduoduo.com", "拦截 ta.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,th.pinduoduo.com", "拦截 th.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,th-a.pinduoduo.com", "拦截 th-a.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,ta-a.pinduoduo.com", "拦截 ta-a.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,meta.pinduoduo.com", "拦截 meta.pinduoduo.com（埋点/上报）"),
+    ("DOMAIN,apm-a.pinduoduo.com", "拦截 APM 性能监控上报"),
+    # [Body Rewrite]
+    ("irregular_banner_dy", "首页 hub：删底部视频/不规则 banner"),
+    ('delpaths([["result","icon_set"]])', "首页 hub：删图标集"),
+    ("search_bar_hot_query", "首页 hub：删搜索框热词"),
+    ("bottom_tabs", "首页 hub：底栏只留首页/聊天/个人（删多多视频等）"),
+    ("timeline_visible", "关闭首页信息流 timeline、删 timeline 模"),
+    ("最快明天达|政府补贴", "顶部入口删「最快明天达/政府补贴」"),
+    ('delpaths([["expansion"]])', "搜索：删搜索扩展"),
+    ("monthly_card_entrance", "个人中心：删月卡入口"),
+    ("personal_center_style_v2_vo", "个人中心：删个人中心样式"),
+    ('["icon_set","icons"]', "个人中心：删图标与描述文字"),
+    ("top_personal_icons", "个人中心：删顶部个人图标"),
+    ("other_icon_set", "个人中心：删其他图标描述文字"),
+    ("entrance_text", "个人中心：清空钱包入口文字"),
+    ("bottom_section_list", "订单渲染：删底部区域"),
+    ('"ui","bottom_section"', "订单渲染：删底部区域"),
+    ("float_info", "订单渲染：删直播浮层信息"),
+    ("goods_list", "订单详情：删商品推荐列表"),
+    ("marketing_banner_vo", "订单页：删营销横幅"),
+    ("banner_above_recommend", "订单页：删物流上方推荐"),
+    ("order_growth_tip", "订单列表：删订单成长提示"),
+    ("recommend_fresh_info", "首页 hub：删多多买菜栏与百亿补贴入口"),
+    ("personal_banner", "个人中心：删补贴横幅"),
+    ("title_bar_items", "个人中心：删标题栏"),
+    # [Map Local]
+    ("unrated_order_for_unreceived_tab", "未收货订单评价入口，返回置空"),
+    ("query_order_list_tabs_element", "订单列表 tabs 元素，返回置空"),
+    ("aquarius\\/hungary\\/global\\/homepage", "全球首页接口，返回置空"),
+    ("query\\/order_express_group", "订单快递信息接口，返回置空"),
+    ("search_hotquery", "搜索热词接口，返回置空"),
+    ("get_list_data", "聊天资源列表接口，返回置空"),
+    ("new_chat_group", "新聊天组接口，返回置空"),
+    ("goods\\/back_up", "商品备用接口，返回置空"),
+    ("query\\/personal", "个人信息查询接口，返回置空"),
+    ("bybt_guide", "商品详情引导接口，返回置空"),
+    ("require\\/append", "追加评价接口，返回置空"),
+    ("my_order_group", "我的订单组接口，返回置空"),
+    ("query\\/likes", "喜欢列表接口，返回置空"),
+    ("gbdbpdv\\/extra", "附加数据接口，返回置空"),
+    ("shortcut\\/list", "跨店快捷入口列表，返回置空"),
+    ("liveactivity\\/push\\/create\\/url\\/report", "直播活动推送上报接口，返回置空"),
+    ("index\\/gather", "成长聚合接口，返回置空"),
+    ("wait\\/receive\\/review", "待收货评价接口，返回置空"),
+    ("nasus\\/recommend", "推荐接口，返回置空"),
+    # [MITM]
+    ("hostname = %APPEND% api.pinduoduo.com", "解密 api.pinduoduo.com（改写与映射生效的前提）"),
+]
+
+
+def fail(msg):
+    print(f"sync_pinduoduo_cxm: error: {msg}", file=sys.stderr)
+    sys.exit(2)
+
+
+def fetch_text(url, from_file=None):
+    if from_file:
+        with open(from_file, "r", encoding="utf-8") as f:
+            return f.read()
+    req = urllib.request.Request(url, headers={"User-Agent": "surge-sync/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            if resp.status != 200:
+                fail(f"上游返回 HTTP {resp.status}：{url}")
+            return resp.read().decode("utf-8")
+    except SystemExit:
+        raise
+    except Exception as e:
+        fail(f"抓取上游失败：{e}")
+
+
+def fetch_optional(url):
+    """抓脚本用：404 时返回 None（不致命），其他失败直接中止。"""
+    req = urllib.request.Request(url, headers={"User-Agent": "surge-sync/1.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            if resp.status != 200:
+                return None
+            return resp.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        fail(f"抓取脚本失败 HTTP {e.code}：{url}")
+    except Exception as e:
+        fail(f"抓取脚本失败：{e}")
+
+
+def parse(text):
+    """解析上游 .sgmodule：头部 #! 注释；正文按段落收集，重复的 [Script] 合并。"""
+    meta = {}
+    segments = []  # [{name, lines}]，name 为 None 表示段落前的说明文字
+    current = None
+    seen_sections = set()
+    in_header = True
+    for raw in text.splitlines():
+        line = raw.rstrip("\n")
+        stripped = line.strip()
+        if in_header:
+            if not stripped:
+                continue
+            if stripped.startswith("#!"):
+                m = re.fullmatch(r"#!(\S+?)\s*=\s*(.+)", stripped)
+                if not m:
+                    fail(f"无法识别的头部行：{raw!r}")
+                meta[m.group(1)] = m.group(2).strip()
+                continue
+            in_header = False
+        if stripped.startswith("[") and stripped.endswith("]"):
+            if stripped not in KNOWN_SECTIONS:
+                fail(f"无法识别的段落：{raw!r}")
+            seen_sections.add(stripped)
+            if stripped == "[Script]" and any(s["name"] == "[Script]" for s in segments):
+                current = next(s for s in segments if s["name"] == "[Script]")
+                continue
+            current = {"name": stripped, "lines": []}
+            segments.append(current)
+            continue
+        if current is None:
+            current = {"name": None, "lines": []}
+            segments.append(current)
+        current["lines"].append(line)
+    for section in REQUIRED_SECTIONS:
+        if section not in seen_sections:
+            fail(f"上游缺少必要段落 {section}，结构可能已变，已中止")
+    if "desc" not in meta:
+        fail("上游缺少 #!desc，结构可能已变，已中止")
+    return {"meta": meta, "segments": segments}
+
+
+def rewrite_script_line(line, mirrored):
+    """把 [Script] 行的 script-path 改为自托管地址（未镜像的保持原地址）。"""
+    m = re.fullmatch(
+        r"(.+?)\s*=\s*type=(http-response|http-request)\s*,\s*pattern=(.+?)\s*,\s*"
+        r"script-path=(\S+?)\s*,\s*requires-body=(true|false)\s*,\s*max-size=(\d+)\s*",
+        line,
+    )
+    if not m:
+        fail(f"无法识别的 Script 行：{line!r}")
+    name, req_type, pattern, js_url, requires_body, max_size = m.groups()
+    if req_type != "http-response":
+        fail(f"不支持的脚本类型 {req_type!r}（期望 http-response）：{line!r}")
+    if requires_body != "true":
+        fail(f"脚本 requires-body 不是 true：{line!r}")
+    new_url = mirrored.get(name.strip(), js_url)
+    return (
+        f"{name.strip()} = type=http-response,pattern={pattern},"
+        f"script-path={new_url},requires-body=true,max-size={max_size}"
+    )
+
+
+def render(parts, mirrored):
+    meta = parts["meta"]
+    out = [
+        f"#!name = {MODULE_NAME}",
+        f"#!desc = {meta['desc']}",
+        f"#!category = {MODULE_CATEGORY}",
+    ]
+    for key, value in meta.items():
+        if key in ("name", "desc", "category"):
+            continue
+        out.append(f"#!{key} = {value}")
+    out += ["", f"# 同步自上游：{UPSTREAM_URL}", ""]
+    used_comments = set()
+    uncovered = []
+    for seg in parts["segments"]:
+        if seg["name"]:
+            out.append(seg["name"])
+        for line in seg["lines"]:
+            if seg["name"] == "[Script]" and line.strip():
+                out.append(rewrite_script_line(line, mirrored))
+                continue
+            if not line.strip():
+                out.append(line)
+                continue
+            # 上游自带的 # 注释行原样保留，它本身就是注释，不再另加 # >
+            if line.lstrip().startswith("#"):
+                out.append(line)
+                continue
+            # 规则行：上一行已是注释（上游自带）时不再加 # >；
+            # 否则按 COMMENTS 表加；两者都没有则记下来，同步直接失败。
+            preceded_by_comment = bool(out) and out[-1].lstrip().startswith("#")
+            matched = None
+            for idx, (key, comment) in enumerate(COMMENTS):
+                if key in line:
+                    matched = (idx, comment)
+                    break
+            if matched is not None:
+                used_comments.add(matched[0])
+            if preceded_by_comment:
+                out.append(line)
+                continue
+            if matched is not None:
+                out.append(f"# > {matched[1]}")
+            else:
+                uncovered.append(line)
+            out.append(line)
+    if uncovered:
+        fail(
+            "以下规则行没有注释（上游未带注释，COMMENTS 表里也没有对应条目），"
+            "请补注释后再同步：\n" + "\n".join(f"  {l}" for l in uncovered)
+        )
+    for idx, (key, comment) in enumerate(COMMENTS):
+        if idx not in used_comments:
+            print(
+                f"sync_pinduoduo_cxm: 警告：注释未匹配到上游行（上游可能删改了这条规则），"
+                f"请检查 COMMENTS：{key!r} -> {comment}",
+                file=sys.stderr,
+            )
+    return "\n".join(out).rstrip("\n") + "\n"
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--from-file")
+    ap.add_argument("--output", default=DEFAULT_OUTPUT)
+    args = ap.parse_args()
+    text = fetch_text(UPSTREAM_URL, args.from_file)
+    parts = parse(text)
+
+    # 自托管镜像同步：上游 js 全文原样镜像；抓不到（404）的脚本保持原地址，
+    # 等上游补上文件后下次同步自动改为镜像。
+    mirrored = {}
+    js_changed = False
+    # v16（2026-11-14）起上游无 [Script] 段：无脚本可镜像时跳过抓取；
+    # 上游若恢复 [Script]，仍按旧逻辑镜像。
+    has_script = any(s["name"] == "[Script]" for s in parts["segments"])
+    scripts_to_mirror = SCRIPTS if has_script else []
+    if not has_script:
+        print("sync_pinduoduo_cxm: 上游无 [Script] 段，跳过脚本镜像")
+    for name, js_url, asset_path in scripts_to_mirror:
+        js_text = fetch_optional(js_url)
+        if js_text is None:
+            print(f"sync_pinduoduo_cxm: 注意：脚本 {name} 上游不存在（{js_url}），保持原地址")
+            continue
+        try:
+            old_js = open(asset_path, encoding="utf-8").read()
+        except FileNotFoundError:
+            old_js = None
+        if old_js != js_text:
+            os.makedirs(os.path.dirname(asset_path), exist_ok=True)
+            with open(asset_path, "w", encoding="utf-8") as f:
+                f.write(js_text)
+            js_changed = True
+            print(f"sync_pinduoduo_cxm: 已更新镜像 {asset_path}")
+        mirrored[name] = SELF_HOSTED_BASE + asset_path
+
+    new_text = render(parts, mirrored)
+    try:
+        old_text = open(args.output, encoding="utf-8").read()
+    except FileNotFoundError:
+        old_text = None
+    if old_text == new_text and not js_changed:
+        print("sync_pinduoduo_cxm: 规则无变化，跳过写入（避免无意义提交）")
+        return 0
+    if old_text == new_text and js_changed:
+        print("sync_pinduoduo_cxm: 模块无变化，镜像已更新")
+        return 0
+    out_dir = os.path.dirname(args.output)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+    with open(args.output, "w", encoding="utf-8") as f:
+        f.write(new_text)
+    print(f"sync_pinduoduo_cxm: 已写入 {args.output}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
