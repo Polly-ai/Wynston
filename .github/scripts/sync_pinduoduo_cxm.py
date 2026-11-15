@@ -22,8 +22,10 @@ system、raw-url，以及上游今后新增的任何 #! 项）全部跟随上游
     system、raw-url，以及上游今后新增的任何 #! 项），按上游原有顺序输出。
   - [Rule]、[Map Local]、[Body Rewrite]、[MITM] 及段落内注释全文原样保留。
   - 同步时按 COMMENTS 表给 [Rule]、[Body Rewrite]、[Map Local]、[MITM] 的
-    每条规则行上方插入 # > 注释（用户写法），缺失的行都补上；上游新增条目
-    时需在 COMMENTS 里补注释，缺失时只在日志里警告，不中断同步。
+    每条规则行上方插入 # > 注释（用户写法），缺失的行都补上。上游自带的
+    # 注释行全文原样保留，其后规则不再另加 # >；若某规则行既无上游注释、
+    COMMENTS 表里又没有对应条目，同步直接失败（需补注释后再跑），绝不
+    让没注释的规则悄悄入库。
   - 若上游有 [Script]：两个 [Script] 段落合并为一个（内容不变），脚本一律指向
     自托管地址（SELF_HOSTED 列表），不直接引用第三方 js；同步时同时抓上游 js
     更新自托管镜像文件。上游无 [Script] 时跳过镜像（v16 起即如此）。
@@ -79,8 +81,10 @@ SELF_HOSTED_BASE = "https://raw.githubusercontent.com/Polly-ai/Wynston/main/"
 # 该行的片段；同一注释可重复插在多条相同规则上方（如上游重复的
 # irregular_banner_dy 行）。目标是四个段落里每条规则行上方都有
 # 注释。目的不确定的域名只按组写通用注释，不编造具体用途。
-# 上游新增条目时需在这里补注释；map 里的 key 在上游找
-# 不到时只打印警告，不中断同步。
+# 注释政策（2026-11-15 用户定）：上游自带的 # 注释行全文原样保留，
+# 其后规则不再另加 # >；没有注释的规则行按本表加 # >；若某规则行
+# 既无上游注释、本表又没有对应条目，同步直接失败，等补了注释再跑。
+# map 里的 key 在上游找不到时只打印警告，不中断同步。
 COMMENTS = [
     # [Rule]
     ("((25[0-5]", "拦截直连 IP 的上报请求"),
@@ -259,6 +263,7 @@ def render(parts, mirrored):
         out.append(f"#!{key} = {value}")
     out += ["", f"# 同步自上游：{UPSTREAM_URL}", ""]
     used_comments = set()
+    uncovered = []
     for seg in parts["segments"]:
         if seg["name"]:
             out.append(seg["name"])
@@ -266,13 +271,36 @@ def render(parts, mirrored):
             if seg["name"] == "[Script]" and line.strip():
                 out.append(rewrite_script_line(line, mirrored))
                 continue
-            if line.strip():
-                for idx, (key, comment) in enumerate(COMMENTS):
-                    if key in line:
-                        out.append(f"# > {comment}")
-                        used_comments.add(idx)
-                        break
+            if not line.strip():
+                out.append(line)
+                continue
+            # 上游自带的 # 注释行原样保留，它本身就是注释，不再另加 # >
+            if line.lstrip().startswith("#"):
+                out.append(line)
+                continue
+            # 规则行：上一行已是注释（上游自带）时不再加 # >；
+            # 否则按 COMMENTS 表加；两者都没有则记下来，同步直接失败。
+            preceded_by_comment = bool(out) and out[-1].lstrip().startswith("#")
+            matched = None
+            for idx, (key, comment) in enumerate(COMMENTS):
+                if key in line:
+                    matched = (idx, comment)
+                    break
+            if matched is not None:
+                used_comments.add(matched[0])
+            if preceded_by_comment:
+                out.append(line)
+                continue
+            if matched is not None:
+                out.append(f"# > {matched[1]}")
+            else:
+                uncovered.append(line)
             out.append(line)
+    if uncovered:
+        fail(
+            "以下规则行没有注释（上游未带注释，COMMENTS 表里也没有对应条目），"
+            "请补注释后再同步：\n" + "\n".join(f"  {l}" for l in uncovered)
+        )
     for idx, (key, comment) in enumerate(COMMENTS):
         if idx not in used_comments:
             print(
@@ -329,7 +357,9 @@ def main():
     if old_text == new_text and js_changed:
         print("sync_pinduoduo_cxm: 模块无变化，镜像已更新")
         return 0
-    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+    out_dir = os.path.dirname(args.output)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(new_text)
     print(f"sync_pinduoduo_cxm: 已写入 {args.output}")
