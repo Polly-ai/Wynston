@@ -1,1 +1,157 @@
-IyFuYW1lID0g5ou85aSa5aSa5YeA5YyWCiMhZGVzYyA9IOenu+mZpOW8gOWxj+W5v+WRiuOAgeW6leagj+WkmuWkmuinhumikeOAgeS8muWcuuWFpeWPo+OAgeiBiuWkqemhtemdoueyvumAieaOqOiNkOWPiuaOqOW5v++8jOeyvueugOmmlumhteWSjOS4quS6uuS4reW/g++8m+WPpuWOu+aOiemmlumhteWkmuWkmuS5sOiPnOS4jueZvuS6v+ihpei0tOS4pOagj+OAggojIWNhdGVnb3J5ID0gUG9sbHktYWkKIyFhdXRob3IgPSDlsI/mhacgKOmtlOaUueiHqiBRaW5nUmV4IOeahCBMb29uS2lzc1N1cmdlIOaLvOWkmuWkmiBCZXRhIOaooeWdl++8jOWOn+S9nOiAhSBaZW5tb0ZlaVNoaeOAgeWPr+iOiSkKIyFob21lcGFnZSA9IGh0dHBzOi8vaHViLmtlbGVlLm9uZQojIXZlcnNpb24gPSAyMDI2LTExLTE0LXYxCiMhb3BlblVybCA9IGh0dHBzOi8vYXBwcy5hcHBsZS5jb20vYXBwL2lkMTA0NDI4MzA1OQoKIyDlkIzmraXoh6rkuIrmuLjvvJpodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vQ2FvWGlhb01hbm4vWGlhb01hbi9tYWluL1N1cmdlL1NjcmlwdHMvUEREL1BERC5zZ21vZHVsZQoKW1J1bGVdCiMgPiDmi6bmiKrnm7Tov54gSVAg55qE5LiK5oql6K+35rGCCkFORCwoKFVSTC1SRUdFWCwiXmh0dHA6XC9cLygoMjVbMC01XXwyWzAtNF1bMC05XXxbMDFdP1swLTldWzAtOV0/KVwuKXszfSgyNVswLTVdfDJbMC00XVswLTldfFswMV0/WzAtOV1bMC05XT8pXC9kKFxkKT8iLGV4dGVuZGVkLW1hdGNoaW5nKSwoVVNFUi1BR0VOVCwiKmNvbS54dW5tZW5nLnBpbmR1b2R1byoiKSksUkVKRUNUCiMgPiDmi6bmiKrnm7Tov54gSVB2NiDnmoTkuIrmiqXor7fmsYIKQU5ELCgoVVJMLVJFR0VYLCJeaHR0cDpcL1wvXFtbMC05YS1mQS1GOl0rXF1cL2QoXGQpP1w/IixleHRlbmRlZC1tYXRjaGluZyksKFVTRVItQUdFTlQsIipjb20ueHVubWVuZy5waW5kdW9kdW8qIikpLFJFSkVDVAojID4g56aB55SoIGFwaS5waW5kdW9kdW8uY29tIOeahCBRVUlDCkFORCwoKERPTUFJTixhcGkucGluZHVvZHVvLmNvbSxleHRlbmRlZC1tYXRjaGluZyksKFBST1RPQ09MLFFVSUMpKSxSRUpFQ1QKIyA+IOaLpuaIquWfi+eCueOAgeS4iuaKpeS4juW5v+WRiuebuOWFs+Wfn+WQjQpET01BSU4sdGl0YW4ucGluZHVvZHVvLmNvbSxSRUpFQ1QtTk8tRFJPUCxleHRlbmRlZC1tYXRjaGluZyxwcmUtbWF0Y2hpbmcKIyA+IOaLpuaIqiB4Zy5waW5kdW9kdW8uY29t77yI5Z+L54K5L+S4iuaKpe+8iQpET01BSU4seGcucGluZHVvZHVvLmNvbSxSRUpFQ1QsZXh0ZW5kZWQtbWF0Y2hpbmcscHJlLW1hdGNoaW5nCiMgPiDmi6bmiKrlub/lkYrlm77niYcgQ0ROCkRPTUFJTixjZGwtMS5wZGRwaWMuY29tLFJFSkVDVCxleHRlbmRlZC1tYXRjaGluZyxwcmUtbWF0Y2hpbmcKIyA+IOaLpuaIqiBUaXRhbiDln4vngrnkuIrmiqUKRE9NQUlOLHRpdGFuLnBpbmR1b2R1by5jb20sUkVKRUNULGV4dGVuZGVkLW1hdGNoaW5nLHByZS1tYXRjaGluZwojID4g5oum5oiq5bm/5ZGK5Zu+54mHIENETgpET01BSU4sY2RsLXAyLnBkZHBpYy5jb20sUkVKRUNULGV4dGVuZGVkLW1hdGNoaW5nLHByZS1tYXRjaGluZwojID4g5oum5oiq5bm/5ZGK5Zu+54mHIENETgpET01BSU4sY2QtMS5wZGRwaWMuY29tLFJFSkVDVCxleHRlbmRlZC1tYXRjaGluZyxwcmUtbWF0Y2hpbmcKIyA+IOaLpuaIqiBBUE0g5oCn6IO955uR5o6n5LiK5oqlCkRPTUFJTixhcG0ucGluZHVvZHVvLmNvbSxSRUpFQ1QsZXh0ZW5kZWQtbWF0Y2hpbmcscHJlLW1hdGNoaW5nCiMgPiDmi6bmiKogdGgtYi5waW5kdW9kdW8uY29t77yI5Z+L54K5L+S4iuaKpe+8iQpET01BSU4sdGgtYi5waW5kdW9kdW8uY29tLFJFSkVDVCxleHRlbmRlZC1tYXRjaGluZyxwcmUtbWF0Y2hpbmcKIyA+IOaLpuaIqiB0YS5waW5kdW9kdW8uY29t77yI5Z+L54K5L+S4iuaKpe+8iQpET01BSU4sdGEucGluZHVvZHVvLmNvbSxSRUpFQ1QsZXh0ZW5kZWQtbWF0Y2hpbmcscHJlLW1hdGNoaW5nCiMgPiDmi6bmiKogdGgucGluZHVvZHVvLmNvbe+8iOWfi+eCuS/kuIrmiqXvvIkKRE9NQUlOLHRoLnBpbmR1b2R1by5jb20sUkVKRUNULGV4dGVuZGVkLW1hdGNoaW5nLHByZS1tYXRjaGluZwojID4g5oum5oiqIHRoLWEucGluZHVvZHVvLmNvbe+8iOWfi+eCuS/kuIrmiqXvvIkKRE9NQUlOLHRoLWEucGluZHVvZHVvLmNvbSxSRUpFQ1QsZXh0ZW5kZWQtbWF0Y2hpbmcscHJlLW1hdGNoaW5nCiMgPiDmi6bmiKogdGEtYS5waW5kdW9kdW8uY29t77yI5Z+L54K5L+S4iuaKpe+8iQpET01BSU4sdGEtYS5waW5kdW9kdW8uY29tLFJFSkVDVCxleHRlbmRlZC1tYXRjaGluZyxwcmUtbWF0Y2hpbmcKIyA+IOaLpuaIqiBtZXRhLnBpbmR1b2R1by5jb23vvIjln4vngrkv5LiK5oql77yJCkRPTUFJTixtZXRhLnBpbmR1b2R1by5jb20sUkVKRUNULGV4dGVuZGVkLW1hdGNoaW5nLHByZS1tYXRjaGluZwojID4g5oum5oiqIEFQTSDmgKfog73nm5HmjqfkuIrmiqUKRE9NQUlOLGFwbS1hLnBpbmR1b2R1by5jb20sUkVKRUNULGV4dGVuZGVkLW1hdGNoaW5nLHByZS1tYXRjaGluZwoKW0JvZHkgUmV3cml0ZV0KIyA+IOmmlumhtSBodWLvvJrliKDlupXpg6jop4bpopEv5LiN6KeE5YiZIGJhbm5lcgpodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9hbGV4YVwvaG9tZXBhZ2VcL2h1Ylw/ICdkZWxwYXRocyhbWyJyZXN1bHQiLCJkeV9tb2R1bGUiLCJpcnJlZ3VsYXJfYmFubmVyX2R5Il1dKScKIyA+IOmmlumhtSBodWLvvJrliKDlm77moIfpm4YKaHR0cC1yZXNwb25zZS1qcSBeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvYWxleGFcL2hvbWVwYWdlXC9odWJcPyAnZGVscGF0aHMoW1sicmVzdWx0IiwiaWNvbl9zZXQiXV0pJwojID4g6aaW6aG1IGh1Yu+8muWIoOaQnOe0ouahhueDreivjQpodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9hbGV4YVwvaG9tZXBhZ2VcL2h1Ylw/ICdkZWxwYXRocyhbWyJyZXN1bHQiLCJzZWFyY2hfYmFyX2hvdF9xdWVyeSJdXSknCiMgPiDpppbpobUgaHVi77ya5Yig5bqV6YOo6KeG6aKRL+S4jeinhOWImSBiYW5uZXIKaHR0cC1yZXNwb25zZS1qcSBeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvYWxleGFcL2hvbWVwYWdlXC9odWJcPyAnZGVscGF0aHMoW1sicmVzdWx0IiwiZHlfbW9kdWxlIiwiaXJyZWd1bGFyX2Jhbm5lcl9keSJdXSknCiMgPiDpppbpobUgaHVi77ya5bqV5qCP5Y+q55WZ6aaW6aG1L+iBiuWkqS/kuKrkurrvvIjliKDlpJrlpJrop4bpopHnrYnvvIkKaHR0cC1yZXNwb25zZS1qcSBeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvYWxleGFcL2hvbWVwYWdlXC9odWJcPyAnLnJlc3VsdC5ib3R0b21fdGFicz8gfD0gbWFwKHNlbGVjdCgubGluayB8IElOKCJpbmRleC5odG1sIiwgImNoYXRfbGlzdC5odG1sIiwgInBlcnNvbmFsLmh0bWwiKSkpIHwgLnJlc3VsdC5idWZmZXJfYm90dG9tX3RhYnM/IHw9IG1hcChzZWxlY3QoLmxpbmsgfCBJTigiaW5kZXguaHRtbCIsICJjaGF0X2xpc3QuaHRtbCIsICJwZXJzb25hbC5odG1sIikpKSB8IC5yZXN1bHQuYWxsX3RvcF9vcHRzIHw9IG1hcChkZWwoLnNlbGVjdGVkX2ltYWdlLCAuaW1hZ2UsIC5oZWlnaHQsIC53aWR0aCkpJwojID4g5YWz6Zet6aaW6aG15L+h5oGv5rWBIHRpbWVsaW5l44CB5YigIHRpbWVsaW5lIOaooQpodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9hbGV4YVwvaG9tZXBhZ2VcL2h1Ylw/ICdpZiAodHlwZSA9PSAib2JqZWN0IiBhbmQgKC5yZXN1bHQgfCB0eXBlKSA9PSAib2JqZWN0IikgdGhlbiAucmVzdWx0LnRpbWVsaW5lX3Zpc2libGUgPSBmYWxzZSB8IGRlbCgucmVzdWx0LmhvbWVfc2NyZWVuX3NraW4udGltZWxpbmUpIHwgaWYgKC5yZXN1bHQubW9kdWxlX29yZGVyIHwgdHlwZSkgPT0gImFycmF5IiB0aGVuIC5yZXN1bHQubW9kdWxlX29yZGVyIHw9IG1hcChzZWxlY3QoaWYgdHlwZSA9PSAib2JqZWN0IiB0aGVuIC5tb2R1bGVfbmFtZSAhPSAidGltZWxpbmUiIGVsc2UgLiAhPSAidGltZWxpbmUiIGVuZCkpIGVsc2UgLiBlbmQgZWxzZSAuIGVuZCcKIyA+IOmhtumDqOWFpeWPo+WIoOOAjOacgOW/q+aYjuWkqei+vi/mlL/lupzooaXotLTjgI0KaHR0cC1yZXNwb25zZS1qcSBeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvYWxleGFcL2hvbWVwYWdlXC9odWJcPyAnaWYgKHR5cGUgPT0gIm9iamVjdCIgYW5kICgucmVzdWx0IHwgdHlwZSkgPT0gIm9iamVjdCIpIHRoZW4gaWYgKC5yZXN1bHQuYWxsX3RvcF9vcHRzIHwgdHlwZSkgPT0gImFycmF5IiB0aGVuIC5yZXN1bHQuYWxsX3RvcF9vcHRzIHw9IG1hcChzZWxlY3QoKC5vcHRfbmFtZSAvLyAiIikgfCB0ZXN0KCLmnIDlv6vmmI7lpKnovr585pS/5bqc6KGl6LS0IikgfCBub3QpKSBlbHNlIC4gZW5kIGVsc2UgLiBlbmQnCiMgPiDpppbpobUgaHVi77ya5Yig5aSa5aSa5Lmw6I+c5qCP5LiO55m+5Lq/6KGl6LS05YWl5Y+jCmh0dHAtcmVzcG9uc2UtanEgXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL2FsZXhhXC9ob21lcGFnZVwvaHViXD8gJ2RlbHBhdGhzKFtbInJlc3VsdCIsImR5X21vZHVsZSIsInJlY29tbWVuZF9mcmVzaF9pbmZvIl0sWyJyZXN1bHQiLCJkeV9tb2R1bGUiLCJiaWxsaW9uX3N1YnNpZHlfZW50cmFuY2VfZHkiXV0pJwojID4g5pCc57Si77ya5Yig5pCc57Si5omp5bGVCmh0dHAtcmVzcG9uc2UtanEgXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9zZWFyY2hcPyAnZGVscGF0aHMoW1siZXhwYW5zaW9uIl1dKScKIyA+IOS4quS6uuS4reW/g++8muWIoOihpei0tOaoquW5hQpodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9waGlsb1wvcGVyc29uYWxcL2h1Ylw/ICdkZWxwYXRocyhbWyJwZXJzb25hbF9iYW5uZXIiXV0pJwojID4g5Liq5Lq65Lit5b+D77ya5Yig5qCH6aKY5qCPCmh0dHAtcmVzcG9uc2UtanEgXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL3BoaWxvXC9wZXJzb25hbFwvaHViXD8gJ2RlbHBhdGhzKFtbInRpdGxlX2Jhcl9pdGVtcyJdXSknCiMgPiDkuKrkurrkuK3lv4PvvJrliKDmnIjljaHlhaXlj6MKaHR0cC1yZXNwb25zZS1qcSBeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvcGhpbG9cL3BlcnNvbmFsXC9odWJcPyAnZGVscGF0aHMoW1sibW9udGhseV9jYXJkX2VudHJhbmNlIl1dKScKIyA+IOS4quS6uuS4reW/g++8muWIoOS4quS6uuS4reW/g+agt+W8jwpodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9waGlsb1wvcGVyc29uYWxcL2h1Ylw/ICdkZWxwYXRocyhbWyJwZXJzb25hbF9jZW50ZXJfc3R5bGVfdjJfdm8iXV0pJwojID4g5Liq5Lq65Lit5b+D77ya5Yig5Zu+5qCH5LiO5o+P6L+w5paH5a2XCmh0dHAtcmVzcG9uc2UtanEgXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL3BoaWxvXC9wZXJzb25hbFwvaHViXD8gJ2RlbHBhdGhzKFtbImljb25fc2V0IiwiaWNvbnMiXV0pJwojID4g5Liq5Lq65Lit5b+D77ya5Yig6aG26YOo5Liq5Lq65Zu+5qCHCmh0dHAtcmVzcG9uc2UtanEgXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL3BoaWxvXC9wZXJzb25hbFwvaHViXD8gJ2RlbHBhdGhzKFtbImljb25fc2V0IiwidG9wX3BlcnNvbmFsX2ljb25zIl1dKScKIyA+IOS4quS6uuS4reW/g++8muWIoOWFtuS7luWbvuagh+aPj+i/sOaWh+WtlwpodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9waGlsb1wvcGVyc29uYWxcL2h1Ylw/ICdpZiB0eXBlID09ICJvYmplY3QiIHRoZW4gZGVsKC5pY29uX3NldC5vdGhlcl9pY29uX3NldC5zaG93X2FsbF9vcmRlci5kZXNjX3RleHRfbGlzdCwgLmljb25fc2V0Lm90aGVyX2ljb25fc2V0LnNob3dfYWxsX29yZGVyLmRlc2NfdGV4dF9saXN0X3YyKSBlbHNlIC4gZW5kJwojID4g5Liq5Lq65Lit5b+D77ya5riF56m66ZKx5YyF5YWl5Y+j5paH5a2XCmh0dHAtcmVzcG9uc2UtanEgXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL3BoaWxvXC9wZXJzb25hbFwvaHViXD8gJ2lmICh0eXBlID09ICJvYmplY3QiIGFuZCAoLndhbGxldCB8IHR5cGUpID09ICJvYmplY3QiKSB0aGVuIC53YWxsZXQuZW50cmFuY2VfdGV4dCA9ICIiIGVsc2UgLiBlbmQnCiMgPiDorqLljZXmuLLmn5PvvJrliKDlupXpg6jljLrln58KaHR0cC1yZXNwb25zZS1qcSBeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvb2FrXC9pbnRlZ3JhdGlvblwvcmVuZGVyXD8gJ2RlbHBhdGhzKFtbImJvdHRvbV9zZWN0aW9uX2xpc3QiXV0pJwojID4g6K6i5Y2V5riy5p+T77ya5Yig5bqV6YOo5Yy65Z+fCmh0dHAtcmVzcG9uc2UtanEgXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL29ha1wvaW50ZWdyYXRpb25cL3JlbmRlclw/ICdkZWxwYXRocyhbWyJ1aSIsImJvdHRvbV9zZWN0aW9uIl1dKScKIyA+IOiuouWNlea4suafk++8muWIoOebtOaSrea1ruWxguS/oeaBrwpodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9vYWtcL2ludGVncmF0aW9uXC9yZW5kZXJcPyAnZGVscGF0aHMoW1sidWkiLCJsaXZlX3NlY3Rpb24iLCJmbG9hdF9pbmZvIl1dKScKIyA+IOiuouWNleivpuaDhe+8muWIoOWVhuWTgeaOqOiNkOWIl+ihqApodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9jYXRlcmhhbVwvdjNcL3F1ZXJ5XC9vcmRlcl9kZXRhaWxfZ3JvdXBcPyAnZGVscGF0aHMoW1siZGF0YSIsImdvb2RzX2xpc3QiXV0pJwojID4g6K6i5Y2V6aG177ya5Yig6JCl6ZSA5qiq5bmFCmh0dHAtcmVzcG9uc2UtanEgXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9vcmRlclwvICdkZWxwYXRocyhbWyJtYXJrZXRpbmdfYmFubmVyX3ZvIl1dKScKIyA+IOiuouWNlemhte+8muWIoOeJqea1geS4iuaWueaOqOiNkApodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvb3JkZXJcLyAnZGVscGF0aHMoW1sic2hpcHBpbmciLCJiYW5uZXJfYWJvdmVfcmVjb21tZW5kIl1dKScKIyA+IOiuouWNleWIl+ihqO+8muWIoOiuouWNleaIkOmVv+aPkOekugpodHRwLXJlc3BvbnNlLWpxIF5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9hcmlzdG90bGVcL29yZGVyX2xpc3RfdjRcPyAnLm9yZGVycyB8PSBtYXAoLm9yZGVyX2J1dHRvbnMgfD0gbWFwKGRlbCgub3JkZXJfZ3Jvd3RoX3RpcCkpKScKCltNYXAgTG9jYWxdCiMgPiDmnKrmlLbotKforqLljZXor4Tku7flhaXlj6PvvIzov5Tlm57nva7nqboKXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL2FyaXN0b3RsZVwvdW5yYXRlZF9vcmRlcl9mb3JfdW5yZWNlaXZlZF90YWJcPyBkYXRhLXR5cGU9dGV4dCBkYXRhPSJ7fSIgc3RhdHVzLWNvZGU9MjAwIGhlYWRlcj0iQ29udGVudC1UeXBlOmFwcGxpY2F0aW9uL2pzb24iCgojID4g6K6i5Y2V5YiX6KGoIHRhYnMg5YWD57Sg77yM6L+U5Zue572u56m6Cl5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9hcmlzdG90bGVcL3F1ZXJ5X29yZGVyX2xpc3RfdGFic19lbGVtZW50XD8gZGF0YS10eXBlPXRleHQgZGF0YT0ie30iIHN0YXR1cy1jb2RlPTIwMCBoZWFkZXI9IkNvbnRlbnQtVHlwZTphcHBsaWNhdGlvbi9qc29uIgoKIyA+IOWFqOeQg+mmlumhteaOpeWPo++8jOi/lOWbnue9ruepugpeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvYXF1YXJpdXNcL2h1bmdhcnlcL2dsb2JhbFwvaG9tZXBhZ2VcPyBkYXRhLXR5cGU9dGV4dCBkYXRhPSJ7fSIgc3RhdHVzLWNvZGU9MjAwIGhlYWRlcj0iQ29udGVudC1UeXBlOmFwcGxpY2F0aW9uL2pzb24iCgojID4g6K6i5Y2V5b+r6YCS5L+h5oGv5o6l5Y+j77yM6L+U5Zue572u56m6Cl5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9jYXRlcmhhbVwvdjNcL3F1ZXJ5XC9vcmRlcl9leHByZXNzX2dyb3VwXD8gZGF0YS10eXBlPXRleHQgZGF0YT0ie30iIHN0YXR1cy1jb2RlPTIwMCBoZWFkZXI9IkNvbnRlbnQtVHlwZTphcHBsaWNhdGlvbi9qc29uIgoKIyA+IOaQnOe0oueDreivjeaOpeWPo++8jOi/lOWbnue9ruepugpeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL3NlYXJjaF9ob3RxdWVyeVw/IGRhdGEtdHlwZT10ZXh0IGRhdGE9Int9IiBzdGF0dXMtY29kZT0yMDAgaGVhZGVyPSJDb250ZW50LVR5cGU6YXBwbGljYXRpb24vanNvbiIKCiMgPiDogYrlpKnotYTmupDliJfooajmjqXlj6PvvIzov5Tlm57nva7nqboKXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL3phaXJlX2JpelwvY2hhdFwvcmVzb3VyY2VcL2dldF9saXN0X2RhdGFcPyBkYXRhLXR5cGU9dGV4dCBkYXRhPSJ7fSIgc3RhdHVzLWNvZGU9MjAwIGhlYWRlcj0iQ29udGVudC1UeXBlOmFwcGxpY2F0aW9uL2pzb24iCgojID4g5paw6IGK5aSp57uE5o6l5Y+j77yM6L+U5Zue572u56m6Cl5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9jYXRlcmhhbVwvdjNcL3F1ZXJ5XC9uZXdfY2hhdF9ncm91cFw/IGRhdGEtdHlwZT10ZXh0IGRhdGE9Int9IiBzdGF0dXMtY29kZT0yMDAgaGVhZGVyPSJDb250ZW50LVR5cGU6YXBwbGljYXRpb24vanNvbiIKCiMgPiDllYblk4HlpIfnlKjmjqXlj6PvvIzov5Tlm57nva7nqboKXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL2FsZXhhXC9nb29kc1wvYmFja191cFw/IGRhdGEtdHlwZT10ZXh0IGRhdGE9Int9IiBzdGF0dXMtY29kZT0yMDAgaGVhZGVyPSJDb250ZW50LVR5cGU6YXBwbGljYXRpb24vanNvbiIKCiMgPiDkuKrkurrkv6Hmga/mn6Xor6LmjqXlj6PvvIzov5Tlm57nva7nqboKXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL2NhdGVyaGFtXC92M1wvcXVlcnlcL3BlcnNvbmFsXD8gZGF0YS10eXBlPXRleHQgZGF0YT0ie30iIHN0YXR1cy1jb2RlPTIwMCBoZWFkZXI9IkNvbnRlbnQtVHlwZTphcHBsaWNhdGlvbi9qc29uIgoKIyA+IOWVhuWTgeivpuaDheW8leWvvOaOpeWPo++8jOi/lOWbnue9ruepugpeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvYnJhbmQtb2xheVwvZ29vZHNfZGV0YWlsXC9ieWJ0X2d1aWRlXD8gZGF0YS10eXBlPXRleHQgZGF0YT0ie30iIHN0YXR1cy1jb2RlPTIwMCBoZWFkZXI9IkNvbnRlbnQtVHlwZTphcHBsaWNhdGlvbi9qc29uIgoKIyA+IOi/veWKoOivhOS7t+aOpeWPo++8jOi/lOWbnue9ruepugpeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvZW5nZWxzXC9yZXZpZXdzXC9yZXF1aXJlXC9hcHBlbmRcPyBkYXRhLXR5cGU9dGV4dCBkYXRhPSJ7fSIgc3RhdHVzLWNvZGU9MjAwIGhlYWRlcj0iQ29udGVudC1UeXBlOmFwcGxpY2F0aW9uL2pzb24iCgojID4g5oiR55qE6K6i5Y2V57uE5o6l5Y+j77yM6L+U5Zue572u56m6Cl5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9jYXRlcmhhbVwvdjNcL3F1ZXJ5XC9teV9vcmRlcl9ncm91cFw/IGRhdGEtdHlwZT10ZXh0IGRhdGE9Int9IiBzdGF0dXMtY29kZT0yMDAgaGVhZGVyPSJDb250ZW50LVR5cGU6YXBwbGljYXRpb24vanNvbiIKCiMgPiDllpzmrKLliJfooajmjqXlj6PvvIzov5Tlm57nva7nqboKXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL2NhdGVyaGFtXC92M1wvcXVlcnlcL2xpa2VzXD8gZGF0YS10eXBlPXRleHQgZGF0YT0ie30iIHN0YXR1cy1jb2RlPTIwMCBoZWFkZXI9IkNvbnRlbnQtVHlwZTphcHBsaWNhdGlvbi9qc29uIgoKIyA+IOmZhOWKoOaVsOaNruaOpeWPo++8jOi/lOWbnue9ruepugpeaHR0cHM6XC9cL2FwaVwucGluZHVvZHVvXC5jb21cL2FwaVwvcGhhbnRvbVwvZ2JkYnBkdlwvZXh0cmFcPyBkYXRhLXR5cGU9dGV4dCBkYXRhPSJ7fSIgc3RhdHVzLWNvZGU9MjAwIGhlYWRlcj0iQ29udGVudC1UeXBlOmFwcGxpY2F0aW9uL2pzb24iCgojID4g6Leo5bqX5b+r5o235YWl5Y+j5YiX6KGo77yM6L+U5Zue572u56m6Cl5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9tYW51ZmFjdHVyZXJcL2Nyb3NzXC9zaG9ydGN1dFwvbGlzdFw/IGRhdGEtdHlwZT10ZXh0IGRhdGE9Int9IiBzdGF0dXMtY29kZT0yMDAgaGVhZGVyPSJDb250ZW50LVR5cGU6YXBwbGljYXRpb24vanNvbiIKCiMgPiDnm7Tmkq3mtLvliqjmjqjpgIHkuIrmiqXmjqXlj6PvvIzov5Tlm57nva7nqboKXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL2R1bmtpcmtcL2xpdmVhY3Rpdml0eVwvcHVzaFwvY3JlYXRlXC91cmxcL3JlcG9ydFw/IGRhdGEtdHlwZT10ZXh0IGRhdGE9Int9IiBzdGF0dXMtY29kZT0yMDAgaGVhZGVyPSJDb250ZW50LVR5cGU6YXBwbGljYXRpb24vanNvbiIKCiMgPiDmiJDplb/ogZrlkIjmjqXlj6PvvIzov5Tlm57nva7nqboKXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL2dyb3d0aFwvbmFnYXRvXC9hcHBcL2luZGV4XC9nYXRoZXJcPyBkYXRhLXR5cGU9dGV4dCBkYXRhPSJ7fSIgc3RhdHVzLWNvZGU9MjAwIGhlYWRlcj0iQ29udGVudC1UeXBlOmFwcGxpY2F0aW9uL2pzb24iCgojID4g5b6F5pS26LSn6K+E5Lu35o6l5Y+j77yM6L+U5Zue572u56m6Cl5odHRwczpcL1wvYXBpXC5waW5kdW9kdW9cLmNvbVwvYXBpXC9lbmdlbHNcL3dhaXRcL3JlY2VpdmVcL3Jldmlld1w/IGRhdGEtdHlwZT10ZXh0IGRhdGE9Int9IiBzdGF0dXMtY29kZT0yMDAgaGVhZGVyPSJDb250ZW50LVR5cGU6YXBwbGljYXRpb24vanNvbiIKCiMgPiDmjqjojZDmjqXlj6PvvIzov5Tlm57nva7nqboKXmh0dHBzOlwvXC9hcGlcLnBpbmR1b2R1b1wuY29tXC9hcGlcL2J1ZmZvblwvbmFzdXNcL3JlY29tbWVuZFw/IGRhdGEtdHlwZT10ZXh0IGRhdGE9Int9IiBzdGF0dXMtY29kZT0yMDAgaGVhZGVyPSJDb250ZW50LVR5cGU6YXBwbGljYXRpb24vanNvbiIKCltNSVRNXQojID4g6Kej5a+GIGFwaS5waW5kdW9kdW8uY29t77yI5pS55YaZ5LiO5pig5bCE55Sf5pWI55qE5YmN5o+Q77yJCmhvc3RuYW1lID0gJUFQUEVORCUgYXBpLnBpbmR1b2R1by5jb20K
+#!name = 拼多多净化
+#!desc = 移除开屏广告、底栏多多视频、会场入口、聊天页面精选推荐及推广，精简首页和个人中心；另去掉首页多多买菜与百亿补贴两栏。
+#!category = Polly-ai
+#!author = 小慧 (魔改自 QingRex 的 LoonKissSurge 拼多多 Beta 模块，原作者 ZenmoFeiShi、可莉)
+#!homepage = https://hub.kelee.one
+#!version = 2026-11-14-v1
+#!openUrl = https://apps.apple.com/app/id1044283059
+
+# 同步自上游：https://raw.githubusercontent.com/CaoXiaoMann/XiaoMan/main/Surge/Scripts/PDD/PDD.sgmodule
+
+[Rule]
+# > 拦截直连 IP 的上报请求
+AND,((URL-REGEX,"^http:\/\/((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/d(\d)?",extended-matching),(USER-AGENT,"*com.xunmeng.pinduoduo*")),REJECT
+# > 拦截直连 IPv6 的上报请求
+AND,((URL-REGEX,"^http:\/\/\[[0-9a-fA-F:]+\]\/d(\d)?\?",extended-matching),(USER-AGENT,"*com.xunmeng.pinduoduo*")),REJECT
+# > 禁用 api.pinduoduo.com 的 QUIC
+AND,((DOMAIN,api.pinduoduo.com,extended-matching),(PROTOCOL,QUIC)),REJECT
+# > 拦截埋点、上报与广告相关域名
+DOMAIN,titan.pinduoduo.com,REJECT-NO-DROP,extended-matching,pre-matching
+# > 拦截 xg.pinduoduo.com（埋点/上报）
+DOMAIN,xg.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截广告图片 CDN
+DOMAIN,cdl-1.pddpic.com,REJECT,extended-matching,pre-matching
+# > 拦截 Titan 埋点上报
+DOMAIN,titan.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截广告图片 CDN
+DOMAIN,cdl-p2.pddpic.com,REJECT,extended-matching,pre-matching
+# > 拦截广告图片 CDN
+DOMAIN,cd-1.pddpic.com,REJECT,extended-matching,pre-matching
+# > 拦截 APM 性能监控上报
+DOMAIN,apm.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截 th-b.pinduoduo.com（埋点/上报）
+DOMAIN,th-b.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截 ta.pinduoduo.com（埋点/上报）
+DOMAIN,ta.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截 th.pinduoduo.com（埋点/上报）
+DOMAIN,th.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截 th-a.pinduoduo.com（埋点/上报）
+DOMAIN,th-a.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截 ta-a.pinduoduo.com（埋点/上报）
+DOMAIN,ta-a.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截 meta.pinduoduo.com（埋点/上报）
+DOMAIN,meta.pinduoduo.com,REJECT,extended-matching,pre-matching
+# > 拦截 APM 性能监控上报
+DOMAIN,apm-a.pinduoduo.com,REJECT,extended-matching,pre-matching
+
+[Body Rewrite]
+# > 首页 hub：删底部视频/不规则 banner
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'delpaths([["result","dy_module","irregular_banner_dy"]])'
+# > 首页 hub：删图标集
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'delpaths([["result","icon_set"]])'
+# > 首页 hub：删搜索框热词
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'delpaths([["result","search_bar_hot_query"]])'
+# > 首页 hub：删底部视频/不规则 banner
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'delpaths([["result","dy_module","irregular_banner_dy"]])'
+# > 首页 hub：底栏只留首页/聊天/个人（删多多视频等）
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? '.result.bottom_tabs? |= map(select(.link | IN("index.html", "chat_list.html", "personal.html"))) | .result.buffer_bottom_tabs? |= map(select(.link | IN("index.html", "chat_list.html", "personal.html"))) | .result.all_top_opts |= map(del(.selected_image, .image, .height, .width))'
+# > 关闭首页信息流 timeline、删 timeline 模
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'if (type == "object" and (.result | type) == "object") then .result.timeline_visible = false | del(.result.home_screen_skin.timeline) | if (.result.module_order | type) == "array" then .result.module_order |= map(select(if type == "object" then .module_name != "timeline" else . != "timeline" end)) else . end else . end'
+# > 顶部入口删「最快明天达/政府补贴」
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'if (type == "object" and (.result | type) == "object") then if (.result.all_top_opts | type) == "array" then .result.all_top_opts |= map(select((.opt_name // "") | test("最快明天达|政府补贴") | not)) else . end else . end'
+# > 首页 hub：删多多买菜栏与百亿补贴入口
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'delpaths([["result","dy_module","recommend_fresh_info"],["result","dy_module","billion_subsidy_entrance_dy"]])'
+# > 搜索：删搜索扩展
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/search\? 'delpaths([["expansion"]])'
+# > 个人中心：删补贴横幅
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'delpaths([["personal_banner"]])'
+# > 个人中心：删标题栏
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'delpaths([["title_bar_items"]])'
+# > 个人中心：删月卡入口
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'delpaths([["monthly_card_entrance"]])'
+# > 个人中心：删个人中心样式
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'delpaths([["personal_center_style_v2_vo"]])'
+# > 个人中心：删图标与描述文字
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'delpaths([["icon_set","icons"]])'
+# > 个人中心：删顶部个人图标
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'delpaths([["icon_set","top_personal_icons"]])'
+# > 个人中心：删其他图标描述文字
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'if type == "object" then del(.icon_set.other_icon_set.show_all_order.desc_text_list, .icon_set.other_icon_set.show_all_order.desc_text_list_v2) else . end'
+# > 个人中心：清空钱包入口文字
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'if (type == "object" and (.wallet | type) == "object") then .wallet.entrance_text = "" else . end'
+# > 订单渲染：删底部区域
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/oak\/integration\/render\? 'delpaths([["bottom_section_list"]])'
+# > 订单渲染：删底部区域
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/oak\/integration\/render\? 'delpaths([["ui","bottom_section"]])'
+# > 订单渲染：删直播浮层信息
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/oak\/integration\/render\? 'delpaths([["ui","live_section","float_info"]])'
+# > 订单详情：删商品推荐列表
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_detail_group\? 'delpaths([["data","goods_list"]])'
+# > 订单页：删营销横幅
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/order\/ 'delpaths([["marketing_banner_vo"]])'
+# > 订单页：删物流上方推荐
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/order\/ 'delpaths([["shipping","banner_above_recommend"]])'
+# > 订单列表：删订单成长提示
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/order_list_v4\? '.orders |= map(.order_buttons |= map(del(.order_growth_tip)))'
+
+[Map Local]
+# > 未收货订单评价入口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/unrated_order_for_unreceived_tab\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 订单列表 tabs 元素，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/query_order_list_tabs_element\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 全球首页接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/aquarius\/hungary\/global\/homepage\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 订单快递信息接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_express_group\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 搜索热词接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/search_hotquery\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 聊天资源列表接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/zaire_biz\/chat\/resource\/get_list_data\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 新聊天组接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/new_chat_group\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 商品备用接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/alexa\/goods\/back_up\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 个人信息查询接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/personal\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 商品详情引导接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/brand-olay\/goods_detail\/bybt_guide\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 追加评价接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/engels\/reviews\/require\/append\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 我的订单组接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/my_order_group\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 喜欢列表接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/likes\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 附加数据接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/phantom\/gbdbpdv\/extra\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 跨店快捷入口列表，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/manufacturer\/cross\/shortcut\/list\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 直播活动推送上报接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/dunkirk\/liveactivity\/push\/create\/url\/report\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 成长聚合接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/growth\/nagato\/app\/index\/gather\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 待收货评价接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/engels\/wait\/receive\/review\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# > 推荐接口，返回置空
+^https:\/\/api\.pinduoduo\.com\/api\/buffon\/nasus\/recommend\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+[MITM]
+# > 解密 api.pinduoduo.com（改写与映射生效的前提）
+hostname = %APPEND% api.pinduoduo.com
