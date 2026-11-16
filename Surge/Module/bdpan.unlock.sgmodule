@@ -1,0 +1,23 @@
+#!name = 百度网盘 功能增强
+#!desc = 完整保留上游视频播放URL调整和会员界面标记功能；使用WebView原生URL接口，每日更新；不保证服务端会员权益。
+#!category = Polly-ai
+#!author = ddgksf2013
+# 上游：https://ddgksf2013.top/scripts/bdpan.unlock.js
+# 上游脚本版本：V1.0.2
+# 原始文件 SHA256：00615ce6dfae37cdc5e55ae791c9353a3fb6f981d895a6fbd0b53caaaf129ecd
+# 由原JS头部内嵌QX配置完整转换；原JS按字节镜像，兼容脚本仅处理异常和返回类型。
+# 需启用重写、MITM并信任证书；Map Local需Surge iOS5.9.1+/Mac5.5.1+。
+# 两模块的membership/user游戏中心接口有重叠；同用时请让“功能增强”的响应规则优先。
+# 净化原脚本对正常gamecenter接口无操作，按原逻辑保留，不擅自启用其中潜藏会员分支。
+# 上游部分正则也覆盖其他baidu.com/zhangyuyidong.cn主机；MITM仅原列出的两主机，不擅自扩大。
+# 请求/响应规则保持上游范围；1MiB以上响应跳过脚本透传；无变化不提交，验证失败保留旧版。
+# 倍速请求把匹配的M3U8_HQ_1080调整为M3U8_AUTO_1080；仅修改客户端请求，不提供真实会员。
+# 会员接口按上游响应字段形状改写，可能整体替换会员展示对象；不代表真实配额、下载权限或到期日。
+# engine=webview用于原脚本的URL/searchParams和动态Function；无需修改系统JS全局。
+
+[Script]
+bdpan_unlock_48bba36dd77a = type=http-request, pattern=^https:\/\/pan\.baidu\.com\/api\/streaming\?app_id=\d+&type=M3U8_HQ_1080, requires-body=false, engine=webview, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/BaiduPan/bdpan.unlock.surge.js, script-update-interval=86400, timeout=15
+bdpan_unlock_5e8cfaa70949 = type=http-response, pattern=^https:\/\/pan\.baidu\.com\/rest\/.*\/membership\/user, requires-body=true, max-size=1048576, engine=webview, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/BaiduPan/bdpan.unlock.surge.js, script-update-interval=86400, timeout=15
+
+[MITM]
+hostname = %APPEND% pan.baidu.com, afd.baidu.com

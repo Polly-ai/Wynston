@@ -162,7 +162,7 @@ def render(config: bytes, javascript: bytes) -> str:
     return '\n'.join(out)
 
 
-def validate_script(javascript: bytes, test_path: Path):
+def validate_script(javascript: bytes, test_path: Path, config: bytes):
     """Parse and regression-test a downloaded script before making any changes."""
     text = javascript.decode('utf-8-sig')
     if (not text.strip() or '$done' not in text or
@@ -177,7 +177,9 @@ def validate_script(javascript: bytes, test_path: Path):
                                 capture_output=True, text=True, timeout=20)
         if syntax.returncode:
             raise SyncError('JavaScript syntax check failed: ' + syntax.stderr[:1000])
-        runtime = subprocess.run(['node', str(test_path), str(path), '15000'],
+        config_path = Path(directory) / 'WeiboEnhanced.conf'
+        config_path.write_bytes(config)
+        runtime = subprocess.run(['node', str(test_path), str(path), '15000', str(config_path)],
                                  capture_output=True, text=True, timeout=180)
         if runtime.returncode:
             raise SyncError('Weibo settings/response regression failed: ' + runtime.stderr[:2000])
@@ -186,7 +188,7 @@ def validate_script(javascript: bytes, test_path: Path):
 
 def prepare(config: bytes, javascript: bytes, test_path: Path):
     parse(config.decode('utf-8-sig'))
-    validate_script(javascript, test_path)
+    validate_script(javascript, test_path, config)
     return {SCRIPT_PATH: javascript, MODULE_PATH: render(config, javascript).encode('utf-8')}
 
 
