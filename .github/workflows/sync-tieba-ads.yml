@@ -1,0 +1,85 @@
+name: Sync TieBaAds module from upstream
+
+# 每日北京时间 09:07（UTC 01:07），错开其他模块。GitHub 调度可能略有延迟。
+# 同时更新上游配置和 JavaScript；无变化不提交，下载/验证失败不发布。
+on:
+  schedule:
+    - cron: "7 1 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/sync_tieba_ads.py
+      - .github/scripts/test_sync_tieba_ads.py
+      - .github/scripts/test_tieba_json.cjs
+      - .github/scripts/test_tieba_jq.cjs
+      - .github/scripts/test_tieba_proto.cjs
+      - .github/workflows/sync-tieba-ads.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-tieba-ads-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Set up Node.js for JavaScript validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test TieBa converter safeguards
+        run: python3 .github/scripts/test_sync_tieba_ads.py
+
+      - name: Sync TieBaAds module and upstream JavaScript
+        run: python3 .github/scripts/sync_tieba_ads.py
+
+      - name: Validate updated converter and runtime behavior
+        run: |
+          python3 .github/scripts/test_sync_tieba_ads.py
+          node .github/scripts/test_tieba_jq.cjs Surge/JavaScript/TieBa/tieba-json.js Surge/JavaScript/TieBa/TieBaAds.conf
+          node .github/scripts/test_tieba_proto.cjs Surge/JavaScript/TieBa/tieba-proto.js
+
+      - name: Commit and push only changed TieBaAds files
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Only this final publishing step receives a write-capable token.
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $auth"
+          trap 'git config --local --unset-all http.https://github.com/.extraheader || true' EXIT
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- Surge/Module/TieBaAds.sgmodule Surge/JavaScript/TieBa/
+          if git diff --cached --quiet; then
+            echo "No upstream changes"
+            exit 0
+          fi
+          git commit -m "Sync TieBaAds module and scripts from upstream"
+          # Preserve other jobs' commits; never force push or silently overwrite.
+          for attempt in 1 2 3; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+          done
+          echo "Push failed after three attempts" >&2
+          exit 1

@@ -1,0 +1,33 @@
+#!name = 百度贴吧净化
+#!desc = 净化贴吧首页搜索、侧边栏、我的页面、进吧推荐与信息流广告；保留上游 Protobuf 处理。
+#!category = Polly-ai
+#!author = app2smile, ddgksf2013
+# 上游：https://raw.githubusercontent.com/ddgksf2013/Rewrite/refs/heads/master/AdBlock/TieBaAds.conf
+# 上游版本：V1.0.03
+# 配置 SHA256：377b0d3379329cf29c52dc081c565b4d7efa190d5a54f2a035736297f412aaf4
+# tieba-proto.js SHA256：6015d737870b6d89c38a0181479ed715e07d11b5a2c3746f96f95e25835e8610
+# JSON 规则异常时透传；Protobuf 脚本原样镜像。需启用 MITM 并信任证书。
+
+[Rule]
+IP-CIDR,180.76.76.200/32,REJECT
+
+[Map Local]
+# > 页面中部广告
+^https?:\/\/tieba(c)?\.baidu\.com\/c\/f\/ad\/getFeedAd data-type=text data="" status-code=200
+
+[Script]
+# > 首页搜索|进吧搜索
+tieba_dad323f47cd0 = type=http-response, pattern=^https?:\/\/tieba(c)?\.baidu\.com\/c\/f\/search\/discover, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/TieBa/tieba-json.js, script-update-interval=86400, timeout=60
+# > 侧边抽屉栏
+tieba_30922e5b553e = type=http-response, pattern=^https?:\/\/tieba(c)?\.baidu\.com\/c\/f\/sidebar\/home, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/TieBa/tieba-json.js, script-update-interval=86400, timeout=60
+# > 我的页面
+tieba_a65d2b12fa0a = type=http-response, pattern=^https?:\/\/tieba(c)?\.baidu\.com\/c\/u\/user\/profile, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/TieBa/tieba-json.js, script-update-interval=86400, timeout=60
+# > 进吧Form
+tieba_29590d4c9fa9 = type=http-response, pattern=^https?:\/\/tieba(c)?\.baidu\.com\/c\/f\/forum\/forumGuide, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/TieBa/tieba-json.js, script-update-interval=86400, timeout=60
+# > 搜索推荐
+tieba_5757bc677c49 = type=http-response, pattern=^https?:\/\/tieba(c)?\.baidu\.com\/mo\/q\/search\/startPage, requires-body=true, max-size=1048576, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/TieBa/tieba-json.js, script-update-interval=86400, timeout=60
+# > 贴吧proto处理@app2smile
+tieba_7a57243c72a1 = type=http-response, pattern=^http(s:\/\/tiebac|:\/\/c\.tieba)\.baidu\.com\/c\/f\/(frs\/(page|threadlist|generalTabList)|pb\/page|excellent\/personalized)\?cmd, requires-body=true, binary-body-mode=true, max-size=-1, script-path=https://raw.githubusercontent.com/Polly-ai/Wynston/main/Surge/JavaScript/TieBa/tieba-proto.js, script-update-interval=86400, timeout=60
+
+[MITM]
+hostname = %APPEND% tieba.baidu.com, tiebac.baidu.com
