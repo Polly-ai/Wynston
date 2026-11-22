@@ -1,10 +1,14 @@
-// IPPure 节点信息面板 (Surge)
-// 数据来源：https://my.ippure.com/v1/info（参考 StashNetworks 官方 IPPure Tile，单次请求）
-// 显示（对齐 IPPure 网站详情页）：标题即节点名；内容为 ASN、位置、宽带、机构、IP来源、IP属性、IPPure系数（不显示 IP）
-// 网站有但 /v1/info 接口不返回的（AS域名、IP范围、人机流量比、多源位置）无法显示
-// 宽带取 ip-api.com 的 isp、机构取 ip-api.com 的 org（同 node_purity.js）；宽带无结果时回落到 IPPure 的 asOrganization，机构无结果时不显示；与 IPPure 并行查询
+// Net.Coffee 节点信息面板 (Surge)
+// 数据来源：https://ip.net.coffee/ip/（信任评分标准：0-100，分越高越可信；与 IPPure 系数方向相反）
+// 接口（2026-11-23 实测，站方前端 JS 内确认）：
+//   1. 出口 IP：ip-api.com（带 policy 走节点）取 query，失败时回落 api.ipify.org
+//   2. 主查询：GET https://ip.net.coffee/api/ip/lookup/<IP>（JSON，含 trust_score、ASN、地理、原生性、风险信号）
+//   3. 人机流量：GET https://ip.net.coffee/api/ipv2/radar/<ASN>（JSON {ok,human,bot}，近 28 天；仅 IPv4，失败时不显示该行）
+// 显示（按 ip.net.coffee/ip/ 页面版式，文字版）：位置、评分、IP 原生性、标记、运营商类型、人机流量、场景评估、服务商、ASN（不显示 IP）
+// 评分档位（站方 tierOf）：≥95 极度纯净，≥80 纯净，≥50 良好，≥25 中性，<25 可疑
+// 场景评估（站方 v2 sceneScores 原样复刻）：基础分 roundHalfUp(trust/10)；原生 +0.5、非机房真人 +0.5、business -0.5、机房 -2、广播 -1、非 AI 机房再 -1、代理/VPN/Tor（AI -2、其它 -3）、历史滥用（AI -0.5、其它 -1）、滥用分/蜜罐扣分、爬虫 -0.5；0-10 clamp，有风险信号最高 9；地区 block/partial 按站方 REGION 表；IPv6 不评估，公共服务 IP 不评估
 //
-// 节点名选中逻辑（参考 node_purity.js）：
+// 节点名选中逻辑（沿用旧版）：
 //  用 Surge 内置 $httpAPI 直接调本地 HTTP API，不需要密钥：
 //   1. GET /v1/outbound 看当前出站模式：direct 显示直连，global 则跟 GLOBAL 组
 //   2. GET /v1/policy_groups/select?group_name=组名 拿该组当前选中项
@@ -16,8 +20,10 @@
 //  group=策略组名：实时读取该组当前选中节点（默认 Proxy）
 //  纯名字，如 argument=Proxy：等同于 group=Proxy
 
-var IPPURE_URL = "https://my.ippure.com/v1/info";
-var IPAPI_URL = "http://ip-api.com/json/?fields=status,query,country,countryCode,regionName,city,isp,org,as,mobile,hosting";
+var IPAPI_URL = "http://ip-api.com/json/?fields=status,query";
+var IPIFY_URL = "https://api.ipify.org?format=json";
+var LOOKUP_URL = "https://ip.net.coffee/api/ip/lookup/";
+var RADAR_URL = "https://ip.net.coffee/api/ipv2/radar/";
 
 function getArg(key) {
   if (typeof $argument !== "string" || !$argument) return "";
@@ -41,6 +47,7 @@ function fetchJSON(url, timeout, policy) {
     if (policy) opts.policy = policy;
     $httpClient.get(opts, function (err, resp, data) {
       if (err) return reject(err);
+      if (resp && resp.status && resp.status !== 200) return reject(new Error("HTTP " + resp.status));
       try {
         resolve(JSON.parse(data));
       } catch (e) {
@@ -90,12 +97,14 @@ function resolveNode(targetGroup) {
     .catch(function () { return { name: targetGroup, policy: "" }; });
 }
 
-// 系数分级沿用 IPPure 自己的口径：0-25 纯净，26-50 轻度风险，51-70 中度风险，71-100 高度风险
-function fraudMeta(score) {
-  if (score <= 25) return { tag: "纯净", emoji: "🟢", color: "#34C759" };
-  if (score <= 50) return { tag: "轻度风险", emoji: "🟡", color: "#FFCC00" };
-  if (score <= 70) return { tag: "中度风险", emoji: "🟠", color: "#FF9500" };
-  return { tag: "高度风险", emoji: "🔴", color: "#FF3B30" };
+// 评分档位（站方 tierOf）
+function tierOf(score) {
+  if (!isFinite(score)) return { tag: "-", color: "#3D90ED" };
+  if (score >= 95) return { tag: "极度纯净", color: "#34C759" };
+  if (score >= 80) return { tag: "纯净", color: "#34C759" };
+  if (score >= 50) return { tag: "良好", color: "#3D90ED" };
+  if (score >= 25) return { tag: "中性", color: "#FFCC00" };
+  return { tag: "可疑", color: "#FF3B30" };
 }
 
 function finish(lines, color, icon, title) {
@@ -123,95 +132,225 @@ function buildLocation(country, region, city) {
   return loc;
 }
 
-
-// 运营商名去冗余后缀：Cogent Communications, LLC → Cogent Communications
-function cleanOrg(name) {
-  if (typeof name !== "string") return name;
-  return name.replace(/,?\s*(LLC|Inc|Corp|Ltd|Limited|Company|Co\.?\s*Ltd\.?|Co\.?)\.?$/i, "").trim();
+// 国家代码 → 国旗 emoji（地区指示符）
+function flagEmoji(cc) {
+  if (!cc || cc.length !== 2) return "";
+  try {
+    var a = cc.toUpperCase();
+    return String.fromCodePoint(127397 + a.charCodeAt(0), 127397 + a.charCodeAt(1));
+  } catch (e) {
+    return "";
+  }
 }
 
-function renderIPPure(nodeName, p, a) {
-  var details = [];
-  // ASN：ASxxxx – 运营商（同网站格式，运营商去冗余后缀）
-  var asnOrg = cleanOrg(p.asOrganization);
-  var asnLine = "";
-  if (p.asn) asnLine = "AS" + p.asn;
-  if (asnOrg) asnLine = asnLine ? asnLine + " – " + asnOrg : asnOrg;
-  if (asnLine) details.push("ASN：" + asnLine);
-  if (p.country) details.push("位置：" + buildLocation(p.country, p.region, p.city));
-  // 宽带：运营商名（同 node_purity.js 的“宽带”，取 ip-api 的 isp；无结果时回落到 IPPure 的 asOrganization）
-  // 与 ASN 行运营商重复时不显示，避免同一名字出现多次
-  var ispName = (a && a.isp) ? cleanOrg(a.isp) : asnOrg;
-  if (ispName && ispName !== asnOrg) details.push("宽带：" + ispName);
-  // 机构：同 node_purity.js 的“机构”，取 ip-api 的 org；与宽带/ASN 运营商重复时不显示
-  var orgName = (a && a.org) ? cleanOrg(a.org) : "";
-  if (orgName && orgName !== ispName && orgName !== asnOrg) details.push("机构：" + orgName);
-  // IP来源：原生 / 广播（网站叫法，由 isBroadcast 决定）
-  if (typeof p.isBroadcast === "boolean") details.push("IP来源：" + (p.isBroadcast ? "📡 广播IP" : "✅ 原生IP"));
-  // IP属性：移动 / 住宅 / 机房（网站叫法，单值；移动优先，同 node_purity.js）
-  var attr = "";
-  if (a && a.mobile) attr = "📱 移动网络";
-  else if (p.isResidential) attr = "🏠 住宅IP";
-  else if (p.isDataCenter) attr = "🖥️ 机房IP";
-  else if (p.isBroadcast) attr = "📡 广播IP";
-  if (attr) details.push("IP属性：" + attr);
+// 常用国家中文名（面板原生性行用中文，其余行沿用接口英文地名）
+var COUNTRY_ZH = {
+  US: "美国", JP: "日本", HK: "香港", TW: "台湾", SG: "新加坡", KR: "韩国",
+  GB: "英国", DE: "德国", NL: "荷兰", FR: "法国", CA: "加拿大", AU: "澳大利亚",
+  IN: "印度", BR: "巴西", RU: "俄罗斯", TR: "土耳其", ID: "印度尼西亚",
+  MY: "马来西亚", TH: "泰国", VN: "越南", PH: "菲律宾", IT: "意大利",
+  ES: "西班牙", SE: "瑞典", NO: "挪威", FI: "芬兰", DK: "丹麦", PL: "波兰",
+  CH: "瑞士", AT: "奥地利", BE: "比利时", IE: "爱尔兰", PT: "葡萄牙",
+  CZ: "捷克", HU: "匈牙利", RO: "罗马尼亚", UA: "乌克兰", IL: "以色列",
+  AE: "阿联酋", SA: "沙特阿拉伯", EG: "埃及", ZA: "南非", NG: "尼日利亚",
+  KE: "肯尼亚", MX: "墨西哥", AR: "阿根廷", CL: "智利", CO: "哥伦比亚",
+  PE: "秘鲁", VE: "委内瑞拉", NZ: "新西兰", IS: "冰岛", LU: "卢森堡"
+};
 
-  var color = "#3D90ED";
-  var coefLine = "";
-  // 系数优先用 ippureCoefficient（即网站的 IPPure系数），缺失时回落到 fraudScore
-  var score = Number(p.ippureCoefficient);
-  if (isNaN(score)) score = Number(p.fraudScore);
-  if (!isNaN(score)) {
-    var m = fraudMeta(score);
-    color = m.color;
-    coefLine = "IPPure系数：" + score + "% " + m.emoji + " " + m.tag;
-  } else if (p.ip && p.ip.indexOf(":") !== -1) {
-    // 已实测：IPPure 的 IPv6 响应里本来就没有分数，不是查询失败
-    coefLine = "IPPure系数：" + "v6 无分数（IPPure 仅给 v4 打分）";
+function countryZh(cc, fallbackEn) {
+  if (!cc) return fallbackEn || "";
+  var zh = COUNTRY_ZH[cc.toUpperCase()];
+  return zh || fallbackEn || cc;
+}
+
+function roundHalfUp(x) { return Math.floor(x + 0.5); }
+
+// 场景评估地区表（站方 v2 REGION）
+var REGION = {
+  tiktok: { block: ["CN", "HK", "IN", "IR", "AF", "KP", "JO", "SO", "SN", "KG", "UZ"], partial: [] },
+  social: { block: ["CN", "IR", "KP", "TM"], partial: ["RU", "MM"] },
+  ai: { block: ["CN", "RU", "BY", "IR", "KP", "CU", "SY", "AF"], partial: ["HK", "MO", "VE", "MM"] }
+};
+
+// 场景评估（站方 v2 sceneScores 原样复刻；返回 {tiktok,social,ai}，每项 {score,blocked,verdict}）
+function sceneScores(d) {
+  var trust = Number(d.trust_score);
+  if (!isFinite(trust)) return null;
+  var base = roundHalfUp(trust / 10);
+  var cc = (d.countryCode || "").toUpperCase();
+  var reg = (d.registered_country_code || "").toUpperCase();
+  var dc = !!(d.is_datacenter || d.company_type === "hosting" || d.asn_kind === "hosting" || d.asn_kind === "cdn");
+  var native = !!(cc && reg && cc === reg);
+  var broadcast = !!(cc && reg && cc !== reg);
+  var human = !dc && !d.is_crawler && !d.is_public_service;
+  var business = (d.company_type || "") === "business";
+  var pv = !!(d.is_proxy || d.is_vpn || d.is_tor);
+  var intel = d.intelligence || {};
+  var threats = !!d.is_abuser;
+  var abRaw = parseFloat(intel.abuser_score_raw != null ? intel.abuser_score_raw : d.abuser_score);
+  var abPen = 0;
+  if (isFinite(abRaw)) {
+    abPen = abRaw > 0.05 ? 2 : abRaw > 0.025 ? 1 : abRaw > 0.01 ? 0.5 : 0;
   } else {
-    coefLine = "IPPure系数：" + "查询失败";
+    var lv = String(intel.abuser_level || "").toLowerCase();
+    abPen = (lv === "high" || lv === "very_high" || lv === "veryhigh") ? 2 : lv === "elevated" ? 1 : 0;
+  }
+  var hpRaw = (intel.rep_threat != null && intel.rep_threat !== "") ? intel.rep_threat : intel.httpbl_threat;
+  var hp = Number(hpRaw);
+  var hpPen = (isFinite(hp) && hp > 0) ? (hp <= 25 ? 1 : 2) : 0;
+  var crawler = !!d.is_crawler;
+  var risky = threats || abPen > 0 || hpPen > 0 || crawler || pv;
+
+  function calc(kind) {
+    var s = base;
+    if (native) s += 0.5;
+    if (human) s += 0.5;
+    if (business) s -= 0.5;
+    if (dc) s -= 2;
+    if (broadcast) s -= 1;
+    if (kind !== "ai" && dc) s -= 1;
+    if (pv) s -= (kind === "ai" ? 2 : 3);
+    if (threats) s -= (kind === "ai" ? 0.5 : 1);
+    s -= abPen;
+    s -= hpPen;
+    if (crawler) s -= 0.5;
+    s = roundHalfUp(s);
+    if (s < 0) s = 0;
+    if (s > 10) s = 10;
+    if (risky && s > 9) s = 9;
+    var r = REGION[kind];
+    var blocked = r.block.indexOf(cc) >= 0;
+    var partial = r.partial.indexOf(cc) >= 0;
+    if (blocked) return { score: 0, blocked: true, verdict: "地区不可用" };
+    if (partial && s > 5) s = 5;
+    var v;
+    if (partial) v = "部分可用";
+    else if (s >= 10) v = "极佳";
+    else if (s >= 8) v = "推荐";
+    else if (s >= 5) v = (kind === "ai" ? "可以尝试" : "可用");
+    else v = "不推荐";
+    return { score: s, blocked: false, verdict: v };
+  }
+  return { tiktok: calc("tiktok"), social: calc("social"), ai: calc("ai") };
+}
+
+// 位置：用接口主字段（与站方头部一致；主字段无省/市时只显示国家）
+function pickGeo(d) {
+  return { country: d.country || "", region: d.region || "", city: d.city || "" };
+}
+
+// 标记：爬虫 / 公共服务 / 移动 / 住宅 / 机房 / Bogon
+function ipTag(d) {
+  if (d.is_crawler) return "爬虫/机器人";
+  if (d.is_public_service) {
+    if (d.public_service && d.public_service.service_type === "anycast_dns") return "任播 DNS";
+    if (d.ai_verdict && d.ai_verdict.label) return d.ai_verdict.label;
+    return "公共服务";
+  }
+  if (d.is_mobile) return "移动网络";
+  if (d.isResidential) return "住宅IP";
+  if (d.is_datacenter) return "机房IP";
+  if (d.is_bogon) return "Bogon";
+  return "";
+}
+
+function renderNetCoffee(nodeName, d, radar) {
+  var isV6 = String(d.ip || "").indexOf(":") !== -1;
+  var score = Number(d.trust_score);
+  var tier = tierOf(score);
+  var geo = pickGeo(d);
+  var flag = flagEmoji(d.countryCode);
+  var lines = [];
+
+  // 顶部：位置
+  var loc = buildLocation(geo.country, geo.region, geo.city);
+  if (loc) lines.push((flag ? flag + " " : "") + loc);
+  // 评分（0 高危 – 100 可信，分越高越可信）
+  if (isFinite(score)) {
+    lines.push("评分：" + score + " " + tier.tag + "（0 高危 – 100 可信）");
+  } else {
+    lines.push("评分：查询失败");
+  }
+  lines.push("");
+  lines.push("使用场景 / 类型");
+
+  // IP 原生性：注册国与归属国一致为原生，否则广播
+  var cc = (d.countryCode || "").toUpperCase();
+  var reg = (d.registered_country_code || "").toUpperCase();
+  if (cc && reg) {
+    if (cc === reg) {
+      lines.push("IP 原生性：" + (flag ? flag + " " : "") + countryZh(cc, d.country) + " · 原生 IP");
+    } else {
+      lines.push("IP 原生性：" + (flag ? flag + " " : "") + countryZh(cc, d.country) + " · 广播 IP（注册：" + countryZh(reg, d.registered_country) + "）");
+    }
+  } else if (cc) {
+    lines.push("IP 原生性：" + (flag ? flag + " " : "") + countryZh(cc, d.country));
   }
 
-  // 图标：纯净或无分数时按 IP 属性适配（住宅房子/机房机架/广播天线/未知地球）；
-  // 轻度风险以上按风险适配（轻/中度黄橙三角、高度红八角），颜色始终跟系数风险走
+  var tag = ipTag(d);
+  if (tag) lines.push("标记：" + tag);
+
+  if (d.company_type) {
+    var ct = d.company_type;
+    lines.push("运营商类型：" + ct.charAt(0).toUpperCase() + ct.slice(1));
+  }
+
+  // 人机流量（radar 按 ASN，近 28 天；IPv6 没有）
+  if (!isV6 && radar && radar.ok && typeof radar.human === "number" && typeof radar.bot === "number") {
+    var h = Math.round(radar.human * 10) / 10;
+    var b = Math.round(radar.bot * 10) / 10;
+    var lean = h >= b ? "人类偏多" : "机器偏多";
+    lines.push("人机流量：人类 " + h + "% · 机器 " + b + "%（" + lean + "）");
+  }
+
+  // 场景评估（IPv6 不评估，公共服务 IP 不评估）
+  if (isV6) {
+    lines.push("场景评估：IPv6 地址暂不评估");
+  } else if (!d.is_public_service) {
+    var sc = sceneScores(d);
+    if (sc) {
+      lines.push("场景评估：TikTok " + sc.tiktok.score + " " + sc.tiktok.verdict +
+        " · 社媒运营 " + sc.social.score + " " + sc.social.verdict +
+        " · AI应用 " + sc.ai.score + " " + sc.ai.verdict);
+    }
+  }
+
+  // 服务商（站方字段优先级：isp → company_name → asOrganization → datacenter_name；显示站方原值）
+  var provider = d.isp || d.company_name || d.asOrganization || d.datacenter_name || "";
+  if (provider) lines.push("服务商：" + provider);
+
+  var asnOrg = d.asOrganization || d.asname || "";
+  if (d.asn) {
+    lines.push("ASN：AS" + d.asn + (asnOrg ? " – " + asnOrg : ""));
+  }
+
+  // 图标：分数走风险色；高分按 IP 属性适配
   var icon;
-  if (!isNaN(score) && score > 25) {
-    icon = score <= 70 ? "exclamationmark.triangle.fill" : "exclamationmark.octagon.fill";
+  var color = tier.color;
+  if (isFinite(score) && score < 25) {
+    icon = "exclamationmark.octagon.fill";
+  } else if (isFinite(score) && score < 50) {
+    icon = "exclamationmark.triangle.fill";
   } else {
     icon = "globe.asia.australia";
-    if (p.isResidential) icon = "house.fill";
-    else if (p.isDataCenter) icon = "server.rack";
-    else if (p.isBroadcast) icon = "antenna.radiowaves.left.and.right";
+    if (d.isResidential) icon = "house.fill";
+    else if (d.is_datacenter) icon = "server.rack";
   }
-
-  // 排版：标题即节点名；内容以空行开头，详情 / 系数两段空行分隔
-  var lines = [""].concat(details);
-  if (details.length) lines.push("");
-  lines.push(coefLine);
 
   finish(lines, color, icon, nodeName);
 }
 
-function renderIPApi(nodeName, a) {
-  // IPPure 失败时用 ip-api.com 兜底位置等信息，系数显示查询失败
-  var details = [];
-  var fallbackAsnOrg = "";
-  if (a.as) {
-    var am = a.as.match(/^(AS\d+)\s+(.*)$/);
-    fallbackAsnOrg = am ? cleanOrg(am[2]) : "";
-    details.push("ASN：" + (am ? am[1] + (fallbackAsnOrg ? " – " + fallbackAsnOrg : "") : a.as));
-  }
-  if (a.country) details.push("位置：" + buildLocation(a.country, a.regionName, a.city));
-  var fallbackIsp = a.isp ? cleanOrg(a.isp) : "";
-  if (fallbackIsp && fallbackIsp !== fallbackAsnOrg) details.push("宽带：" + fallbackIsp);
-  var fallbackOrg = a.org ? cleanOrg(a.org) : "";
-  if (fallbackOrg && fallbackOrg !== fallbackIsp && fallbackOrg !== fallbackAsnOrg) details.push("机构：" + fallbackOrg);
-  if (a.mobile) details.push("IP属性：" + "📱 移动网络");
-  else if (a.hosting) details.push("IP属性：" + "🖥️ 机房IP");
-  var lines = [""].concat(details);
-  if (details.length) lines.push("");
-  lines.push("IPPure系数：查询失败");
-  finish(lines, "#3D90ED", "globe.asia.australia", nodeName);
+// 取出口 IP：先 ip-api，失败回落 ipify
+function getEgressIP(policy) {
+  return fetchJSON(IPAPI_URL, 5, policy).then(function (a) {
+    if (a && a.status === "success" && a.query) return a.query;
+    throw new Error("ip-api 无结果");
+  }).catch(function () {
+    return fetchJSON(IPIFY_URL, 5, policy).then(function (j) {
+      if (j && j.ip) return j.ip;
+      throw new Error("无法获取出口 IP");
+    });
+  });
 }
 
 var manualNode = getArg("node");
@@ -224,21 +363,17 @@ var nodeTask = manualNode
   : resolveNode(targetGroup);
 
 nodeTask.then(function (node) {
-  // 先解析节点，再带 policy 强制走该节点查出口 IP
-  // IPPure 与 ip-api 并行：IPPure 给系数与 IP 属性，ip-api 给宽带/机构/移动标识
-  return Promise.all([
-    fetchJSON(IPPURE_URL, 5, node.policy).catch(function () { return null; }),
-    fetchJSON(IPAPI_URL, 5, node.policy).catch(function () { return null; })
-  ]).then(function (results) {
-    var p = results[0];
-    var a = results[1];
-    // IPPure 返回了无 ip 字段的错误响应时，也视为失败，走 ip-api 兜底，避免面板半空
-    if (p && p.ip) {
-      renderIPPure(node.name, p, a);
-    } else if (a && a.query) {
-      renderIPApi(node.name, a);
-    } else {
-      fail(new Error("IPPure 与 ip-api 均查询失败"));
-    }
+  // 先解析节点，再带 policy 强制走该节点查出口 IP，然后用该 IP 查 net.coffee
+  return getEgressIP(node.policy).then(function (egressIP) {
+    return fetchJSON(LOOKUP_URL + encodeURIComponent(egressIP), 8, node.policy).then(function (d) {
+      if (!d || !d.ip || typeof d.trust_score === "undefined") throw new Error("net.coffee 查询失败");
+      var radarTask = Promise.resolve(null);
+      if (d.asn && String(egressIP).indexOf(":") === -1) {
+        radarTask = fetchJSON(RADAR_URL + encodeURIComponent(d.asn), 8, node.policy).catch(function () { return null; });
+      }
+      return radarTask.then(function (radar) {
+        renderNetCoffee(node.name, d, radar);
+      });
+    });
   });
-});
+}).catch(function (e) { fail(e); });
