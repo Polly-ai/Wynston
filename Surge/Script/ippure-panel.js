@@ -4,7 +4,7 @@
 //   1. 出口 IP：ip-api.com（带 policy 走节点）取 query，失败时回落 api.ipify.org
 //   2. 主查询：GET https://ip.net.coffee/api/ip/lookup/<IP>（JSON，含 trust_score、ASN、地理、原生性、风险信号）
 //   3. 人机流量：GET https://ip.net.coffee/api/ipv2/radar/<ASN>（JSON {ok,human,bot}，近 28 天；仅 IPv4，失败时不显示该行）
-// 显示（按 ip.net.coffee/ip/ 页面版式，文字版）：位置、评分、IP 原生性、标记、运营商类型、人机流量、场景评估、服务商、ASN（不显示 IP）
+// 显示（按 ip.net.coffee/ip/ 页面版式，文字紧凑版；面板窄，每行控制在 30 字宽内防换行）：位置（国家 · 城市，无城市时用省）、评分、IP 原生性、标记、运营商类型、人机、场景评估（每项一行）、服务商（去法律后缀防换行）、ASN（用 asname 短码）（不显示 IP）
 // 评分档位（站方 tierOf）：≥95 极度纯净，≥80 纯净，≥50 良好，≥25 中性，<25 可疑
 // 场景评估（站方 v2 sceneScores 原样复刻）：基础分 roundHalfUp(trust/10)；原生 +0.5、非机房真人 +0.5、business -0.5、机房 -2、广播 -1、非 AI 机房再 -1、代理/VPN/Tor（AI -2、其它 -3）、历史滥用（AI -0.5、其它 -1）、滥用分/蜜罐扣分、爬虫 -0.5；0-10 clamp，有风险信号最高 9；地区 block/partial 按站方 REGION 表；IPv6 不评估，公共服务 IP 不评估
 //
@@ -234,9 +234,15 @@ function sceneScores(d) {
   return { tiktok: calc("tiktok"), social: calc("social"), ai: calc("ai") };
 }
 
-// 位置：用接口主字段（与站方头部一致；主字段无省/市时只显示国家）
+// 位置：用接口主字段（与站方头部一致）；只取国家 + 城市（无城市时用省），省市同时出现时只留城市，防换行
 function pickGeo(d) {
-  return { country: d.country || "", region: d.region || "", city: d.city || "" };
+  return { country: d.country || "", region: "", city: d.city || d.region || "" };
+}
+
+// 运营商名去法律后缀防换行：Cogent Communications, LLC → Cogent Communications（仅服务商行用）
+function cleanOrg(name) {
+  if (typeof name !== "string") return name;
+  return name.replace(/,?\s*(LLC|Inc|Corp|Ltd|Limited|Company|Co\.?\s*Ltd\.?|Co\.?)\.?$/i, "").trim();
 }
 
 // 标记：爬虫 / 公共服务 / 移动 / 住宅 / 机房 / Bogon
@@ -267,12 +273,11 @@ function renderNetCoffee(nodeName, d, radar) {
   if (loc) lines.push((flag ? flag + " " : "") + loc);
   // 评分（0 高危 – 100 可信，分越高越可信）
   if (isFinite(score)) {
-    lines.push("评分：" + score + " " + tier.tag + "（0 高危 – 100 可信）");
+    lines.push("评分：" + score + " " + tier.tag);
   } else {
     lines.push("评分：查询失败");
   }
   lines.push("");
-  lines.push("使用场景 / 类型");
 
   // IP 原生性：注册国与归属国一致为原生，否则广播
   var cc = (d.countryCode || "").toUpperCase();
@@ -299,8 +304,7 @@ function renderNetCoffee(nodeName, d, radar) {
   if (!isV6 && radar && radar.ok && typeof radar.human === "number" && typeof radar.bot === "number") {
     var h = Math.round(radar.human * 10) / 10;
     var b = Math.round(radar.bot * 10) / 10;
-    var lean = h >= b ? "人类偏多" : "机器偏多";
-    lines.push("人机流量：人类 " + h + "% · 机器 " + b + "%（" + lean + "）");
+    lines.push("人机：人类 " + h + "% · 机器 " + b + "%");
   }
 
   // 场景评估（IPv6 不评估，公共服务 IP 不评估）
@@ -309,22 +313,24 @@ function renderNetCoffee(nodeName, d, radar) {
   } else if (!d.is_public_service) {
     var sc = sceneScores(d);
     if (sc) {
-      lines.push("场景评估：TikTok " + sc.tiktok.score + " " + sc.tiktok.verdict +
-        " · 社媒运营 " + sc.social.score + " " + sc.social.verdict +
-        " · AI应用 " + sc.ai.score + " " + sc.ai.verdict);
+      // 每项一行，防一行过长换行
+      lines.push("场景评估：TikTok " + sc.tiktok.score + " " + sc.tiktok.verdict);
+      lines.push("社媒运营 " + sc.social.score + " " + sc.social.verdict);
+      lines.push("AI应用 " + sc.ai.score + " " + sc.ai.verdict);
     }
   }
 
-  // 服务商（站方字段优先级：isp → company_name → asOrganization → datacenter_name；显示站方原值）
-  var provider = d.isp || d.company_name || d.asOrganization || d.datacenter_name || "";
+  // 服务商（站方字段优先级：isp → company_name → asOrganization → datacenter_name；去法律后缀防换行）
+  var provider = cleanOrg(d.isp || d.company_name || d.asOrganization || d.datacenter_name || "");
   if (provider) lines.push("服务商：" + provider);
 
-  var asnOrg = d.asOrganization || d.asname || "";
+  // ASN 归属用站方 asname（短码，不易换行）
+  var asnOrg = d.asname || d.asOrganization || "";
   if (d.asn) {
     lines.push("ASN：AS" + d.asn + (asnOrg ? " – " + asnOrg : ""));
   }
 
-  // 图标：分数走风险色；高分按 IP 属性适配
+  // 图标：低分按风险走（三角/八角），其余用房子（沿用旧版）
   var icon;
   var color = tier.color;
   if (isFinite(score) && score < 25) {
@@ -332,9 +338,7 @@ function renderNetCoffee(nodeName, d, radar) {
   } else if (isFinite(score) && score < 50) {
     icon = "exclamationmark.triangle.fill";
   } else {
-    icon = "globe.asia.australia";
-    if (d.isResidential) icon = "house.fill";
-    else if (d.is_datacenter) icon = "server.rack";
+    icon = "house.fill";
   }
 
   finish(lines, color, icon, nodeName);
