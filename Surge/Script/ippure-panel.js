@@ -4,7 +4,7 @@
 //   1. 出口 IP：ip-api.com（带 policy 走节点）取 query，失败时回落 api.ipify.org
 //   2. 主查询：GET https://ip.net.coffee/api/ip/lookup/<IP>（JSON，含 trust_score、ASN、地理、原生性、风险信号）
 //   3. 人机流量：GET https://ip.net.coffee/api/ipv2/radar/<ASN>（JSON {ok,human,bot}，近 28 天；仅 IPv4，失败时不显示该行）
-// 显示（2026-11-23 用户定版 v5，截图）：去位置行；IP 属性为首段（✅ 原生 / 🌐 广播+注册国），标记/评分为缩进子项（全角空格×2），▦ 条在评分下一行对齐到分值下方（全角空格×5，10 格，分数/10 四舍五入）；分段空行；运营商类型；人机流量（分两行，第二行缩进对齐）；场景评估（首行 + 全角空格缩进对齐）；服务商（去法律后缀）；ASN（带“ASN：”标签 + 全名，>32 超宽时回落 asname 短码）（不显示 IP；每行控制在 32 字宽内防换行）
+// 显示（2026-11-23 用户定版 v11）：去位置行；IP 属性为首段（✅ 原生 / 🌐 广播+注册国），标记/评分为缩进子项（全角空格×1，值对齐到 ✅ 下方），▦/□ 条加「」角括号框在评分下一行（全角空格×3，10 格，分数/10 四舍五入；【】在聊天里不渲染，▦ 本来就能渲染）；分段空行；运营商类型；人机流量（分两行，第二行缩进对齐）；场景评估（首行 + 全角空格缩进对齐）；服务商（去法律后缀）；ASN（带“ASN：”标签 + 全名，>32 超宽时回落 asname 短码，asname 末尾 -AS-AP 之类地域后缀去掉）；机房 IP 图标保持原样 ⚠️（不显示 IP；每行控制在 32 字宽内防换行）
 // 评分档位（站方 tierOf）：≥95 极度纯净，≥80 纯净，≥50 良好，≥25 中性，<25 可疑
 // 场景评估（站方 v2 sceneScores 原样复刻）：基础分 roundHalfUp(trust/10)；原生 +0.5、非机房真人 +0.5、business -0.5、机房 -2、广播 -1、非 AI 机房再 -1、代理/VPN/Tor（AI -2、其它 -3）、历史滥用（AI -0.5、其它 -1）、滥用分/蜜罐扣分、爬虫 -0.5；0-10 clamp，有风险信号最高 9；地区 block/partial 按站方 REGION 表；IPv6 不评估，公共服务 IP 不评估
 //
@@ -331,15 +331,16 @@ function ipTag(d) {
   return "";
 }
 
-// 用户定版 v5（2026-11-23 08:34 截图）：去位置行；IP 属性为首段，标记/评分为缩进子项，▦ 条在评分下一行对齐到分值下方；分段空行
+// 用户定版 v6（2026-11-23 08:40 截图反馈）：去位置行；IP 属性为首段，标记/评分为缩进子项（全角空格×1，值对齐到 ✅ 下方），▦ 条在评分下一行对齐到分值下方（全角空格×4）；分段空行；ASN 短码去 -AS-AP 后缀
 function renderNetCoffee(nodeName, d, radar) {
   var isV6 = String(d.ip || "").indexOf(":") !== -1;
   var score = Number(d.trust_score);
   var tier = tierOf(score);
   var geo = pickGeo(d);
-  // 缩进：SUB=子项（标记/评分，全角空格×2）；INDENT=续行对齐到值下方（全角空格×5，与“场景评估：”/“人机流量：”同宽）
+  // 缩进：SUB=子项（标记/评分，全角空格×1，值对齐到 ✅ 下方）；BAR=▦ 条（全角空格×4，对齐到分值下方）；INDENT=续行对齐到值下方（全角空格×5，与“场景评估：”/“人机流量：”同宽）
   var INDENT = "　".repeat(5);
-  var SUB = "　".repeat(2);
+  var SUB = "　".repeat(1);
+  var BAR = "　".repeat(3);
   var sections = [];
 
   // 第一段：IP 属性 + 标记 + 评分 + ▦ 条（标记/评分为子项；条对齐到分值下方）
@@ -365,7 +366,7 @@ function renderNetCoffee(nodeName, d, radar) {
     var filled = Math.round(score / 10);
     if (filled < 0) filled = 0;
     if (filled > 10) filled = 10;
-    ipSec.push(INDENT + "▦".repeat(filled) + "□".repeat(10 - filled));
+    ipSec.push(BAR + "「" + "▦".repeat(filled) + "□".repeat(10 - filled) + "」");
   } else {
     ipSec.push(SUB + "评分：查询失败");
   }
@@ -412,13 +413,14 @@ function renderNetCoffee(nodeName, d, radar) {
   if (provider) providerSec.push("服务商：" + provider);
   if (providerSec.length) sections.push(providerSec);
 
-  // 第六段：ASN（单独一段；带“ASN：”标签 + 全名，超宽（>32）时回落到 asname 短码，再超宽只留 AS 号）
+  // 第六段：ASN（单独一段；带“ASN：”标签 + 全名，超宽（>32）时回落到 asname 短码，再超宽只留 AS 号；asname 末尾的 -AS-AP 之类地域后缀去掉，只留名字）
   var asnLineSec = [];
   if (d.asn) {
     var org = cleanOrg(d.asOrganization || "");
     var asnLine = "ASN：AS" + d.asn + (org ? " – " + org : "");
     if (dispWidth(asnLine) > 32 && d.asname) {
-      asnLine = "ASN：AS" + d.asn + " – " + d.asname;
+      var asname = String(d.asname).replace(/-AS-[A-Z]{2}$/i, "");
+      asnLine = "ASN：AS" + d.asn + " – " + asname;
     }
     if (dispWidth(asnLine) > 32) asnLine = "ASN：AS" + d.asn;
     asnLineSec.push(asnLine);
