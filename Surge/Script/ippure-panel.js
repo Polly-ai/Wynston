@@ -4,7 +4,7 @@
 //   1. 出口 IP：ip-api.com（带 policy 走节点）取 query，失败时回落 api.ipify.org
 //   2. 主查询：GET https://ip.net.coffee/api/ip/lookup/<IP>（JSON，含 trust_score、ASN、地理、原生性、风险信号）
 //   3. 人机流量：GET https://ip.net.coffee/api/ipv2/radar/<ASN>（JSON {ok,human,bot}，近 28 天；仅 IPv4，失败时不显示该行）
-// 显示（按 ip.net.coffee/ip/ 页面版式，文字紧凑版；面板窄，每行控制在 30 字宽内防换行）：位置（国家 · 城市，无城市时用省）、评分、IP 原生性、标记、运营商类型、人机、场景评估（每项一行）、服务商（去法律后缀防换行）、ASN（用 asname 短码）（不显示 IP）
+// 显示（2026-11-23 用户定版 v4）：位置中文（国家 · 城市）、评分（89%纯净）+ ▦ 条（10 格，分数/10 四舍五入）、分段空行、IP 属性（✅ 原生 / 🌐 广播+注册国）、标记（缩进子项，⚠️ 机房 IP 等）、运营商类型、人机流量（分两行，第二行缩进对齐）、场景评估（首行 + 全角空格缩进对齐）、服务商（去法律后缀）、ASN（带“ASN：”标签 + 全名，>32 超宽时回落 asname 短码，截图证实 35 宽会断行）（不显示 IP；每行控制在 32 字宽内防换行）
 // 评分档位（站方 tierOf）：≥95 极度纯净，≥80 纯净，≥50 良好，≥25 中性，<25 可疑
 // 场景评估（站方 v2 sceneScores 原样复刻）：基础分 roundHalfUp(trust/10)；原生 +0.5、非机房真人 +0.5、business -0.5、机房 -2、广播 -1、非 AI 机房再 -1、代理/VPN/Tor（AI -2、其它 -3）、历史滥用（AI -0.5、其它 -1）、滥用分/蜜罐扣分、爬虫 -0.5；0-10 clamp，有风险信号最高 9；地区 block/partial 按站方 REGION 表；IPv6 不评估，公共服务 IP 不评估
 //
@@ -125,13 +125,6 @@ function fail(err) {
   });
 }
 
-function buildLocation(country, region, city) {
-  var loc = country || "";
-  if (region) loc += " · " + region;
-  if (city) loc += " · " + city;
-  return loc;
-}
-
 // 国家代码 → 国旗 emoji（地区指示符）
 function flagEmoji(cc) {
   if (!cc || cc.length !== 2) return "";
@@ -154,13 +147,91 @@ var COUNTRY_ZH = {
   CZ: "捷克", HU: "匈牙利", RO: "罗马尼亚", UA: "乌克兰", IL: "以色列",
   AE: "阿联酋", SA: "沙特阿拉伯", EG: "埃及", ZA: "南非", NG: "尼日利亚",
   KE: "肯尼亚", MX: "墨西哥", AR: "阿根廷", CL: "智利", CO: "哥伦比亚",
-  PE: "秘鲁", VE: "委内瑞拉", NZ: "新西兰", IS: "冰岛", LU: "卢森堡"
+  PE: "秘鲁", VE: "委内瑞拉", NZ: "新西兰", IS: "冰岛", LU: "卢森堡",
+  CN: "中国", PA: "巴拿马", SC: "塞舌尔", BZ: "伯利兹", KY: "开曼群岛",
+  VG: "英属维尔京群岛", BM: "百慕大", MU: "毛里求斯", KZ: "哈萨克斯坦",
+  UZ: "乌兹别克斯坦", KG: "吉尔吉斯斯坦", AF: "阿富汗", IR: "伊朗",
+  KP: "朝鲜", SY: "叙利亚", CU: "古巴", BY: "白俄罗斯", TM: "土库曼斯坦",
+  MM: "缅甸", JO: "约旦", SO: "索马里", SN: "塞内加尔", MO: "澳门",
+  MN: "蒙古", LA: "老挝", KH: "柬埔寨", BD: "孟加拉国", PK: "巴基斯坦",
+  LK: "斯里兰卡", NP: "尼泊尔", GE: "格鲁吉亚", AM: "亚美尼亚",
+  AZ: "阿塞拜疆", MD: "摩尔多瓦", RS: "塞尔维亚", HR: "克罗地亚",
+  SI: "斯洛文尼亚", SK: "斯洛伐克", BG: "保加利亚", GR: "希腊",
+  CY: "塞浦路斯", MT: "马耳他", DZ: "阿尔及利亚", MA: "摩洛哥",
+  TN: "突尼斯", GH: "加纳", CI: "科特迪瓦"
 };
 
 function countryZh(cc, fallbackEn) {
   if (!cc) return fallbackEn || "";
   var zh = COUNTRY_ZH[cc.toUpperCase()];
   return zh || fallbackEn || cc;
+}
+
+// 常用城市中文名（位置行用中文；不在表里时用接口英文名）
+var CITY_ZH = {
+  "New York": "纽约", "Los Angeles": "洛杉矶", "San Francisco": "旧金山",
+  "San Jose": "圣何塞", "Seattle": "西雅图", "Chicago": "芝加哥",
+  "Dallas": "达拉斯", "Houston": "休斯顿", "Miami": "迈阿密",
+  "Atlanta": "亚特兰大", "Ashburn": "阿什本", "Denver": "丹佛",
+  "Phoenix": "菲尼克斯", "Las Vegas": "拉斯维加斯", "Boston": "波士顿",
+  "Washington": "华盛顿", "Portland": "波特兰", "San Diego": "圣迭戈",
+  "Tokyo": "东京", "Osaka": "大阪", "Singapore": "新加坡",
+  "Hong Kong": "香港", "London": "伦敦", "Frankfurt": "法兰克福",
+  "Amsterdam": "阿姆斯特丹", "Paris": "巴黎", "Madrid": "马德里",
+  "Milan": "米兰", "Stockholm": "斯德哥尔摩", "Sydney": "悉尼",
+  "Melbourne": "墨尔本", "Seoul": "首尔", "Taipei": "台北",
+  "Toronto": "多伦多", "Montreal": "蒙特利尔", "Vancouver": "温哥华",
+  "Mumbai": "孟买", "Bangkok": "曼谷", "Kuala Lumpur": "吉隆坡",
+  "Jakarta": "雅加达", "Manila": "马尼拉", "Dubai": "迪拜",
+  "Johannesburg": "约翰内斯堡",
+  "Mountain View": "山景城", "Beijing": "北京", "Shanghai": "上海",
+  "Guangzhou": "广州", "Shenzhen": "深圳", "Chengdu": "成都",
+  "Hangzhou": "杭州", "Wuhan": "武汉", "Xi'an": "西安",
+  "Chongqing": "重庆", "Nanjing": "南京", "Tianjin": "天津",
+  "Suzhou": "苏州", "Harbin": "哈尔滨", "Shenyang": "沈阳",
+  "Dalian": "大连", "Qingdao": "青岛", "Xiamen": "厦门",
+  "Fuzhou": "福州", "Changsha": "长沙", "Zhengzhou": "郑州",
+  "Kunming": "昆明", "Hefei": "合肥", "Ningbo": "宁波", "Wuxi": "无锡",
+  // 州/省（无城市时 pickGeo 用省回落）
+  "California": "加利福尼亚", "Texas": "得克萨斯", "Florida": "佛罗里达",
+  "Virginia": "弗吉尼亚", "Oregon": "俄勒冈", "Illinois": "伊利诺伊",
+  "Georgia": "佐治亚", "New Jersey": "新泽西", "Ohio": "俄亥俄"
+};
+
+function cityZh(en) {
+  if (!en) return "";
+  return CITY_ZH[en] || en;
+}
+
+// 显示宽度：CJK/全角/emoji/几何图形算 2，拉丁/数字/半角标点算 1（用于 ASN 行超宽回落判断）
+function dispWidth(s) {
+  if (typeof s !== "string") return 0;
+  var w = 0;
+  for (var i = 0; i < s.length; i++) {
+    var c = s.codePointAt(i);
+    if (c > 0xFFFF) i++;
+    if (c === 0xFE0F || c === 0x200D) continue; // 变体选择符 / 零宽连接符不占宽
+    if ((c >= 0x1100 && c <= 0x115F) || (c >= 0x2E80 && c <= 0x9FFF) ||
+        (c >= 0xA000 && c <= 0xA4CF) || (c >= 0xAC00 && c <= 0xD7A3) ||
+        (c >= 0xF900 && c <= 0xFAFF) || (c >= 0xFE30 && c <= 0xFE4F) ||
+        (c >= 0xFF00 && c <= 0xFF60) || (c >= 0xFFE0 && c <= 0xFFE6) ||
+        (c >= 0x1F000 && c <= 0x1FAFF) || (c >= 0x20000 && c <= 0x2FFFF) ||
+        c === 0x3000 || (c >= 0x2500 && c <= 0x25FF)) w += 2;
+    else w += 1;
+  }
+  return w;
+}
+
+// 标记行的 emoji：机房 ⚠️、住宅 🏠、移动 📱、任播 🌐、爬虫 🤖、公共服务 ℹ️
+function tagEmojiFor(tag) {
+  if (tag === "机房 IP") return "⚠️";
+  if (tag === "住宅 IP") return "🏠";
+  if (tag === "移动网络") return "📱";
+  if (tag === "任播 DNS") return "🌐";
+  if (tag === "爬虫/机器人") return "🤖";
+  if (tag === "公共服务") return "ℹ️";
+  if (tag === "Bogon") return "⚠️";
+  return "";
 }
 
 function roundHalfUp(x) { return Math.floor(x + 0.5); }
@@ -254,83 +325,114 @@ function ipTag(d) {
     return "公共服务";
   }
   if (d.is_mobile) return "移动网络";
-  if (d.isResidential) return "住宅IP";
-  if (d.is_datacenter) return "机房IP";
+  if (d.isResidential) return "住宅 IP";
+  if (d.is_datacenter) return "机房 IP";
   if (d.is_bogon) return "Bogon";
   return "";
 }
 
+// 用户定版 v4（2026-11-23 08:11）：分段空行；IP 属性用 ✅（原生）/ 🌐（广播）；标记为缩进子项；人机分两行；场景双空格；ASN 带标签
 function renderNetCoffee(nodeName, d, radar) {
   var isV6 = String(d.ip || "").indexOf(":") !== -1;
   var score = Number(d.trust_score);
   var tier = tierOf(score);
   var geo = pickGeo(d);
-  var flag = flagEmoji(d.countryCode);
-  var lines = [];
+  // 续行缩进：全角空格 ×5（“场景评估：”/“人机流量：”的宽度，续行对齐到值下方）
+  var INDENT = "　".repeat(5);
+  var sections = [];
 
-  // 顶部：位置
-  var loc = buildLocation(geo.country, geo.region, geo.city);
-  if (loc) lines.push((flag ? flag + " " : "") + loc);
-  // 评分（0 高危 – 100 可信，分越高越可信）
+  // 第一段：位置 / 评分 / ▦ 条
+  var head = [];
+  var locCountry = countryZh(d.countryCode, d.country);
+  var locCity = cityZh(geo.city);
+  var loc = locCountry;
+  if (locCity) loc += " · " + locCity;
+  if (loc) head.push(loc);
   if (isFinite(score)) {
-    lines.push("评分：" + score + " " + tier.tag);
+    head.push("评分：" + score + "%" + tier.tag);
+    var filled = Math.round(score / 10);
+    if (filled < 0) filled = 0;
+    if (filled > 10) filled = 10;
+    head.push("▦".repeat(filled) + "□".repeat(10 - filled));
   } else {
-    lines.push("评分：查询失败");
+    head.push("评分：查询失败");
   }
-  lines.push("");
+  if (head.length) sections.push(head);
 
-  // IP 原生性：注册国与归属国一致为原生，否则广播
+  // 第二段：IP 属性 + 标记（标记为缩进子项）
+  var ipSec = [];
   var cc = (d.countryCode || "").toUpperCase();
   var reg = (d.registered_country_code || "").toUpperCase();
   if (cc && reg) {
     if (cc === reg) {
-      lines.push("IP 原生性：" + (flag ? flag + " " : "") + countryZh(cc, d.country) + " · 原生 IP");
+      ipSec.push("IP 属性：✅ " + countryZh(cc, d.country) + " · 原生 IP");
     } else {
-      lines.push("IP 原生性：" + (flag ? flag + " " : "") + countryZh(cc, d.country) + " · 广播 IP（注册：" + countryZh(reg, d.registered_country) + "）");
+      ipSec.push("IP 属性：🌐 " + countryZh(reg, d.registered_country) + " · 广播 IP");
     }
   } else if (cc) {
-    lines.push("IP 原生性：" + (flag ? flag + " " : "") + countryZh(cc, d.country));
+    ipSec.push("IP 属性：✅ " + countryZh(cc, d.country));
   }
-
   var tag = ipTag(d);
-  if (tag) lines.push("标记：" + tag);
-
-  if (d.company_type) {
-    var ct = d.company_type;
-    lines.push("运营商类型：" + ct.charAt(0).toUpperCase() + ct.slice(1));
+  if (tag) {
+    var te = tagEmojiFor(tag);
+    ipSec.push(INDENT + "标记：" + (te ? te + " " : "") + tag);
   }
+  if (ipSec.length) sections.push(ipSec);
 
-  // 人机流量（radar 按 ASN，近 28 天；IPv6 没有）
+  // 第三段：运营商类型 + 人机流量（分两行，第二行缩进对齐）
+  var netSec = [];
+  if (d.company_type) {
+    var ct = String(d.company_type).toLowerCase();
+    var ctLabel = { cdn: "CDN", isp: "ISP", hosting: "Hosting", business: "Business",
+      education: "Education", government: "Government", military: "Military" }[ct];
+    if (!ctLabel) ctLabel = ct.charAt(0).toUpperCase() + ct.slice(1);
+    netSec.push("运营商类型：" + ctLabel);
+  }
   if (!isV6 && radar && radar.ok && typeof radar.human === "number" && typeof radar.bot === "number") {
     var h = Math.round(radar.human * 10) / 10;
     var b = Math.round(radar.bot * 10) / 10;
-    lines.push("人机：人类 " + h + "% · 机器 " + b + "%");
+    netSec.push("人机流量：人类 " + h + "%");
+    netSec.push(INDENT + "机器 " + b + "%");
   }
+  if (netSec.length) sections.push(netSec);
 
-  // 场景评估（IPv6 不评估，公共服务 IP 不评估）
+  // 第四段：场景评估（公共服务 IP 不评估；IPv6 不评估）
+  var sceneSec = [];
   if (isV6) {
-    lines.push("场景评估：IPv6 地址暂不评估");
+    sceneSec.push("场景评估：IPv6 地址暂不评估");
   } else if (!d.is_public_service) {
     var sc = sceneScores(d);
     if (sc) {
-      // 每项一行，防一行过长换行
-      lines.push("场景评估：TikTok " + sc.tiktok.score + " " + sc.tiktok.verdict);
-      lines.push("社媒运营 " + sc.social.score + " " + sc.social.verdict);
-      lines.push("AI应用 " + sc.ai.score + " " + sc.ai.verdict);
+      sceneSec.push("场景评估：TikTok " + sc.tiktok.score + " " + sc.tiktok.verdict);
+      sceneSec.push(INDENT + "社媒运营 " + sc.social.score + " " + sc.social.verdict);
+      sceneSec.push(INDENT + "AI应用 " + sc.ai.score + " " + sc.ai.verdict);
     }
   }
+  if (sceneSec.length) sections.push(sceneSec);
 
-  // 服务商（站方字段优先级：isp → company_name → asOrganization → datacenter_name；去法律后缀防换行）
+  // 第五段：服务商 + ASN
+  var asnSec = [];
   var provider = cleanOrg(d.isp || d.company_name || d.asOrganization || d.datacenter_name || "");
-  if (provider) lines.push("服务商：" + provider);
-
-  // ASN 归属用站方 asname（短码，不易换行）
-  var asnOrg = d.asname || d.asOrganization || "";
+  if (provider) asnSec.push("服务商：" + provider);
+  // ASN：带“ASN：”标签 + 全名；超宽（>32，截图证实 35 宽会断行）时回落到 asname 短码，再超宽只留 AS 号
   if (d.asn) {
-    lines.push("ASN：AS" + d.asn + (asnOrg ? " – " + asnOrg : ""));
+    var org = cleanOrg(d.asOrganization || "");
+    var asnLine = "ASN：AS" + d.asn + (org ? " – " + org : "");
+    if (dispWidth(asnLine) > 32 && d.asname) {
+      asnLine = "ASN：AS" + d.asn + " – " + d.asname;
+    }
+    if (dispWidth(asnLine) > 32) asnLine = "ASN：AS" + d.asn;
+    asnSec.push(asnLine);
   }
+  if (asnSec.length) sections.push(asnSec);
 
-  // 图标：低分按风险走（三角/八角），其余用房子（沿用旧版）
+  // 组装：各段之间空一行
+  var lines = [];
+  sections.forEach(function (sec, idx) {
+    if (idx > 0) lines.push("");
+    lines = lines.concat(sec);
+  });
+
   var icon;
   var color = tier.color;
   if (isFinite(score) && score < 25) {
