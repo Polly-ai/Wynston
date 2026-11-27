@@ -4,7 +4,7 @@
 //   1. 出口 IP：ip-api.com（带 policy 走节点）取 query，失败时回落 api.ipify.org
 //   2. 主查询：GET https://ip.net.coffee/api/ip/lookup/<IP>（JSON，含 trust_score、ASN、地理、原生性、风险信号）
 //   3. 人机流量：GET https://ip.net.coffee/api/ipv2/radar/<ASN>（JSON {ok,human,bot}，近 28 天；仅 IPv4，失败时不显示该行）
-// 显示（用户定版 v13，2026-11-27）：去位置行；属性为首段（✅ 原生 / 🌍 广播+注册国），标记/评分为子项（与属性同宽，无缩进，值对齐到 ✅ 下方），▦/□ 条加「」角括号框在评分下一行（全角空格×3，对齐到分值下方，10 格，分数/10 四舍五入；【】在聊天里不渲染，▦ 本来就能渲染）；分段空行；运营商类型；人机流量（分两行，第二行缩进对齐）；场景评估（首行 + 全角空格缩进对齐）；服务商（去法律后缀）；ASN（带“ASN：”标签 + 全名，>32 超宽时回落 asname 短码，asname 末尾 -AS-AP 之类地域后缀去掉）；机房 IP 图标保持原样 ⚠️（不显示 IP；每行控制在 32 字宽内防换行）
+// 显示（用户定版 v14，2026-11-27）：去位置行；属性为首段（✅ 原生 / 🌍 广播+注册国），标记/评分为子项（三行共用全角空格×2 缩进，值对齐到 ✅ 下方），▦/□ 条加「」角括号框在评分下一行（全角空格×5，对齐到分值下方，10 格，分数/10 四舍五入；【】在聊天里不渲染，▦ 本来就能渲染）；分段空行；运营商类型；人机流量（分两行，第二行缩进对齐）；场景评估（首行 + 全角空格缩进对齐）；服务商（去法律后缀）；ASN（带“ASN：”标签 + 全名，>32 超宽时回落 asname 短码，asname 末尾 -AS-AP 之类地域后缀去掉）；机房 IP 图标保持原样 ⚠️（不显示 IP；每行控制在 32 字宽内防换行）
 // 评分档位（站方 tierOf）：≥95 极度纯净，≥80 纯净，≥50 良好，≥25 中性，<25 可疑
 // 场景评估（站方 v2 sceneScores 原样复刻）：基础分 roundHalfUp(trust/10)；原生 +0.5、非机房真人 +0.5、business -0.5、机房 -2、广播 -1、非 AI 机房再 -1、代理/VPN/Tor（AI -2、其它 -3）、历史滥用（AI -0.5、其它 -1）、滥用分/蜜罐扣分、爬虫 -0.5；0-10 clamp，有风险信号最高 9；地区 block/partial 按站方 REGION 表；IPv6 不评估，公共服务 IP 不评估
 //
@@ -337,11 +337,11 @@ function renderNetCoffee(nodeName, d, radar) {
   var score = Number(d.trust_score);
   var tier = tierOf(score);
   var geo = pickGeo(d);
-  // 缩进：SUB=子项（标记/评分，与属性同宽故为空，值对齐到 ✅ 下方）；BAR=▦ 条（全角空格×3，对齐到分值下方）；INDENT=续行对齐到值下方（全角空格×5，与“场景评估：”/“人机流量：”同宽）
-  // 注意：标签已简化为“属性”（去掉了全角ＩＰ），三行标签同为 6 宽（属性/标记/评分各 2 字＋：），值都从第 7 列起；SUB 为空（标记/评分与属性同宽，无需缩进找齐），BAR=全角空格×3（对到分值下方）。全段只用全角字符，不用半角空格，换字体也不错位。
+  // 缩进：SUB=三行共用左缩进（全角空格×2，值对齐到 ✅ 下方）；BAR=▦ 条（全角空格×5，对齐到分值下方）；INDENT=续行对齐到值下方（全角空格×5，与“场景评估：”/“人机流量：”同宽）
+  // 注意：标签为“属性”（去掉了全角ＩＰ），三行标签同为 6 宽；三行共用同一缩进 SUB=全角空格×2，值都从第 11 列起（与 v12 位置一致），BAR=全角空格×5（对到分值下方）。全段只用全角字符，不用半角空格，换字体也不错位。
   var INDENT = "　".repeat(5);
-  var SUB = "";
-  var BAR = "　".repeat(3);
+  var SUB = "　".repeat(2);
+  var BAR = "　".repeat(5);
   var sections = [];
 
   // 第一段：属性 + 标记 + 评分 + ▦ 条（标记/评分为子项；条对齐到分值下方）
@@ -350,12 +350,12 @@ function renderNetCoffee(nodeName, d, radar) {
   var reg = (d.registered_country_code || "").toUpperCase();
   if (cc && reg) {
     if (cc === reg) {
-      ipSec.push("属性：✅ " + countryZh(cc, d.country) + " · 原生 IP");
+      ipSec.push(SUB + "属性：✅ " + countryZh(cc, d.country) + " · 原生 IP");
     } else {
-      ipSec.push("属性：🌍 " + countryZh(reg, d.registered_country) + " · 广播 IP");
+      ipSec.push(SUB + "属性：🌍 " + countryZh(reg, d.registered_country) + " · 广播 IP");
     }
   } else if (cc) {
-    ipSec.push("属性：✅ " + countryZh(cc, d.country));
+    ipSec.push(SUB + "属性：✅ " + countryZh(cc, d.country));
   }
   var tag = ipTag(d);
   if (tag) {
